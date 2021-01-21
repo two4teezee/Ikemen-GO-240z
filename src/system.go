@@ -1719,7 +1719,7 @@ func (s *System) drawDebug() {
 		}
 		s.debugWC = s.chars[s.debugRef[0]][s.debugRef[1]]
 		y = float32(s.gameHeight) - float32(s.debugFont.fnt.Size[1])*sys.debugFont.yscl/s.heightScale*
-			(float32(len(s.listLFunc))+float32(s.clipboardRows))-1*s.heightScale
+			(float32(len(s.listLFunc))+float32(s.clipboardRows)) - 1*s.heightScale
 		for i, f := range s.listLFunc {
 			if f != nil {
 				if i == 1 {
@@ -2283,6 +2283,7 @@ type SelectChar struct {
 	intro          string
 	ending         string
 	arcadepath     string
+	trialslist     string
 	ratiopath      string
 	movelist       string
 	pal            []int32
@@ -2397,6 +2398,7 @@ func (s *Select) addChar(def string) {
 	sc.def = def
 	lines, i, info, files, keymap, arcade := SplitAndTrim(str, "\n"), 0, true, true, true, true
 	var movelist string
+	var trialslist string
 	for i < len(lines) {
 		is, name, subname := ReadIniSection(lines, &i)
 		switch name {
@@ -2429,6 +2431,7 @@ func (s *Select) addChar(def string) {
 					}
 				}
 				movelist = is["movelist"]
+				trialslist = is["trialslist"]
 			}
 		case "palette ":
 			if keymap &&
@@ -2499,6 +2502,12 @@ func (s *Select) addChar(def string) {
 	if len(movelist) > 0 {
 		LoadFile(&movelist, def, func(file string) error {
 			sc.movelist, _ = LoadText(file)
+			return nil
+		})
+	}
+	if len(trialslist) > 0 {
+		LoadFile(&trialslist, def, func(file string) error {
+			sc.trialslist, _ = LoadText(file)
 			return nil
 		})
 	}

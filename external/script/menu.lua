@@ -77,6 +77,15 @@ menu.t_itemname = {
 		end
 		return true
 	end,
+	--Change Trials
+	['changetrials'] = function(t, item, cursorPosY, moveTxt, section)
+		if main.f_input(main.t_players, {'pal', 's'}) then
+			sndPlay(motif.files.snd_data, motif[section].cursor_done_snd[1], motif[section].cursor_done_snd[2])
+			menu.f_trialsParse()
+			menu.itemname = t.items[item].itemname
+		end
+		return true
+	end,
 	--Command List
 	['commandlist'] = function(t, item, cursorPosY, moveTxt, section)
 		if main.f_input(main.t_players, {'pal', 's'}) then
@@ -239,7 +248,7 @@ function menu.f_init()
 	togglePause(true)
 	main.pauseMenu = true
 	main.f_bgReset(motif.optionbgdef.bg)
-	if gamemode('training') then
+	if gamemode('training') || gamemode('trials') then
 		sndPlay(motif.files.snd_data, motif.training_info.enter_snd[1], motif.training_info.enter_snd[2])
 		main.f_bgReset(motif.trainingbgdef.bg)
 		main.f_fadeReset('fadein', motif.training_info)
@@ -520,5 +529,9 @@ function menu.f_commandlistRender(section, t)
 		end
 	end
 end
+
+--;===========================================================
+--; TRIALS LIST
+--;===========================================================
 
 return menu

@@ -2522,6 +2522,76 @@ func (ai *LifeBarAiLevel) draw(layerno int16, f []*Fnt, ailv float32) {
 	}
 }
 
+type LifeBarTrialsOverlay struct {
+	pos    [2]int32
+	text   LbText
+	bg     AnimLayout
+	top    AnimLayout
+	active bool
+}
+
+func newLifeBarTrialsOverlay() *LifeBarTrialsOverlay {
+	return &LifeBarTrialsOverlay{}
+}
+func readLifeBarTrialsOverlay(pre string, is IniSection,
+	sff *Sff, at AnimationTable, f []*Fnt) *LifeBarAiLevel {
+	to := newLifeBarTrialsOverlay()
+	is.ReadI32(pre+"pos", &to.pos[0], &to.pos[1])
+	to.text = *readLbText(pre+"text.", is, "", 0, f, 0)
+	to.bg = *ReadAnimLayout(pre+"bg.", is, sff, at, 0)
+	to.top = *ReadAnimLayout(pre+"top.", is, sff, at, 0)
+	return to
+}
+func (to *LifeBarTrialsOverlay) step() {
+
+}
+func (to *LifeBarTrialsOverlay) reset() {
+
+}
+func (to *LifeBarTrialsOverlay) bgDraw(layerno int16) {
+	if to.active {
+		to.bg.DrawScaled(float32(to.pos[0])+sys.lifebarOffsetX, float32(to.pos[1]), layerno, sys.lifebarScale)
+	}
+}
+func (to *LifeBarTrialsOverlay) draw(layerno int16, f []*Fnt, ailv float32) {
+	if tr.active && tr.text.font[0] >= 0 && int(tr.text.font[0]) < len(f) && f[tr.text.font[0]] != nil {
+		text := sc.text.text
+		total := sys.chars[side][0].scoreTotal()
+		if total == 0 && sc.pad == 0 {
+			return
+		}
+		if total > sc.max {
+			total = sc.max
+		} else if total < sc.min {
+			total = sc.min
+		}
+		//split float value
+		s := strings.Split(fmt.Sprintf("%f", total), ".")
+		//integer left padding (add leading zeros)
+		for i := int(sc.pad) - len(s[0]); i > 0; i-- {
+			s[0] = "0" + s[0]
+		}
+		//integer thousands separator
+		for i := len(s[0]) - 3; i > 0; i -= 3 {
+			s[0] = s[0][:i] + sc.separator[0] + s[0][i:]
+		}
+		//decimal places (trim trailing numbers)
+		if int(sc.places) < len(s[1]) {
+			s[1] = s[1][:sc.places]
+		}
+		//decimal separator
+		ds := ""
+		if sc.places > 0 {
+			ds = sc.separator[1]
+		}
+		//replace %s with formatted string
+		text = strings.Replace(text, "%s", s[0]+ds+s[1], 1)
+		sc.text.lay.DrawText(float32(sc.pos[0])+sys.lifebarOffsetX, float32(sc.pos[1]), sys.lifebarScale, layerno,
+			text, f[sc.text.font[0]], sc.text.font[1], sc.text.font[2], sc.text.palfx, sc.text.frgba)
+		sc.top.DrawScaled(float32(sc.pos[0])+sys.lifebarOffsetX, float32(sc.pos[1]), layerno, sys.lifebarScale)
+	}
+}
+
 type LifeBarMode struct {
 	pos  [2]int32
 	text LbText
@@ -2591,6 +2661,7 @@ type Lifebar struct {
 	sc         [2]*LifeBarScore
 	ma         *LifeBarMatch
 	ai         [2]*LifeBarAiLevel
+	to         *LifeBarTrialsOverlay
 	mo         map[string]*LifeBarMode
 	missing    map[string]int
 	active     bool
