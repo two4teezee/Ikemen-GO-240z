@@ -465,6 +465,9 @@ const (
 	OC_ex_timeelapsed
 	OC_ex_timeremaining
 	OC_ex_timetotal
+	OC_ex_trialcurrent
+	OC_ex_trialcurrentsteps
+	OC_ex_trialsnumberof
 )
 const (
 	NumVar     = OC_sysvar0 - OC_var0
@@ -1837,6 +1840,12 @@ func (be BytecodeExp) run_ex(c *Char, i *int, oc *Char) {
 		sys.bcStack.PushI(timeRemaining())
 	case OC_ex_timetotal:
 		sys.bcStack.PushI(timeTotal())
+	case OC_ex_trialcurrent
+		sys.bcStack.PushI(c.currentTrial())
+	case OC_ex_trialcurrentsteps
+		sys.bcStack.PushI(c.currentTrialSteps())
+	case OC_ex_trialsnumberof
+		sys.bcStack.PushI(c.trialsNumberof())
 	default:
 		sys.errLog.Printf("%v\n", be[*i-1])
 		c.panic()

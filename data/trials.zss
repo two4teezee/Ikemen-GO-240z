@@ -9,7 +9,18 @@ if !Const(Default.Enable.Action) || TeamSide = 0 {
     
 }
 
-#SAMPLE TRIALS LIST=============================================================
+# TRIALS MODE DEV NOTES=========================================================
+# 0. Enable Trials Mode on select screen (main.lua) - DONE
+# 1. Collect trials list when reading char (system.go) - DONE
+# 2. Create new triggers for trials mode (char, compiler, bytecode.go) - WIP
+# --> 2a. trialcurrent: current trial being attempted
+# --> 2b. trialcurrentsteps: number of steps in current trial
+# --> 2c. trialsnumberof: total number of trials for this char
+# 3. Create trials list parser (menu.lua) - WIP
+# 4. Create pause menu for trials list + ability to select trial (menu.lua) - WIP
+# 5. Create trials display elements (lifebar.go) - WIP
+# 6. Create trials function that feeds display elements (trials.zss) - WIP
+# SAMPLE TRIALS LIST============================================================
 #
 # [Trial 1 Def]
 # trial.steps = 1                   ;int > 0
