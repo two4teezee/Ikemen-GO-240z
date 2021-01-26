@@ -7255,20 +7255,22 @@ func (sc targetScoreAdd) Run(c *Char, _ []int32) bool {
 	return false
 }
 
-type trialsInc StateControllerBase
+type trialsTracker StateControllerBase
 
 const (
-	trialsInc_value byte = iota
-	trialsInc_redirectid
+	trialsTracker_id byte = iota
+	trialsTracker_currenttrial
+	trialsTracker_currentsteps
+	trialsTracker_redirectid
 )
 
-func (sc trialsInc) Run(c *Char, _ []int32) bool {
+func (sc trialsTracker) Run(c *Char, _ []int32) bool {
 	crun := c
 	StateControllerBase(sc).run(c, func(id byte, exp []BytecodeExp) bool {
 		switch id {
-		case trialsInc_value:
-			crun.trialsInc(exp[0].evalF(c))
-		case trialsInc_redirectid:
+		case trialsTracker_value:
+			crun.trialsTracker(exp[0].evalF(c))
+		case trialsTracker_redirectid:
 			if rid := sys.playerID(exp[0].evalI(c)); rid != nil {
 				crun = rid
 			} else {
