@@ -5,17 +5,19 @@
 
 if !Const(Default.Enable.Action) || TeamSide = 0 {
 	#do nothing, global code disabled locally or executed by stage
-} else if IsHelper {
-    
+} else if GameMode = Trials {
+    if time = 1 {
+		
+	}
 }
 
 # TRIALS MODE DEV NOTES=========================================================
 # 0. Enable Trials Mode on select screen (main.lua) - DONE
 # 1. Collect trials list when reading char (system.go) - DONE
 # 2. Create new triggers for trials mode (char, compiler, bytecode.go) - WIP
-# --> 2a. trialcurrent: current trial being attempted
-# --> 2b. trialcurrentsteps: number of steps in current trial
-# --> 2c. trialsnumberof: total number of trials for this char
+# --> 2a. currenttrial: current trial being attempted
+# --> 2b. currenttrialsteps: number of steps in current trial
+# --> 2c. numberoftrials: total number of trials for this char
 # 3. Create trials list parser (menu.lua) - WIP
 # 4. Create pause menu for trials list + ability to select trial (menu.lua) - WIP
 # 5. Create trials display elements (lifebar.go) - WIP
@@ -25,19 +27,27 @@ if !Const(Default.Enable.Action) || TeamSide = 0 {
 # [Trial 1 Def]
 # trial.steps = 1                   ;int > 0
 # trial.name = Raging Demon         ;string
+#
 # trial.line1.text = Raging Demon         ;string
 # trial.line1.glyph = XX_F_AZ             ;same as movelist glyphs
 # trial.line1.stateno = 
+# trial.line1.anim =
 #
 # [Trial 2 Def]
 # trial.steps = 3                                   ;int > 0
 # trial.name = Standard Issue Shoto Three Piece     ;string
+#
 # trial.line1.text = Jumping Roundhouse             ;string
 # trial.line1.glyph = _UF_C                         ;same as movelist glyphs
 # trial.line1.stateno = 
+# trial.line1.anim =
+#
 # trial.line2.text = Crouching Forward              ;string
 # trial.line2.glyph = _D_+^B                        ;same as movelist glyphs
 # trial.line2.stateno = 
+# trial.line2.anim =
+#
 # trial.line3.text = Fierce Hadoken                 ;string
 # trial.line3.glyph = _QCF+^Z                       ;same as movelist glyphs
 # trial.line3.stateno = 
+# trial.line3.anim =

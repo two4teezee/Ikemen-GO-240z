@@ -465,9 +465,9 @@ const (
 	OC_ex_timeelapsed
 	OC_ex_timeremaining
 	OC_ex_timetotal
-	OC_ex_trialcurrent
-	OC_ex_trialcurrentsteps
-	OC_ex_trialsnumberof
+	OC_ex_currenttrial
+	OC_ex_currenttrialsteps
+	OC_ex_numberoftrials
 )
 const (
 	NumVar     = OC_sysvar0 - OC_var0
@@ -1840,12 +1840,12 @@ func (be BytecodeExp) run_ex(c *Char, i *int, oc *Char) {
 		sys.bcStack.PushI(timeRemaining())
 	case OC_ex_timetotal:
 		sys.bcStack.PushI(timeTotal())
-	case OC_ex_trialcurrent
+	case OC_ex_currenttrial
 		sys.bcStack.PushI(c.currentTrial())
-	case OC_ex_trialcurrentsteps
+	case OC_ex_currenttrialsteps
 		sys.bcStack.PushI(c.currentTrialSteps())
-	case OC_ex_trialsnumberof
-		sys.bcStack.PushI(c.trialsNumberof())
+	case OC_ex_numberoftrials
+		sys.bcStack.PushI(c.numberoftrials())
 	default:
 		sys.errLog.Printf("%v\n", be[*i-1])
 		c.panic()
@@ -7246,6 +7246,31 @@ func (sc targetScoreAdd) Run(c *Char, _ []int32) bool {
 				if len(tar) == 0 {
 					return false
 				}
+			} else {
+				return false
+			}
+		}
+		return true
+	})
+	return false
+}
+
+type trialsInc StateControllerBase
+
+const (
+	trialsInc_value byte = iota
+	trialsInc_redirectid
+)
+
+func (sc trialsInc) Run(c *Char, _ []int32) bool {
+	crun := c
+	StateControllerBase(sc).run(c, func(id byte, exp []BytecodeExp) bool {
+		switch id {
+		case trialsInc_value:
+			crun.trialsInc(exp[0].evalF(c))
+		case trialsInc_redirectid:
+			if rid := sys.playerID(exp[0].evalI(c)); rid != nil {
+				crun = rid
 			} else {
 				return false
 			}

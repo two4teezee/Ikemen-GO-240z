@@ -162,6 +162,7 @@ func newCompiler() *Compiler {
 		"targetguardpointsadd": c.targetGuardPointsAdd,
 		"targetredlifeadd":     c.targetRedLifeAdd,
 		"targetscoreadd":       c.targetScoreAdd,
+		"trialsInc":            c.trialsInc,
 	}
 	return c
 }
@@ -312,6 +313,8 @@ var triggerMap = map[string]int{
 	"animlength":        1,
 	"combocount":        1,
 	"consecutivewins":   1,
+	"currenttrial":      1,
+	"currenttrialsteps": 1,
 	"dizzy":             1,
 	"dizzypoints":       1,
 	"dizzypointsmax":    1,
@@ -330,6 +333,7 @@ var triggerMap = map[string]int{
 	"map":               1,
 	"memberno":          1,
 	"movecountered":     1,
+	"numberoftrials":    1,
 	"p5name":            1,
 	"p6name":            1,
 	"p7name":            1,
@@ -356,9 +360,6 @@ var triggerMap = map[string]int{
 	"timeelapsed":       1,
 	"timeremaining":     1,
 	"timetotal":         1,
-	"trialcurrent":      1,
-	"trialcurrentsteps": 1,
-	"trialsnumberof":    1,
 }
 
 func (c *Compiler) tokenizer(in *string) string {
@@ -2635,12 +2636,12 @@ func (c *Compiler) expValue(out *BytecodeExp, in *string,
 		out.append(OC_ex_, OC_ex_timeremaining) // Only here for backwards compatibility purposes, going to be deprecated once Add004 updates.
 	case "timetotal":
 		out.append(OC_ex_, OC_ex_timetotal)
-	case "trialcurrent":
-		out.append(OC_ex_, OC_ex_trialcurrent)
-	case "trialcurrentsteps":
-		out.append(OC_ex_, OC_ex_trialcurrentsteps)
-	case "trialsnumberof":
-		out.append(OC_ex_, OC_ex_trialsnumberof)
+	case "currenttrial":
+		out.append(OC_ex_, OC_ex_currenttrial)
+	case "currenttrialsteps":
+		out.append(OC_ex_, OC_ex_currenttrialsteps)
+	case "numberoftrials":
+		out.append(OC_ex_, OC_ex_numberoftrials)
 	case "drawpalno":
 		out.append(OC_ex_, OC_ex_drawpalno)
 	case "=", "!=", ">", ">=", "<", "<=", "&", "&&", "^", "^^", "|", "||",
@@ -7930,6 +7931,25 @@ func (c *Compiler) targetScoreAdd(is IniSection, sc *StateControllerBase,
 		}
 		if err := c.paramValue(is, sc, "value",
 			targetScoreAdd_value, VT_Float, 1, true); err != nil {
+			return err
+		}
+		return nil
+	})
+	return *ret, err
+}
+func (c *Compiler) trialsInc(is IniSection, sc *StateControllerBase,
+	_ int8) (StateController, error) {
+	ret, err := (*trialsInc)(sc), c.stateSec(is, func() error {
+		if err := c.paramValue(is, sc, "redirectid",
+			trialsInc_redirectid, VT_Int, 1, false); err != nil {
+			return err
+		}
+		if err := c.paramValue(is, sc, "id",
+			trialsInc_id, VT_Int, 1, false); err != nil {
+			return err
+		}
+		if err := c.paramValue(is, sc, "value",
+			trialsInc_value, VT_Float, 1, true); err != nil {
 			return err
 		}
 		return nil

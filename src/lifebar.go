@@ -2523,11 +2523,17 @@ func (ai *LifeBarAiLevel) draw(layerno int16, f []*Fnt, ailv float32) {
 }
 
 type LifeBarTrialsOverlay struct {
-	pos  [2]int32
-	text LbText
-	//glyphpos
-	bg     AnimLayout
-	top    AnimLayout
+	pos     [2]int32
+	spacing [2]int32
+	text    LbText
+	//textpos		[2]int32
+
+	glyphpos [2]int32
+	bg       AnimLayout
+	top      AnimLayout
+
+	success AnimLayout
+
 	active bool
 }
 
@@ -2555,9 +2561,9 @@ func (to *LifeBarTrialsOverlay) bgDraw(layerno int16) {
 	}
 }
 func (to *LifeBarTrialsOverlay) draw(layerno int16, f []*Fnt, ailv float32) {
-	if tr.active && tr.text.font[0] >= 0 && int(tr.text.font[0]) < len(f) && f[tr.text.font[0]] != nil {
-		text := sc.text.text
-		total := sys.chars[side][0].scoreTotal()
+	if to.active && to.text.font[0] >= 0 && int(to.text.font[0]) < len(f) && f[to.text.font[0]] != nil {
+		text := to.text.text
+		//total := sys.chars[side][0].scoreTotal()
 
 		//split float value
 		s := strings.Split(fmt.Sprintf("%f", total), ".")
