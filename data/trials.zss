@@ -4,12 +4,15 @@
 #
 # TRIALS MODE DEV NOTES=========================================================
 # 0. Enable Trials Mode on select screen (main.lua) - DONE
-# 1. Collect trials list when reading char (system.go) - DONE
+#
+# 1. Collect trials list when reading char (system.go) - DONE 
+#
+# 3. Create trials list parser (???.lua) - WIP
+# 
 # 2. Create new triggers for trials mode (char, compiler, bytecode.go) - WIP
 # --> 2a. currenttrial: current trial being attempted
 # --> 2b. currenttrialsteps: number of steps in current trial
 # --> 2c. numberoftrials: total number of trials for this char
-# 3. Create trials list parser (menu.lua) - WIP
 # 4. Create pause menu for trials list + ability to select trial (menu.lua) - WIP
 # 5. Create trials display elements (lifebar.go) - WIP
 # 6. Create trials function that feeds display elements (trials.zss) - WIP
