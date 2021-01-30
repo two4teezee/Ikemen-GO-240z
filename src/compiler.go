@@ -162,7 +162,7 @@ func newCompiler() *Compiler {
 		"targetguardpointsadd": c.targetGuardPointsAdd,
 		"targetredlifeadd":     c.targetRedLifeAdd,
 		"targetscoreadd":       c.targetScoreAdd,
-		"trialsInc":            c.trialsInc,
+		"trialsTracker":        c.trialsTracker,
 	}
 	return c
 }
@@ -309,57 +309,57 @@ var triggerMap = map[string]int{
 	"vel":               1,
 	"win":               1,
 	//new triggers
-	"animelemlength":    1,
-	"animlength":        1,
-	"combocount":        1,
-	"consecutivewins":   1,
-	"currenttrial":      1,
-	"currenttrialsteps": 1,
-	"dizzy":             1,
-	"dizzypoints":       1,
-	"dizzypointsmax":    1,
-	"firstattack":       1,
-	"gamemode":          1,
-	"getplayerid":       1,
-	"guardbreak":        1,
-	"guardpoints":       1,
-	"guardpointsmax":    1,
-	"hitoverridden":     1,
-	"incustomstate":     1,
-	"indialogue":        1,
-	"isasserted":        1,
-	"localscale":        1,
-	"majorversion":      1,
-	"map":               1,
-	"memberno":          1,
-	"movecountered":     1,
-	"numberoftrials":    1,
-	"p5name":            1,
-	"p6name":            1,
-	"p7name":            1,
-	"p8name":            1,
-	"pausetime":         1,
-	"physics":           1,
-	"playerno":          1,
-	"rank":              1,
-	"ratiolevel":        1,
-	"receivedhits":      1,
-	"receiveddamage":    1,
-	"redlife":           1,
-	"roundtype":         1,
-	"score":             1,
-	"scoretotal":        1,
-	"selfstatenoexist":  1,
-	"stagebackedge":     1,
-	"stageconst":        1,
-	"stagefrontedge":    1,
-	"stagetime":         1,
-	"standby":           1,
-	"teamleader":        1,
-	"teamsize":          1,
-	"timeelapsed":       1,
-	"timeremaining":     1,
-	"timetotal":         1,
+	"animelemlength":   1,
+	"animlength":       1,
+	"combocount":       1,
+	"consecutivewins":  1,
+	"currenttrial":     1,
+	"currenttrialdata": 1,
+	"dizzy":            1,
+	"dizzypoints":      1,
+	"dizzypointsmax":   1,
+	"firstattack":      1,
+	"gamemode":         1,
+	"getplayerid":      1,
+	"guardbreak":       1,
+	"guardpoints":      1,
+	"guardpointsmax":   1,
+	"hitoverridden":    1,
+	"incustomstate":    1,
+	"indialogue":       1,
+	"isasserted":       1,
+	"localscale":       1,
+	"majorversion":     1,
+	"map":              1,
+	"memberno":         1,
+	"movecountered":    1,
+	"numberoftrials":   1,
+	"p5name":           1,
+	"p6name":           1,
+	"p7name":           1,
+	"p8name":           1,
+	"pausetime":        1,
+	"physics":          1,
+	"playerno":         1,
+	"rank":             1,
+	"ratiolevel":       1,
+	"receivedhits":     1,
+	"receiveddamage":   1,
+	"redlife":          1,
+	"roundtype":        1,
+	"score":            1,
+	"scoretotal":       1,
+	"selfstatenoexist": 1,
+	"stagebackedge":    1,
+	"stageconst":       1,
+	"stagefrontedge":   1,
+	"stagetime":        1,
+	"standby":          1,
+	"teamleader":       1,
+	"teamsize":         1,
+	"timeelapsed":      1,
+	"timeremaining":    1,
+	"timetotal":        1,
 }
 
 func (c *Compiler) tokenizer(in *string) string {
@@ -2638,8 +2638,10 @@ func (c *Compiler) expValue(out *BytecodeExp, in *string,
 		out.append(OC_ex_, OC_ex_timetotal)
 	case "currenttrial":
 		out.append(OC_ex_, OC_ex_currenttrial)
-	case "currenttrialsteps":
-		out.append(OC_ex_, OC_ex_currenttrialsteps)
+	case "currenttrialdata":
+		if err := nameSubEx(OC_ex_currenttrialdata); err != nil {
+			return bvNone(), err
+		}
 	case "numberoftrials":
 		out.append(OC_ex_, OC_ex_numberoftrials)
 	case "drawpalno":
@@ -7937,19 +7939,23 @@ func (c *Compiler) targetScoreAdd(is IniSection, sc *StateControllerBase,
 	})
 	return *ret, err
 }
-func (c *Compiler) trialsInc(is IniSection, sc *StateControllerBase,
+func (c *Compiler) trialsTracker(is IniSection, sc *StateControllerBase,
 	_ int8) (StateController, error) {
-	ret, err := (*trialsInc)(sc), c.stateSec(is, func() error {
+	ret, err := (*trialsTracker)(sc), c.stateSec(is, func() error {
+		if err := c.paramValue(is, sc, "currenttrial",
+			trialsTracker_currenttrial, VT_Int, 1, false); err != nil {
+			return err
+		}
+		if err := c.paramValue(is, sc, "numberofsteps",
+			trialsTracker_numberofsteps, VT_Float, 1, true); err != nil {
+			return err
+		}
+		if err := c.paramValue(is, sc, "currentstep",
+			trialsTracker_currentstep, VT_Float, 1, true); err != nil {
+			return err
+		}
 		if err := c.paramValue(is, sc, "redirectid",
-			trialsInc_redirectid, VT_Int, 1, false); err != nil {
-			return err
-		}
-		if err := c.paramValue(is, sc, "id",
-			trialsInc_id, VT_Int, 1, false); err != nil {
-			return err
-		}
-		if err := c.paramValue(is, sc, "value",
-			trialsInc_value, VT_Float, 1, true); err != nil {
+			trialsTracker_redirectid, VT_Int, 1, false); err != nil {
 			return err
 		}
 		return nil

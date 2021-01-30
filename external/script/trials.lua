@@ -39,7 +39,7 @@ local trials = {}
 --# trial.line3.stateno = 
 --# trial.line3.anim =
 
-local function f_trialslistData(t, str, align, col)
+local function f_trialslistData(t, str, col)
 	local t_insert = {}
 	str = str .. '<#>'
 	for m1, m2 in str:gmatch('(.-)<([^%g <>]+)>') do
@@ -54,14 +54,8 @@ local function f_trialslistData(t, str, align, col)
 			col = {}
 		end
 	end
-	if align == -1 then
-		for i = #t_insert, 1, -1 do
-			table.insert(t, t_insert[i])
-		end
-	else
-		for i = 1, #t_insert do
-			table.insert(t, t_insert[i])
-		end
+	for i = 1, #t_insert do
+		table.insert(t, t_insert[i])
 	end
 	return t, col
 end
@@ -88,18 +82,7 @@ function trials.f_trialslistParse()
 							line = line:gsub('%s+$', '')
 							local subt = {}
 							for m in line:gmatch('(	*[^	]+)') do
-								local tabs = 0
-								m = m:gsub('^(	*)', function(m1)
-									tabs = string.len(m1)
-									return ''
-								end)
-								local align = 1 --left align
-								if tabs == 1 then
-									align = 0 --center align
-								elseif tabs > 1 then
-									align = -1 --right align
-								end
-								subt, col = f_trialslistData(subt, m, align, col)
+								subt, col = f_trialslistData(subt, m, col)
 							end
 							table.insert(t, subt)
 						end
