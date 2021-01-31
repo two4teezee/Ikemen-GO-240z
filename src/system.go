@@ -2507,7 +2507,11 @@ func (s *Select) addChar(def string) {
 	}
 	if len(trialslist) > 0 {
 		LoadFile(&trialslist, def, func(file string) error {
-			sc.trialslist, _ = LoadText(file)
+			//var s string
+			//s, _ = LoadText(file)
+			//for k := len(s) {
+
+			//}
 			return nil
 		})
 	}
