@@ -2272,6 +2272,16 @@ func (wm wincntMap) getLevel(p int) int32 {
 	return wm.getItem(sys.cgi[p].def)[sys.cgi[p].palno-1]
 }
 
+type ParsedTrials struct {
+	trialnames    []string
+	numoftrials   int32
+	trialnumsteps []string
+	trialsteps    [][]string
+	trialglyphs   [][]string
+	trialstateno  [][]int32
+	trialanimno   [][]int32
+}
+
 type SelectChar struct {
 	def            string
 	name           string
@@ -2283,7 +2293,7 @@ type SelectChar struct {
 	intro          string
 	ending         string
 	arcadepath     string
-	trialslist     string
+	trialslist     ParsedTrials
 	ratiopath      string
 	movelist       string
 	pal            []int32
@@ -2398,7 +2408,7 @@ func (s *Select) addChar(def string) {
 	sc.def = def
 	lines, i, info, files, keymap, arcade := SplitAndTrim(str, "\n"), 0, true, true, true, true
 	var movelist string
-	var trialslist string
+	var trials string
 	for i < len(lines) {
 		is, name, subname := ReadIniSection(lines, &i)
 		switch name {
@@ -2431,7 +2441,7 @@ func (s *Select) addChar(def string) {
 					}
 				}
 				movelist = is["movelist"]
-				trialslist = is["trialslist"]
+				trials = is["trialslist"]
 			}
 		case "palette ":
 			if keymap &&
@@ -2505,16 +2515,16 @@ func (s *Select) addChar(def string) {
 			return nil
 		})
 	}
-	if len(trialslist) > 0 {
-		LoadFile(&trialslist, def, func(file string) error {
-			//var s string
-			//s, _ = LoadText(file)
-			//for k := len(s) {
-
-			//}
+	if len(trials) > 0 {
+		LoadFile(&trials, def, func(file string) error {
+			trials, _ = LoadText(file)
+			sc.trialslist = AddTrials(trials)
 			return nil
 		})
 	}
+}
+func (s *Select) AddTrials(trials string) error {
+
 }
 func (s *Select) AddStage(def string) error {
 	var tstr string
