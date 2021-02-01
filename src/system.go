@@ -2541,10 +2541,18 @@ func (s *Select) addChar(def string) {
 					stepstemp, _ := strconv.ParseInt(steps, 10, 32)
 					sc.trialslist.trialnumsteps[i] = int(stepstemp)
 					for k := 1; k <= sc.trialslist.trialnumsteps[i]; k++ {
-						sc.trialslist.trialsteps[i][k], ok, _ = is.getText("trial.line" + strconv.Itoa(k) + ".text")
-						sc.trialslist.trialglyphs[i][k], ok, _ = is.getText("trial.line" + strconv.Itoa(k) + ".glyph")
-						sc.trialslist.trialstateno[i][k], ok, _ = is.getText("trial.line" + strconv.Itoa(k) + ".stateno")
-						sc.trialslist.trialanimno[i][k], ok, _ = is.getText("trial.line" + strconv.Itoa(k) + ".anim")
+						if sc.trialslist.trialsteps[i][k], ok, _ = is.getText("trial.line" + strconv.Itoa(k) + ".text"); !ok {
+							sc.trialslist.trialsteps[i][k] = ""
+						}
+						if sc.trialslist.trialglyphs[i][k], ok, _ = is.getText("trial.line" + strconv.Itoa(k) + ".glyph"); !ok {
+							sc.trialslist.trialglyphs[i][k] = ""
+						}
+						if sc.trialslist.trialstateno[i][k], ok, _ = is.getText("trial.line" + strconv.Itoa(k) + ".stateno"); !ok {
+							break //sc.trialslist.trialstateno[i][k] = ""
+						}
+						if sc.trialslist.trialanimno[i][k], ok, _ = is.getText("trial.line" + strconv.Itoa(k) + ".anim"); !ok {
+							sc.trialslist.trialanimno[i][k] = ""
+						}
 					}
 				}
 			}

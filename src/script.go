@@ -1888,6 +1888,8 @@ func systemScriptInit(l *lua.LState) {
 					sys.lifebar.ai[1].active = lua.LVAsBool(value)
 				case "mode":
 					sys.lifebar.activeMode = lua.LVAsBool(value)
+				case "trials":
+					sys.lifebar.to.active = lua.LVAsBool(value)
 				case "bars":
 					sys.lifebar.activeBars = lua.LVAsBool(value)
 				case "lifebar":
@@ -1929,6 +1931,10 @@ func systemScriptInit(l *lua.LState) {
 		sys.timerStart = int32(numArg(l, 1))
 		return 0
 	})
+	//luaRegister(l, "setLifebarTrials", func(*lua.LState) int {
+	//	sys.timerStart = int32(numArg(l, 1))
+	//	return 0
+	//})
 	luaRegister(l, "setLifeMul", func(l *lua.LState) int {
 		sys.lifeMul = float32(numArg(l, 1))
 		return 0

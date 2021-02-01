@@ -2523,18 +2523,16 @@ func (ai *LifeBarAiLevel) draw(layerno int16, f []*Fnt, ailv float32) {
 }
 
 type LifeBarTrialsOverlay struct {
-	pos     [2]int32
-	spacing [2]int32
-	text    LbText
-	//textpos		[2]int32
-
-	glyphpos [2]int32
-	bg       AnimLayout
-	top      AnimLayout
-
-	success AnimLayout
-
-	active bool
+	pos        [2]int32
+	spacing    [2]int32
+	text       LbText
+	textoffset [2]int32
+	//glyphs			LbText
+	glyphsoffset [2]int32
+	bg           AnimLayout
+	top          AnimLayout
+	success      AnimLayout
+	active       bool
 }
 
 func newLifeBarTrialsOverlay() *LifeBarTrialsOverlay {
