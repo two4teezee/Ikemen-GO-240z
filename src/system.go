@@ -2274,12 +2274,12 @@ func (wm wincntMap) getLevel(p int) int32 {
 
 type ParsedTrials struct {
 	trialnames    []string
-	numoftrials   int32
-	trialnumsteps []string
+	numoftrials   int
+	trialnumsteps []int
 	trialsteps    [][]string
 	trialglyphs   [][]string
-	trialstateno  [][]int32
-	trialanimno   [][]int32
+	trialstateno  [][]string
+	trialanimno   [][]string
 }
 
 type SelectChar struct {
@@ -2518,13 +2518,38 @@ func (s *Select) addChar(def string) {
 	if len(trials) > 0 {
 		LoadFile(&trials, def, func(file string) error {
 			trials, _ = LoadText(file)
-			sc.trialslist = AddTrials(trials)
 			return nil
 		})
+		// Parse trials -- refer to trials.lua for sample trials file
+		var triallines []string
+		triallines = SplitAndTrim(trials, "\n")
+		sc.trialslist.numoftrials = 0
+		for i < len(triallines) {
+			is, name, _ := ReadIniSection(triallines, &i)
+			switch name {
+			case ("trial " + strconv.Itoa(i) + " def"):
+				if i == sc.trialslist.numoftrials+1 {
+					sc.trialslist.numoftrials += 1
+					var ok bool
+					var steps string
+					if steps, ok, _ = is.getText("trial.steps"); !ok {
+						break
+					}
+					if sc.trialslist.trialnames[i], ok, _ = is.getText("trial.name"); !ok {
+						sc.trialslist.trialnames[i] = ("Trial " + strconv.Itoa(i))
+					}
+					stepstemp, _ := strconv.ParseInt(steps, 10, 32)
+					sc.trialslist.trialnumsteps[i] = int(stepstemp)
+					for k := 1; k <= sc.trialslist.trialnumsteps[i]; k++ {
+						sc.trialslist.trialsteps[i][k], ok, _ = is.getText("trial.line" + strconv.Itoa(k) + ".text")
+						sc.trialslist.trialglyphs[i][k], ok, _ = is.getText("trial.line" + strconv.Itoa(k) + ".glyph")
+						sc.trialslist.trialstateno[i][k], ok, _ = is.getText("trial.line" + strconv.Itoa(k) + ".stateno")
+						sc.trialslist.trialanimno[i][k], ok, _ = is.getText("trial.line" + strconv.Itoa(k) + ".anim")
+					}
+				}
+			}
+		}
 	}
-}
-func (s *Select) AddTrials(trials string) error {
-
 }
 func (s *Select) AddStage(def string) error {
 	var tstr string
