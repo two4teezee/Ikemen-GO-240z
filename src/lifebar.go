@@ -2523,16 +2523,15 @@ func (ai *LifeBarAiLevel) draw(layerno int16, f []*Fnt, ailv float32) {
 }
 
 type LifeBarTrialsOverlay struct {
-	pos        [2]int32
-	spacing    [2]int32
-	text       LbText
-	textoffset [2]int32
+	pos     [2]int32
+	spacing [2]int32
+	text    LbText
 	//glyphs			LbText
-	glyphsoffset [2]int32
-	bg           AnimLayout
-	top          AnimLayout
-	success      AnimLayout
-	active       bool
+	//glyphsoffset [2]int32
+	bg        AnimLayout
+	currentbg AnimLayout
+	success   AnimLayout
+	active    bool
 }
 
 func newLifeBarTrialsOverlay() *LifeBarTrialsOverlay {
@@ -2542,46 +2541,33 @@ func readLifeBarTrialsOverlay(pre string, is IniSection,
 	sff *Sff, at AnimationTable, f []*Fnt) *LifeBarAiLevel {
 	to := newLifeBarTrialsOverlay()
 	is.ReadI32(pre+"pos", &to.pos[0], &to.pos[1])
+	is.ReadI32(pre+"spacing", &to.spacing[0], &to.spacing[1])
 	to.text = *readLbText(pre+"text.", is, "", 0, f, 0)
 	to.bg = *ReadAnimLayout(pre+"bg.", is, sff, at, 0)
-	to.top = *ReadAnimLayout(pre+"top.", is, sff, at, 0)
+	to.currentbg = *ReadAnimLayout(pre+"currentbg.", is, sff, at, 0)
+	to.success = *ReadAnimLayout(pre+"bg.", is, sff, at, 0)
 	return to
 }
 func (to *LifeBarTrialsOverlay) step() {
-
+	if sys.gameMode != "trials" {
+		return
+	}
+	to.bg.Action()
+	to.currentbg.Action()
+	to.success.Action()
 }
 func (to *LifeBarTrialsOverlay) reset() {
 
 }
 func (to *LifeBarTrialsOverlay) bgDraw(layerno int16) {
-	if to.active {
+	if to.active && sys.chars[0][0].currenttrial() <= sys.sel.GetChar(sys.sel.selected[0][0][0]).trialslist.numoftrials(sys.chars[0][0].currenttrial()) {
 		to.bg.DrawScaled(float32(to.pos[0])+sys.lifebarOffsetX, float32(to.pos[1]), layerno, sys.lifebarScale)
 	}
 }
 func (to *LifeBarTrialsOverlay) draw(layerno int16, f []*Fnt, ailv float32) {
 	if to.active && to.text.font[0] >= 0 && int(to.text.font[0]) < len(f) && f[to.text.font[0]] != nil {
-		text := to.text.text
 		//total := sys.chars[side][0].scoreTotal()
-
-		//split float value
-		s := strings.Split(fmt.Sprintf("%f", total), ".")
-		//integer left padding (add leading zeros)
-		for i := int(sc.pad) - len(s[0]); i > 0; i-- {
-			s[0] = "0" + s[0]
-		}
-		//integer thousands separator
-		for i := len(s[0]) - 3; i > 0; i -= 3 {
-			s[0] = s[0][:i] + sc.separator[0] + s[0][i:]
-		}
-		//decimal places (trim trailing numbers)
-		if int(sc.places) < len(s[1]) {
-			s[1] = s[1][:sc.places]
-		}
-		//decimal separator
-		ds := ""
-		if sc.places > 0 {
-			ds = sc.separator[1]
-		}
+		//sys.sel.GetChar(sys.sel.selected[0][0][0]).trialslist.trialnames(sys.chars[0][0].currenttrial())
 		//replace %s with formatted string
 		text = strings.Replace(text, "%s", s[0]+ds+s[1], 1)
 		sc.text.lay.DrawText(float32(sc.pos[0])+sys.lifebarOffsetX, float32(sc.pos[1]), sys.lifebarScale, layerno,
