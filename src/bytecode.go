@@ -413,6 +413,7 @@ const (
 	OC_ex_gethitvar_playerno
 	OC_ex_gethitvar_redlife
 	OC_ex_gethitvar_score
+	OC_ex_gethitvar_currenttrialstep
 	OC_ex_ailevelf
 	OC_ex_animelemlength
 	OC_ex_animlength
@@ -466,8 +467,7 @@ const (
 	OC_ex_timeremaining
 	OC_ex_timetotal
 	OC_ex_currenttrial
-	OC_ex_currenttrialdata
-	OC_ex_numberoftrials
+	OC_ex_currenttrialstep
 )
 const (
 	NumVar     = OC_sysvar0 - OC_var0
@@ -1714,6 +1714,8 @@ func (be BytecodeExp) run_ex(c *Char, i *int, oc *Char) {
 		sys.bcStack.PushI(c.ghv.redlife)
 	case OC_ex_gethitvar_score:
 		sys.bcStack.PushF(c.ghv.score)
+	case OC_ex_gethitvar_currenttrialstep:
+		sys.bcStack.PushI(c.ghv.currenttrialstep)
 	case OC_ex_ailevelf:
 		sys.bcStack.PushF(c.aiLevel())
 	case OC_ex_animelemlength:
@@ -1840,12 +1842,8 @@ func (be BytecodeExp) run_ex(c *Char, i *int, oc *Char) {
 		sys.bcStack.PushI(timeRemaining())
 	case OC_ex_timetotal:
 		sys.bcStack.PushI(timeTotal())
-	case OC_ex_currenttrial
+	case OC_ex_currenttrial:
 		sys.bcStack.PushI(c.currentTrial())
-	case OC_ex_currenttrialdata
-		sys.bcStack.PushI(c.currentTrialdata())
-	case OC_ex_numberoftrials
-		sys.bcStack.PushI(c.numberofTrials())
 	default:
 		sys.errLog.Printf("%v\n", be[*i-1])
 		c.panic()
@@ -3710,6 +3708,7 @@ const (
 	hitDef_guardpoints
 	hitDef_redlife
 	hitDef_score
+	hitDef_currenttrialstep
 	hitDef_last = iota + afterImage_last + 1 - 1
 	hitDef_redirectid
 )
@@ -3991,6 +3990,8 @@ func (sc hitDef) runSub(c *Char, hd *HitDef, id byte, exp []BytecodeExp) bool {
 		if len(exp) > 1 {
 			hd.score[1] = exp[1].evalF(c)
 		}
+	case hitDef_currenttrialstep:
+		hd.currenttrialstep = exp[0].evalI(c)
 	default:
 		if !palFX(sc).runSub(c, &hd.palfx, id, exp) {
 			return false
@@ -7255,26 +7256,20 @@ func (sc targetScoreAdd) Run(c *Char, _ []int32) bool {
 	return false
 }
 
-type trialsTracker StateControllerBase
+type currenttrialstepAdd StateControllerBase
 
 const (
-	trialsTracker_currenttrial byte = iota
-	trialsTracker_numberofsteps
-	trialsTracker_currentstep
-	trialsTracker_redirectid
+	currenttrialstepAdd_value byte = iota
+	currenttrialstepAdd_redirectid
 )
 
-func (sc trialsTracker) Run(c *Char, _ []int32) bool {
+func (sc currenttrialstepAdd) Run(c *Char, _ []int32) bool {
 	crun := c
 	StateControllerBase(sc).run(c, func(id byte, exp []BytecodeExp) bool {
 		switch id {
-		case trialsTracker_currenttrial:
-			crun.trialsTracker(exp[0].evalF(c))
-		case trialsTracker_numberofsteps:
-			crun.trialsTracker(exp[0].evalF(c))
-		case trialsTracker_currentstep:
-			crun.trialsTracker(exp[0].evalF(c))
-		case trialsTracker_redirectid:
+		case currenttrialstepAdd_value:
+			crun.currenttrialstepAdd(exp[0].evalI(c))
+		case currenttrialstepAdd_redirectid:
 			if rid := sys.playerID(exp[0].evalI(c)); rid != nil {
 				crun = rid
 			} else {
@@ -7283,58 +7278,6 @@ func (sc trialsTracker) Run(c *Char, _ []int32) bool {
 		}
 		return true
 	})
-	return false
-}
-
-type saveFile StateControllerBase
-
-const (
-	saveFile_path byte = iota
-	saveFile_saveData
-	saveFile_redirectid
-)
-
-func (sc saveFile) Run(c *Char, _ []int32) bool {
-	crun := c
-	var path string
-	var data SaveData
-	StateControllerBase(sc).run(c, func(id byte, exp []BytecodeExp) bool {
-		switch id {
-		case saveFile_path:
-			path = string(*(*[]byte)(unsafe.Pointer(&exp[0])))
-		case saveFile_saveData:
-			data = SaveData(exp[0].evalI(c))
-		case saveFile_redirectid:
-			if rid := sys.playerID(exp[0].evalI(c)); rid != nil {
-				crun = rid
-			} else {
-				return false
-			}
-		}
-		return true
-	})
-	if path != "" {
-		encodeFile, err := os.Create(filepath.Dir(c.gi().def) + "/" + path)
-		if err != nil {
-			panic(err)
-		}
-		defer encodeFile.Close()
-		encoder := gob.NewEncoder(encodeFile)
-		switch data {
-		case SaveData_map:
-			if err := encoder.Encode(crun.mapArray); err != nil {
-				panic(err)
-			}
-		case SaveData_var:
-			if err := encoder.Encode(crun.ivar); err != nil {
-				panic(err)
-			}
-		case SaveData_fvar:
-			if err := encoder.Encode(crun.fvar); err != nil {
-				panic(err)
-			}
-		}
-	}
 	return false
 }
 

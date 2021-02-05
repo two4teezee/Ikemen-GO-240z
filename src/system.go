@@ -2273,13 +2273,15 @@ func (wm wincntMap) getLevel(p int) int32 {
 }
 
 type ParsedTrials struct {
-	trialnames    []string
-	numoftrials   int
-	trialnumsteps []int
-	trialsteps    [][]string
-	trialglyphs   [][]string
-	trialstateno  [][]string
-	trialanimno   [][]string
+	trialnames       []string
+	numoftrials      int32
+	currentTrial     int32
+	currenttrialStep int32
+	trialnumsteps    []int32
+	trialsteps       [][]string
+	trialglyphs      [][]string
+	trialstateno     [][]string
+	trialanimno      [][]string
 }
 
 type SelectChar struct {
@@ -2524,11 +2526,13 @@ func (s *Select) addChar(def string) {
 		var triallines []string
 		triallines = SplitAndTrim(trials, "\n")
 		sc.trialslist.numoftrials = 0
-		for i < len(triallines) {
+		sc.trialslist.currentTrial = 1
+		sc.trialslist.currenttrialStep = 1
+		for i := 1; i <= len(triallines); i++ {
 			is, name, _ := ReadIniSection(triallines, &i)
 			switch name {
 			case ("trial " + strconv.Itoa(i) + " def"):
-				if i == sc.trialslist.numoftrials+1 {
+				if int32(i) == sc.trialslist.numoftrials+1 {
 					sc.trialslist.numoftrials += 1
 					var ok bool
 					var steps string
@@ -2539,7 +2543,7 @@ func (s *Select) addChar(def string) {
 						sc.trialslist.trialnames[i] = ("Trial " + strconv.Itoa(i))
 					}
 					stepstemp, _ := strconv.ParseInt(steps, 10, 32)
-					sc.trialslist.trialnumsteps[i] = int(stepstemp)
+					sc.trialslist.trialnumsteps[i] = int32(stepstemp)
 					for k := 1; k <= sc.trialslist.trialnumsteps[i]; k++ {
 						if sc.trialslist.trialsteps[i][k], ok, _ = is.getText("trial.line" + strconv.Itoa(k) + ".text"); !ok {
 							sc.trialslist.trialsteps[i][k] = ""

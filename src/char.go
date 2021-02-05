@@ -560,6 +560,8 @@ type HitDef struct {
 	guardpoints                int32
 	redlife                    int32
 	score                      [2]float32
+	currenttrialstep           int32
+	//currenttrial			   int32
 }
 
 func (hd *HitDef) clear() {
@@ -603,38 +605,39 @@ func (hd *HitDef) testAttr(attr int32) bool {
 
 type GetHitVar struct {
 	hitBy [][2]int32
-	//hit1           [2]int32
-	//hit2           [2]int32
-	attr           int32
-	_type          HitType
-	airanimtype    Reaction
-	groundanimtype Reaction
-	airtype        HitType
-	groundtype     HitType
-	damage         int32
-	hitcount       int32
-	fallcount      int32
-	hitshaketime   int32
-	hittime        int32
-	slidetime      int32
-	ctrltime       int32
-	xvel           float32
-	yvel           float32
-	yaccel         float32
-	hitid          int32
-	xoff           float32
-	yoff           float32
-	fall           Fall
-	playerNo       int
-	fallf          bool
-	guarded        bool
-	p2getp1state   bool
-	forcestand     bool
-	id             int32
-	dizzypoints    int32
-	guardpoints    int32
-	redlife        int32
-	score          float32
+	//hit1           	[2]int32
+	//hit2           	[2]int32
+	attr             int32
+	_type            HitType
+	airanimtype      Reaction
+	groundanimtype   Reaction
+	airtype          HitType
+	groundtype       HitType
+	damage           int32
+	hitcount         int32
+	fallcount        int32
+	hitshaketime     int32
+	hittime          int32
+	slidetime        int32
+	ctrltime         int32
+	xvel             float32
+	yvel             float32
+	yaccel           float32
+	hitid            int32
+	xoff             float32
+	yoff             float32
+	fall             Fall
+	playerNo         int
+	fallf            bool
+	guarded          bool
+	p2getp1state     bool
+	forcestand       bool
+	id               int32
+	dizzypoints      int32
+	guardpoints      int32
+	redlife          int32
+	score            float32
+	currenttrialstep int32
 }
 
 func (ghv *GetHitVar) clear() {
@@ -4173,6 +4176,28 @@ func (c *Char) scoreTotal() float32 {
 	s += c.score()
 	return s
 }
+func (c *Char) currentTrial() int32 {
+	if c.teamside == -1 {
+		return 0
+	}
+	return sys.sel.GetChar(sys.sel.selected[0][0][0]).trialslist.currentTrial
+}
+func (c *Char) currenttrialstep() int32 {
+	if c.teamside == -1 {
+		return 0
+	}
+	return sys.sel.GetChar(sys.sel.selected[0][0][0]).trialslist.currenttrialStep
+}
+func (c *Char) currenttrialstepAdd(val int32) {
+	if c.teamside == -1 {
+		return
+	}
+	if val == 0 {
+		sys.sel.GetChar(sys.sel.selected[0][0][0]).trialslist.currenttrialStep = 0
+	} else {
+		sys.sel.GetChar(sys.sel.selected[0][0][0]).trialslist.currenttrialStep += val
+	}
+}
 func (c *Char) consecutiveWins() int32 {
 	if c.teamside == -1 {
 		return 0
@@ -6117,6 +6142,26 @@ func (cl *CharList) clsn(getter *Char, proj bool) {
 				}
 				if !math.IsNaN(float64(hd.score[0])) {
 					c.scoreAdd(hd.score[0])
+				}
+				if sys.gameMode == "trials" && sys.sel.GetChar(sys.sel.selected[0][0][0]).trialslist.trialnames(sys.chars[0][0].currenttrial() <= sys.sel.GetChar(sys.sel.selected[0][0][0]).trialslist.trialnames(sys.chars[0][0].numoftrials() {
+					ct = sys.sel.GetChar(sys.sel.selected[0][0][0]).trialslist.trialnames(sys.chars[0][0].currenttrial()
+					cts = sys.sel.GetChar(sys.sel.selected[0][0][0]).trialslist.trialnames(sys.chars[0][0].currenttrialStep()
+					//if currenttrialstep is greater than number of steps for that trial, reset currenttrialsteps and increment currenttrial
+					if cts > sys.sel.GetChar(sys.sel.selected[0][0][0]).trialslist.trialnames(sys.chars[0][0].trialnumsteps[ct]() && {
+						sys.sel.GetChar(sys.sel.selected[0][0][0]).trialslist.trialnames(sys.chars[0][0].currenttrial += 1
+						c.currenttrialstepAdd(0)
+					// else if combocount is reset, reset currenttrialsteps but do not increment currenttrial
+					} else if xxx {
+						c.currenttrialstepAdd(0)
+					}
+					// else if currenttrialstep is less than number of trial steps, check for success and either increment up or reset
+					} else if xxx {
+						if "you did it!" {
+							c.currenttrialstepAdd(1)
+						} else if "you didnt!" {
+							c.currenttrialstepAdd(0)
+						}
+					}
 				}
 				if getter.player {
 					if !math.IsNaN(float64(hd.score[1])) {
