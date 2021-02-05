@@ -2557,11 +2557,16 @@ func (to *LifeBarTrialsOverlay) step() {
 	to.success.Action()
 }
 func (to *LifeBarTrialsOverlay) reset() {
-
+	to.bg.Reset()
+	to.currentbg.Reset()
+	to.success.Reset()
 }
 func (to *LifeBarTrialsOverlay) bgDraw(layerno int16) {
-	if to.active && sys.chars[0][0].currenttrial() <= sys.sel.GetChar(sys.sel.selected[0][0][0]).trialslist.numoftrials(sys.chars[0][0].currenttrial()) {
+	ct := sys.sel.GetChar(sys.sel.selected[0][0][0]).trialslist.currentTrial
+	if to.active && (ct <= sys.sel.GetChar(sys.sel.selected[0][0][0]).trialslist.numoftrials) {
 		to.bg.DrawScaled(float32(to.pos[0])+sys.lifebarOffsetX, float32(to.pos[1]), layerno, sys.lifebarScale)
+	} else if to.active && (ct > sys.sel.GetChar(sys.sel.selected[0][0][0]).trialslist.numoftrials) {
+		to.success.DrawScaled(float32(to.pos[0])+sys.lifebarOffsetX, float32(to.pos[1]), layerno, sys.lifebarScale)
 	}
 }
 func (to *LifeBarTrialsOverlay) draw(layerno int16, f []*Fnt, ailv float32) {
@@ -2569,10 +2574,13 @@ func (to *LifeBarTrialsOverlay) draw(layerno int16, f []*Fnt, ailv float32) {
 		//total := sys.chars[side][0].scoreTotal()
 		//sys.sel.GetChar(sys.sel.selected[0][0][0]).trialslist.trialnames(sys.chars[0][0].currenttrial())
 		//replace %s with formatted string
-		text = strings.Replace(text, "%s", s[0]+ds+s[1], 1)
-		sc.text.lay.DrawText(float32(sc.pos[0])+sys.lifebarOffsetX, float32(sc.pos[1]), sys.lifebarScale, layerno,
-			text, f[sc.text.font[0]], sc.text.font[1], sc.text.font[2], sc.text.palfx, sc.text.frgba)
-		sc.top.DrawScaled(float32(sc.pos[0])+sys.lifebarOffsetX, float32(sc.pos[1]), layerno, sys.lifebarScale)
+		//text = strings.Replace(text, "%s", s[0]+ds+s[1], 1)
+		ct := sys.sel.GetChar(sys.sel.selected[0][0][0]).trialslist.currentTrial
+		for i := int32(1); i < sys.sel.GetChar(sys.sel.selected[0][0][0]).trialslist.trialnumsteps[ct]; i++ {
+			to.text.lay.DrawText(float32(to.pos[0])+sys.lifebarOffsetX+float32(to.spacing[0]*(i-1)), float32(to.pos[1])+float32(to.spacing[1]*(i-1)), sys.lifebarScale, layerno,
+				sys.sel.GetChar(sys.sel.selected[0][0][0]).trialslist.trialsteps[ct][i], f[to.text.font[0]], to.text.font[1], to.text.font[2], to.text.palfx, to.text.frgba)
+		}
+		//sc.top.DrawScaled(float32(sc.pos[0])+sys.lifebarOffsetX, float32(sc.pos[1]), layerno, sys.lifebarScale)
 	}
 }
 
