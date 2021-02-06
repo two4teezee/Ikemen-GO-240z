@@ -1873,6 +1873,8 @@ func (c *Char) load(def string) error {
 							}
 							stepstemp, _ := strconv.ParseInt(steps, 10, 32)
 							gi.trialslist.numoftrials = int32(stepstemp)
+							gi.trialslist.trialnumsteps = make([]int32, gi.trialslist.numoftrials)
+							gi.trialslist.trialnames = make([]string, gi.trialslist.numoftrials)
 							gi.trialslist.trialsteps = make([][]string, gi.trialslist.numoftrials)
 							gi.trialslist.trialglyphs = make([][]string, gi.trialslist.numoftrials)
 							gi.trialslist.trialstateno = make([][]string, gi.trialslist.numoftrials)
@@ -1882,12 +1884,12 @@ func (c *Char) load(def string) error {
 								break
 							}
 							if is["trial.name"] != "" {
-								gi.trialslist.trialnames = append(gi.trialslist.trialnames, is["trial.name"])
+								gi.trialslist.trialnames[ii] = is["trial.name"]
 							} else {
-								gi.trialslist.trialnames = append(gi.trialslist.trialnames, ("Trial " + strconv.Itoa(ii+1)))
+								gi.trialslist.trialnames[ii] = ("Trial " + strconv.Itoa(ii+1))
 							}
 							stepstemp, _ := strconv.ParseInt(steps, 10, 32)
-							gi.trialslist.trialnumsteps = append(gi.trialslist.trialnumsteps, int32(stepstemp))
+							gi.trialslist.trialnumsteps[ii] = int32(stepstemp)
 							texttemp := make([]string, gi.trialslist.trialnumsteps[ii])
 							glyphstemp := make([]string, gi.trialslist.trialnumsteps[ii])
 							statetemp := make([]string, gi.trialslist.trialnumsteps[ii])
