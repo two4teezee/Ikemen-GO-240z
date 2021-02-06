@@ -2272,18 +2272,6 @@ func (wm wincntMap) getLevel(p int) int32 {
 	return wm.getItem(sys.cgi[p].def)[sys.cgi[p].palno-1]
 }
 
-type ParsedTrials struct {
-	trialnames       []string
-	numoftrials      int32
-	currentTrial     int32
-	currenttrialStep int32
-	trialnumsteps    []int32
-	trialsteps       [][]string
-	trialglyphs      [][]string
-	trialstateno     [][]string
-	trialanimno      [][]string
-}
-
 type SelectChar struct {
 	def            string
 	name           string
@@ -2295,7 +2283,6 @@ type SelectChar struct {
 	intro          string
 	ending         string
 	arcadepath     string
-	trialslist     ParsedTrials
 	ratiopath      string
 	movelist       string
 	pal            []int32
@@ -2410,7 +2397,6 @@ func (s *Select) addChar(def string) {
 	sc.def = def
 	lines, i, info, files, keymap, arcade := SplitAndTrim(str, "\n"), 0, true, true, true, true
 	var movelist string
-	var trials string
 	for i < len(lines) {
 		is, name, subname := ReadIniSection(lines, &i)
 		switch name {
@@ -2443,7 +2429,6 @@ func (s *Select) addChar(def string) {
 					}
 				}
 				movelist = is["movelist"]
-				trials = is["trialslist"]
 			}
 		case "palette ":
 			if keymap &&
@@ -2516,51 +2501,6 @@ func (s *Select) addChar(def string) {
 			sc.movelist, _ = LoadText(file)
 			return nil
 		})
-	}
-	if len(trials) > 0 {
-		LoadFile(&trials, def, func(file string) error {
-			trials, _ = LoadText(file)
-			return nil
-		})
-		// Parse trials -- refer to trials.lua for sample trials file
-		var triallines []string
-		triallines = SplitAndTrim(trials, "\n")
-		sc.trialslist.numoftrials = 0
-		sc.trialslist.currentTrial = 1
-		sc.trialslist.currenttrialStep = 1
-		for i := 1; i <= len(triallines); i++ {
-			is, name, _ := ReadIniSection(triallines, &i)
-			switch name {
-			case ("trial " + strconv.Itoa(i) + " def"):
-				if int32(i) == sc.trialslist.numoftrials+1 {
-					sc.trialslist.numoftrials++
-					var ok bool
-					var steps string
-					if steps, ok, _ = is.getText("trial.steps"); !ok {
-						break
-					}
-					if sc.trialslist.trialnames[i], ok, _ = is.getText("trial.name"); !ok {
-						sc.trialslist.trialnames[i] = ("Trial " + strconv.Itoa(i))
-					}
-					stepstemp, _ := strconv.ParseInt(steps, 10, 32)
-					sc.trialslist.trialnumsteps[i] = int32(stepstemp)
-					for k := 1; k <= int(sc.trialslist.trialnumsteps[i]); k++ {
-						if sc.trialslist.trialsteps[i][k], ok, _ = is.getText("trial.line" + strconv.Itoa(k) + ".text"); !ok {
-							sc.trialslist.trialsteps[i][k] = ""
-						}
-						if sc.trialslist.trialglyphs[i][k], ok, _ = is.getText("trial.line" + strconv.Itoa(k) + ".glyph"); !ok {
-							sc.trialslist.trialglyphs[i][k] = ""
-						}
-						if sc.trialslist.trialstateno[i][k], ok, _ = is.getText("trial.line" + strconv.Itoa(k) + ".stateno"); !ok {
-							break //sc.trialslist.trialstateno[i][k] = ""
-						}
-						if sc.trialslist.trialanimno[i][k], ok, _ = is.getText("trial.line" + strconv.Itoa(k) + ".anim"); !ok {
-							sc.trialslist.trialanimno[i][k] = ""
-						}
-					}
-				}
-			}
-		}
 	}
 }
 func (s *Select) AddStage(def string) error {

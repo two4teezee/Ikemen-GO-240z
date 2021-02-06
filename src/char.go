@@ -5,6 +5,7 @@ import (
 	"io"
 	"math"
 	"os"
+	"strconv"
 	"strings"
 	"unsafe"
 
@@ -1425,6 +1426,18 @@ const (
 	PC_Cancel
 )
 
+type ParsedTrials struct {
+	trialnames       []string
+	numoftrials      int32
+	currentTrial     int32
+	currenttrialStep int32
+	trialnumsteps    []int32
+	trialsteps       [][]string
+	trialglyphs      [][]string
+	trialstateno     [][]string
+	trialanimno      [][]string
+}
+
 type CharGlobalInfo struct {
 	def              string
 	displayname      string
@@ -1454,6 +1467,7 @@ type CharGlobalInfo struct {
 	constants        map[string]float32
 	remapPreset      map[string]RemapPreset
 	remappedpal      [2]int32
+	trialslist       ParsedTrials
 }
 
 func (cgi *CharGlobalInfo) clearPCTime() {
@@ -1800,6 +1814,7 @@ func (c *Char) load(def string) error {
 	c.localcoord = int32(320 / (float32(sys.gameWidth) / 320))
 	c.localscl = 320 / float32(c.localcoord)
 	gi.portraitscale = 1
+	var trialslist string
 	for i < len(lines) {
 		is, name, subname := ReadIniSection(lines, &i)
 		switch name {
@@ -1832,6 +1847,68 @@ func (c *Char) load(def string) error {
 				anim, sound = is["anim"], is["sound"]
 				for i := range gi.pal {
 					gi.pal[i] = is[fmt.Sprintf("pal%v", i+1)]
+				}
+				trialslist = is["trialslist"]
+				if len(trialslist) > 0 {
+					var trials string
+					LoadFile(&trialslist, def, func(file string) error {
+						trials, _ = LoadText(file)
+						return nil
+					})
+					// Parse trials -- refer to trials.lua for sample trials file
+					var triallines []string
+					triallines = SplitAndTrim(trials, "\n")
+					gi.trialslist.numoftrials = 0
+					gi.trialslist.currentTrial = 1
+					gi.trialslist.currenttrialStep = 1
+					ii := 0
+					for i := 0; i < len(triallines); i++ {
+						is, name, _ := ReadIniSection(triallines, &i)
+						var steps string
+						var ok bool
+						switch name {
+						case "trialinfo":
+							if steps, ok = is.getString("numoftrials"); !ok {
+								break
+							}
+							stepstemp, _ := strconv.ParseInt(steps, 10, 32)
+							gi.trialslist.numoftrials = int32(stepstemp)
+							gi.trialslist.trialsteps = make([][]string, gi.trialslist.numoftrials)
+							gi.trialslist.trialglyphs = make([][]string, gi.trialslist.numoftrials)
+							gi.trialslist.trialstateno = make([][]string, gi.trialslist.numoftrials)
+							gi.trialslist.trialanimno = make([][]string, gi.trialslist.numoftrials)
+						case "trialdef":
+							if steps, ok = is.getString("trial.steps"); !ok {
+								break
+							}
+							if is["trial.name"] != "" {
+								gi.trialslist.trialnames = append(gi.trialslist.trialnames, is["trial.name"])
+							} else {
+								gi.trialslist.trialnames = append(gi.trialslist.trialnames, ("Trial " + strconv.Itoa(ii+1)))
+							}
+							stepstemp, _ := strconv.ParseInt(steps, 10, 32)
+							gi.trialslist.trialnumsteps = append(gi.trialslist.trialnumsteps, int32(stepstemp))
+							texttemp := make([]string, gi.trialslist.trialnumsteps[ii])
+							glyphstemp := make([]string, gi.trialslist.trialnumsteps[ii])
+							statetemp := make([]string, gi.trialslist.trialnumsteps[ii])
+							animtemp := make([]string, gi.trialslist.trialnumsteps[ii])
+							for k := 0; k < int(gi.trialslist.trialnumsteps[ii]); k++ {
+								texttemp[k] = is[("trial.line" + strconv.Itoa(k+1) + ".text")]
+								glyphstemp[k] = is[("trial.line" + strconv.Itoa(k+1) + ".glyphs")]
+								if is[("trial.line"+strconv.Itoa(k+1)+".stateno")] != "" {
+									statetemp[k] = is[("trial.line" + strconv.Itoa(k+1) + ".stateno")]
+								} else {
+									break //sc.trialslist.trialstateno[i][k] = ""
+								}
+								animtemp[k] = is[("trial.line" + strconv.Itoa(k+1) + ".anim")]
+							}
+							gi.trialslist.trialsteps[ii] = texttemp
+							gi.trialslist.trialglyphs[ii] = glyphstemp
+							gi.trialslist.trialstateno[ii] = statetemp
+							gi.trialslist.trialanimno[ii] = animtemp
+							ii++
+						}
+					}
 				}
 			}
 		case "palette ":
@@ -4180,22 +4257,22 @@ func (c *Char) currentTrial() int32 {
 	if c.teamside == -1 {
 		return 0
 	}
-	return sys.sel.GetChar(sys.sel.selected[0][0][0]).trialslist.currentTrial
+	return sys.cgi[0].trialslist.currentTrial
 }
 func (c *Char) currenttrialstep() int32 {
 	if c.teamside == -1 {
 		return 0
 	}
-	return sys.sel.GetChar(sys.sel.selected[0][0][0]).trialslist.currenttrialStep
+	return sys.cgi[0].trialslist.currenttrialStep
 }
 func (c *Char) currenttrialstepAdd(val int32) {
 	if c.teamside == -1 {
 		return
 	}
 	if val == 0 {
-		sys.sel.GetChar(sys.sel.selected[0][0][0]).trialslist.currenttrialStep = 1
+		sys.cgi[0].trialslist.currenttrialStep = 1
 	} else {
-		sys.sel.GetChar(sys.sel.selected[0][0][0]).trialslist.currenttrialStep++
+		sys.cgi[0].trialslist.currenttrialStep++
 	}
 }
 func (c *Char) consecutiveWins() int32 {
@@ -6143,18 +6220,18 @@ func (cl *CharList) clsn(getter *Char, proj bool) {
 				if !math.IsNaN(float64(hd.score[0])) {
 					c.scoreAdd(hd.score[0])
 				}
-				if sys.gameMode == "trials" && sys.sel.GetChar(sys.sel.selected[0][0][0]).trialslist.currentTrial <= sys.sel.GetChar(sys.sel.selected[0][0][0]).trialslist.numoftrials && sys.sel.GetChar(sys.sel.selected[0][0][0]).trialslist.numoftrials > 0 {
-					ct := sys.sel.GetChar(sys.sel.selected[0][0][0]).trialslist.currentTrial
-					cts := sys.sel.GetChar(sys.sel.selected[0][0][0]).trialslist.currenttrialStep
+				if sys.gameMode == "trials" && sys.cgi[0].trialslist.currentTrial <= sys.cgi[0].trialslist.numoftrials && sys.cgi[0].trialslist.numoftrials > 0 {
+					ct := sys.cgi[0].trialslist.currentTrial
+					cts := sys.cgi[0].trialslist.currenttrialStep
 					//if currenttrialstep is greater than number of steps for that trial, reset currenttrialsteps and increment currenttrial
-					if cts > sys.sel.GetChar(sys.sel.selected[0][0][0]).trialslist.trialnumsteps[ct] {
-						sys.sel.GetChar(sys.sel.selected[0][0][0]).trialslist.currentTrial++
+					if cts > sys.cgi[0].trialslist.trialnumsteps[ct] {
+						sys.cgi[0].trialslist.currentTrial++
 						c.currenttrialstepAdd(0)
 						// else if combocount is reset, reset currenttrialsteps but do not increment currenttrial
 					} else if sys.lifebar.co[c.teamside].combo == 0 {
 						c.currenttrialstepAdd(0)
 						// else if currenttrialstep is less than number of trial steps, check for success and either increment up or reset
-					} else if cts <= sys.sel.GetChar(sys.sel.selected[0][0][0]).trialslist.trialnumsteps[ct] && sys.lifebar.co[c.teamside].combo > 0 {
+					} else if cts <= sys.cgi[0].trialslist.trialnumsteps[ct] && sys.lifebar.co[c.teamside].combo > 0 {
 						//if sys.sel.GetChar(sys.sel.selected[0][0][0]).trialslist.trialstateno[ct][cts] == hd.p1stateno {
 						//	if !math.IsNaN(float64(sys.sel.GetChar(sys.sel.selected[0][0][0]).trialslist.trialanimno[ct][cts])) {
 						//		if sys.sel.GetChar(sys.sel.selected[0][0][0]).trialslist.trialanimno[ct][cts] == c.anim {
@@ -6166,8 +6243,8 @@ func (cl *CharList) clsn(getter *Char, proj bool) {
 						//c.currenttrialstepAdd(1)
 						//	}
 						// one hit trial...
-						if sys.sel.GetChar(sys.sel.selected[0][0][0]).trialslist.currenttrialStep > sys.sel.GetChar(sys.sel.selected[0][0][0]).trialslist.trialnumsteps[ct] {
-							sys.sel.GetChar(sys.sel.selected[0][0][0]).trialslist.currentTrial++
+						if sys.cgi[0].trialslist.currenttrialStep > sys.cgi[0].trialslist.trialnumsteps[ct] {
+							sys.cgi[0].trialslist.currentTrial++
 							c.currenttrialstepAdd(0)
 						} else {
 							c.currenttrialstepAdd(0)
