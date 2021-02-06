@@ -2533,7 +2533,7 @@ func (s *Select) addChar(def string) {
 			switch name {
 			case ("trial " + strconv.Itoa(i) + " def"):
 				if int32(i) == sc.trialslist.numoftrials+1 {
-					sc.trialslist.numoftrials += 1
+					sc.trialslist.numoftrials++
 					var ok bool
 					var steps string
 					if steps, ok, _ = is.getText("trial.steps"); !ok {
@@ -2544,7 +2544,7 @@ func (s *Select) addChar(def string) {
 					}
 					stepstemp, _ := strconv.ParseInt(steps, 10, 32)
 					sc.trialslist.trialnumsteps[i] = int32(stepstemp)
-					for k := 1; k <= sc.trialslist.trialnumsteps[i]; k++ {
+					for k := 1; k <= int(sc.trialslist.trialnumsteps[i]); k++ {
 						if sc.trialslist.trialsteps[i][k], ok, _ = is.getText("trial.line" + strconv.Itoa(k) + ".text"); !ok {
 							sc.trialslist.trialsteps[i][k] = ""
 						}

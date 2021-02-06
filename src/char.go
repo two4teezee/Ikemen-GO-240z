@@ -4193,9 +4193,9 @@ func (c *Char) currenttrialstepAdd(val int32) {
 		return
 	}
 	if val == 0 {
-		sys.sel.GetChar(sys.sel.selected[0][0][0]).trialslist.currenttrialStep = 0
+		sys.sel.GetChar(sys.sel.selected[0][0][0]).trialslist.currenttrialStep = 1
 	} else {
-		sys.sel.GetChar(sys.sel.selected[0][0][0]).trialslist.currenttrialStep += val
+		sys.sel.GetChar(sys.sel.selected[0][0][0]).trialslist.currenttrialStep++
 	}
 }
 func (c *Char) consecutiveWins() int32 {
@@ -6143,34 +6143,32 @@ func (cl *CharList) clsn(getter *Char, proj bool) {
 				if !math.IsNaN(float64(hd.score[0])) {
 					c.scoreAdd(hd.score[0])
 				}
-				if sys.gameMode == "trials" && sys.sel.GetChar(sys.sel.selected[0][0][0]).trialslist.currentTrial <= sys.sel.GetChar(sys.sel.selected[0][0][0]).trialslist.numoftrials {
-					ct = sys.sel.GetChar(sys.sel.selected[0][0][0]).trialslist.currentTrial
-					cts = sys.sel.GetChar(sys.sel.selected[0][0][0]).trialslist.currenttrialStep
+				if sys.gameMode == "trials" && sys.sel.GetChar(sys.sel.selected[0][0][0]).trialslist.currentTrial <= sys.sel.GetChar(sys.sel.selected[0][0][0]).trialslist.numoftrials && sys.sel.GetChar(sys.sel.selected[0][0][0]).trialslist.numoftrials > 0 {
+					ct := sys.sel.GetChar(sys.sel.selected[0][0][0]).trialslist.currentTrial
+					cts := sys.sel.GetChar(sys.sel.selected[0][0][0]).trialslist.currenttrialStep
 					//if currenttrialstep is greater than number of steps for that trial, reset currenttrialsteps and increment currenttrial
 					if cts > sys.sel.GetChar(sys.sel.selected[0][0][0]).trialslist.trialnumsteps[ct] {
-						sys.sel.GetChar(sys.sel.selected[0][0][0]).trialslist.currenttrial += 1
+						sys.sel.GetChar(sys.sel.selected[0][0][0]).trialslist.currentTrial++
 						c.currenttrialstepAdd(0)
-					// else if combocount is reset, reset currenttrialsteps but do not increment currenttrial
+						// else if combocount is reset, reset currenttrialsteps but do not increment currenttrial
 					} else if sys.lifebar.co[c.teamside].combo == 0 {
 						c.currenttrialstepAdd(0)
-					}
-					// else if currenttrialstep is less than number of trial steps, check for success and either increment up or reset
+						// else if currenttrialstep is less than number of trial steps, check for success and either increment up or reset
 					} else if cts <= sys.sel.GetChar(sys.sel.selected[0][0][0]).trialslist.trialnumsteps[ct] && sys.lifebar.co[c.teamside].combo > 0 {
-						if sys.sel.GetChar(sys.sel.selected[0][0][0]).trialslist.trialstateno[ct][cts] == hd.p1stateno {
-							if !math.IsNaN(float64(anno)) {
-								if sys.sel.GetChar(sys.sel.selected[0][0][0]).trialslist.trialanimno[ct][cts] == c.anim {
-									c.currenttrialstepAdd(1)
-								} else {
-									c.currenttrialstepAdd(0)
-								}
-							} else {
-								c.currenttrialstepAdd(1)
-							}
-							// one hit trial...
-							if sys.sel.GetChar(sys.sel.selected[0][0][0]).trialslist.currenttrialStep > sys.sel.GetChar(sys.sel.selected[0][0][0]).trialslist.trialnumsteps[ct] {
-								sys.sel.GetChar(sys.sel.selected[0][0][0]).trialslist.currenttrial += 1
-								c.currenttrialstepAdd(0)
-							}
+						//if sys.sel.GetChar(sys.sel.selected[0][0][0]).trialslist.trialstateno[ct][cts] == hd.p1stateno {
+						//	if !math.IsNaN(float64(sys.sel.GetChar(sys.sel.selected[0][0][0]).trialslist.trialanimno[ct][cts])) {
+						//		if sys.sel.GetChar(sys.sel.selected[0][0][0]).trialslist.trialanimno[ct][cts] == c.anim {
+						//			c.currenttrialstepAdd(1)
+						//		} else {
+						//			c.currenttrialstepAdd(0)
+						//		}
+						//	} else {
+						//c.currenttrialstepAdd(1)
+						//	}
+						// one hit trial...
+						if sys.sel.GetChar(sys.sel.selected[0][0][0]).trialslist.currenttrialStep > sys.sel.GetChar(sys.sel.selected[0][0][0]).trialslist.trialnumsteps[ct] {
+							sys.sel.GetChar(sys.sel.selected[0][0][0]).trialslist.currentTrial++
+							c.currenttrialstepAdd(0)
 						} else {
 							c.currenttrialstepAdd(0)
 						}
