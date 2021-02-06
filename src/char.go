@@ -1860,10 +1860,11 @@ func (c *Char) load(def string) error {
 					triallines = SplitAndTrim(trials, "\n")
 					gi.trialslist.numoftrials = 0
 					gi.trialslist.currentTrial = 1
-					gi.trialslist.currenttrialStep = 1
+					gi.trialslist.currenttrialStep = 0
 					ii := 0
-					for i := 0; i < len(triallines); i++ {
-						is, name, _ := ReadIniSection(triallines, &i)
+					j := 0
+					for j < len(triallines) {
+						is, name, _ := ReadIniSection(triallines, &j)
 						var steps string
 						var ok bool
 						switch name {
