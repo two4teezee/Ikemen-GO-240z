@@ -369,6 +369,7 @@ function start.f_setRounds(roundTime, t_rounds)
 	end
 	setLifebarTimer(timer)
 	setLifebarScore(t_score[1], t_score[2])
+	--setLifebarTrials(1)
 end
 
 --save data between matches

@@ -2181,7 +2181,7 @@ function main.f_default()
 		p2ai = false,
 		p2score = false,
 		timer = false,
-		trials = true,
+		trials = false,
 	}
 	main.luaPath = 'external/script/default.lua' --path to script executed by start.f_selectMode()
 	main.makeRoster = false --if default roster for each match should be generated before first match
@@ -2774,11 +2774,11 @@ main.t_itemname = {
 		main.roundTime = -1
 		main.selectMenu[2] = true
 		main.stageMenu = true
-		main.teamMenu[1].ratio = true
-		main.teamMenu[1].simul = true
+		main.teamMenu[1].ratio = false
+		main.teamMenu[1].simul = false
 		main.teamMenu[1].single = true
-		main.teamMenu[1].tag = true
-		main.teamMenu[1].turns = true
+		main.teamMenu[1].tag = false
+		main.teamMenu[1].turns = false
 		main.teamMenu[2].single = true
 		main.txt_mainSelect:update({text = motif.select_info.title_trials_text})
 		--main.luaPath = 'external/script/trials.lua'

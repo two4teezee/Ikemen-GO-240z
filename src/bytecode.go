@@ -1844,6 +1844,8 @@ func (be BytecodeExp) run_ex(c *Char, i *int, oc *Char) {
 		sys.bcStack.PushI(timeTotal())
 	case OC_ex_currenttrial:
 		sys.bcStack.PushI(c.currentTrial())
+	case OC_ex_currenttrialstep:
+		sys.bcStack.PushI(c.currenttrialstep())
 	default:
 		sys.errLog.Printf("%v\n", be[*i-1])
 		c.panic()

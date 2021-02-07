@@ -1434,8 +1434,8 @@ type ParsedTrials struct {
 	trialnumsteps    []int32
 	trialsteps       [][]string
 	trialglyphs      [][]string
-	trialstateno     [][]string
-	trialanimno      [][]string
+	trialstateno     [][]int32
+	trialanimno      [][]int32
 }
 
 type CharGlobalInfo struct {
@@ -1878,8 +1878,8 @@ func (c *Char) load(def string) error {
 							gi.trialslist.trialnames = make([]string, gi.trialslist.numoftrials)
 							gi.trialslist.trialsteps = make([][]string, gi.trialslist.numoftrials)
 							gi.trialslist.trialglyphs = make([][]string, gi.trialslist.numoftrials)
-							gi.trialslist.trialstateno = make([][]string, gi.trialslist.numoftrials)
-							gi.trialslist.trialanimno = make([][]string, gi.trialslist.numoftrials)
+							gi.trialslist.trialstateno = make([][]int32, gi.trialslist.numoftrials)
+							gi.trialslist.trialanimno = make([][]int32, gi.trialslist.numoftrials)
 						case "trialdef":
 							if steps, ok = is.getString("trial.steps"); !ok {
 								break
@@ -1893,17 +1893,23 @@ func (c *Char) load(def string) error {
 							gi.trialslist.trialnumsteps[ii] = int32(stepstemp)
 							texttemp := make([]string, gi.trialslist.trialnumsteps[ii])
 							glyphstemp := make([]string, gi.trialslist.trialnumsteps[ii])
-							statetemp := make([]string, gi.trialslist.trialnumsteps[ii])
-							animtemp := make([]string, gi.trialslist.trialnumsteps[ii])
+							statetemp := make([]int32, gi.trialslist.trialnumsteps[ii])
+							animtemp := make([]int32, gi.trialslist.trialnumsteps[ii])
 							for k := 0; k < int(gi.trialslist.trialnumsteps[ii]); k++ {
 								texttemp[k] = is[("trial.line" + strconv.Itoa(k+1) + ".text")]
 								glyphstemp[k] = is[("trial.line" + strconv.Itoa(k+1) + ".glyphs")]
 								if is[("trial.line"+strconv.Itoa(k+1)+".stateno")] != "" {
-									statetemp[k] = is[("trial.line" + strconv.Itoa(k+1) + ".stateno")]
+									temp, _ := strconv.ParseInt(is[("trial.line"+strconv.Itoa(k+1)+".stateno")], 10, 32)
+									statetemp[k] = int32(temp)
 								} else {
 									break //sc.trialslist.trialstateno[i][k] = ""
 								}
-								animtemp[k] = is[("trial.line" + strconv.Itoa(k+1) + ".anim")]
+								if is[("trial.line"+strconv.Itoa(k+1)+".anim")] != "" {
+									temp, _ := strconv.ParseInt(is[("trial.line"+strconv.Itoa(k+1)+".anim")], 10, 32)
+									animtemp[k] = int32(temp)
+								} else {
+									animtemp[k] = int32(math.NaN())
+								}
 							}
 							gi.trialslist.trialsteps[ii] = texttemp
 							gi.trialslist.trialglyphs[ii] = glyphstemp
@@ -3204,6 +3210,9 @@ func (c *Char) changeStateEx(no int32, pn int, anim, ctrl int32, ffx bool) {
 }
 func (c *Char) changeState(no, anim, ctrl int32, ffx bool) {
 	c.changeStateEx(no, c.ss.sb.playerNo, anim, ctrl, ffx)
+	if sys.gameMode == "trials" {
+		c.TrialsChecker(no, anim)
+	}
 }
 func (c *Char) selfState(no, anim, readplayerid, ctrl int32, ffx bool) {
 	var playerno int
@@ -3776,6 +3785,38 @@ func (c *Char) fvarGet(i int32) BytecodeValue {
 	sys.appendToConsole(c.warn() + fmt.Sprintf("fvar index %v out of range", i))
 	return BytecodeSF()
 }
+func (c *Char) TrialsChecker(no int32, anim int32) {
+	if sys.cgi[0].trialslist.currentTrial <= sys.cgi[0].trialslist.numoftrials && sys.cgi[0].trialslist.numoftrials > 0 {
+		//if currenttrialstep is greater than number of steps for that trial, reset currenttrialsteps and increment currenttrial
+		if sys.cgi[0].trialslist.currenttrialStep == sys.cgi[0].trialslist.trialnumsteps[sys.cgi[0].trialslist.currentTrial-1] {
+			sys.cgi[0].trialslist.currentTrial++
+			c.currenttrialstepAdd(0)
+			// else if combocount is reset, reset currenttrialsteps but do not increment currenttrial
+		} else if sys.cgi[0].trialslist.currenttrialStep > 0 && sys.lifebar.co[c.teamside].combo == 0 {
+			c.currenttrialstepAdd(0)
+			// else if currenttrialstep is less than number of trial steps, check for success and either increment up or reset
+		} else if sys.cgi[0].trialslist.currenttrialStep < sys.cgi[0].trialslist.trialnumsteps[sys.cgi[0].trialslist.currentTrial-1] {
+			// if stateno's match
+			if sys.cgi[0].trialslist.trialstateno[sys.cgi[0].trialslist.currentTrial-1][sys.cgi[0].trialslist.currenttrialStep] == no {
+				// check if animno was provide and if so, check whether they match
+				if sys.cgi[0].trialslist.trialanimno[sys.cgi[0].trialslist.currentTrial-1][sys.cgi[0].trialslist.currenttrialStep] != -2147483648 {
+					if sys.cgi[0].trialslist.trialanimno[sys.cgi[0].trialslist.currentTrial-1][sys.cgi[0].trialslist.currenttrialStep] == anim {
+						c.currenttrialstepAdd(1)
+					} else {
+						c.currenttrialstepAdd(0)
+					}
+				} else {
+					c.currenttrialstepAdd(1)
+				}
+			}
+			// Trial is now complete
+			if sys.cgi[0].trialslist.currenttrialStep == sys.cgi[0].trialslist.trialnumsteps[sys.cgi[0].trialslist.currentTrial-1] {
+				sys.cgi[0].trialslist.currentTrial++
+				c.currenttrialstepAdd(0)
+			}
+		}
+	}
+}
 func (c *Char) sysVarGet(i int32) BytecodeValue {
 	if i >= 0 && i < int32(NumSysVar) {
 		return BytecodeInt(c.ivar[i+int32(NumVar)])
@@ -4273,7 +4314,7 @@ func (c *Char) currenttrialstepAdd(val int32) {
 		return
 	}
 	if val == 0 {
-		sys.cgi[0].trialslist.currenttrialStep = 1
+		sys.cgi[0].trialslist.currenttrialStep = 0
 	} else {
 		sys.cgi[0].trialslist.currenttrialStep++
 	}
@@ -6222,37 +6263,6 @@ func (cl *CharList) clsn(getter *Char, proj bool) {
 				}
 				if !math.IsNaN(float64(hd.score[0])) {
 					c.scoreAdd(hd.score[0])
-				}
-				if sys.gameMode == "trials" && sys.cgi[0].trialslist.currentTrial <= sys.cgi[0].trialslist.numoftrials && sys.cgi[0].trialslist.numoftrials > 0 {
-					ct := sys.cgi[0].trialslist.currentTrial
-					cts := sys.cgi[0].trialslist.currenttrialStep
-					//if currenttrialstep is greater than number of steps for that trial, reset currenttrialsteps and increment currenttrial
-					if cts > sys.cgi[0].trialslist.trialnumsteps[ct] {
-						sys.cgi[0].trialslist.currentTrial++
-						c.currenttrialstepAdd(0)
-						// else if combocount is reset, reset currenttrialsteps but do not increment currenttrial
-					} else if sys.lifebar.co[c.teamside].combo == 0 {
-						c.currenttrialstepAdd(0)
-						// else if currenttrialstep is less than number of trial steps, check for success and either increment up or reset
-					} else if cts <= sys.cgi[0].trialslist.trialnumsteps[ct] && sys.lifebar.co[c.teamside].combo > 0 {
-						//if sys.sel.GetChar(sys.sel.selected[0][0][0]).trialslist.trialstateno[ct][cts] == hd.p1stateno {
-						//	if !math.IsNaN(float64(sys.sel.GetChar(sys.sel.selected[0][0][0]).trialslist.trialanimno[ct][cts])) {
-						//		if sys.sel.GetChar(sys.sel.selected[0][0][0]).trialslist.trialanimno[ct][cts] == c.anim {
-						//			c.currenttrialstepAdd(1)
-						//		} else {
-						//			c.currenttrialstepAdd(0)
-						//		}
-						//	} else {
-						//c.currenttrialstepAdd(1)
-						//	}
-						// one hit trial...
-						if sys.cgi[0].trialslist.currenttrialStep > sys.cgi[0].trialslist.trialnumsteps[ct] {
-							sys.cgi[0].trialslist.currentTrial++
-							c.currenttrialstepAdd(0)
-						} else {
-							c.currenttrialstepAdd(0)
-						}
-					}
 				}
 				if getter.player {
 					if !math.IsNaN(float64(hd.score[1])) {

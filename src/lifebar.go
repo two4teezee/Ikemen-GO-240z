@@ -2537,21 +2537,18 @@ type LifeBarTrialsOverlay struct {
 func newLifeBarTrialsOverlay() *LifeBarTrialsOverlay {
 	return &LifeBarTrialsOverlay{}
 }
-func readLifeBarTrialsOverlay(pre string, is IniSection,
-	sff *Sff, at AnimationTable, f []*Fnt) *LifeBarTrialsOverlay {
+func readLifeBarTrialsOverlay(is IniSection, sff *Sff,
+	at AnimationTable, f []*Fnt) *LifeBarTrialsOverlay {
 	to := newLifeBarTrialsOverlay()
-	is.ReadI32(pre+"pos", &to.pos[0], &to.pos[1])
-	is.ReadI32(pre+"spacing", &to.spacing[0], &to.spacing[1])
-	to.text = *readLbText(pre+"text.", is, "", 0, f, 0)
-	to.bg = *ReadAnimLayout(pre+"bg.", is, sff, at, 0)
-	to.currentbg = *ReadAnimLayout(pre+"currentbg.", is, sff, at, 0)
-	to.success = *ReadAnimLayout(pre+"bg.", is, sff, at, 0)
+	is.ReadI32("pos", &to.pos[0], &to.pos[1])
+	is.ReadI32("spacing", &to.spacing[0], &to.spacing[1])
+	to.text = *readLbText("text.", is, "", 0, f, 0)
+	to.bg = *ReadAnimLayout("bg.", is, sff, at, 0)
+	to.currentbg = *ReadAnimLayout("currentbg.", is, sff, at, 0)
+	to.success = *ReadAnimLayout("bg.", is, sff, at, 0)
 	return to
 }
 func (to *LifeBarTrialsOverlay) step() {
-	if sys.gameMode != "trials" {
-		return
-	}
 	to.bg.Action()
 	to.currentbg.Action()
 	to.success.Action()
@@ -2563,20 +2560,17 @@ func (to *LifeBarTrialsOverlay) reset() {
 }
 func (to *LifeBarTrialsOverlay) bgDraw(layerno int16) {
 	ct := sys.cgi[0].trialslist.currentTrial - 1
-	if to.active && (ct <= sys.cgi[0].trialslist.numoftrials) {
+	if ct < sys.cgi[0].trialslist.numoftrials {
 		to.bg.DrawScaled(float32(to.pos[0])+sys.lifebarOffsetX, float32(to.pos[1]), layerno, sys.lifebarScale)
-	} else if to.active && (ct > sys.cgi[0].trialslist.numoftrials) {
+	} else if ct == sys.cgi[0].trialslist.numoftrials {
 		to.success.DrawScaled(float32(to.pos[0])+sys.lifebarOffsetX, float32(to.pos[1]), layerno, sys.lifebarScale)
 	}
 }
-func (to *LifeBarTrialsOverlay) draw(layerno int16, f []*Fnt, ailv float32) {
-	if to.active { //&& to.text.font[0] >= 0 && int(to.text.font[0]) < len(f) && f[to.text.font[0]] != nil {
-		ct := sys.cgi[0].trialslist.currentTrial - 1
-		for i := int32(0); i < sys.cgi[0].trialslist.trialnumsteps[ct]; i++ {
-			to.text.lay.DrawText(float32(to.pos[0])+sys.lifebarOffsetX+float32(to.spacing[0]*i), float32(to.pos[1])+float32(to.spacing[1]*i), sys.lifebarScale, layerno,
-				sys.cgi[0].trialslist.trialsteps[ct][i], f[to.text.font[0]], to.text.font[1], to.text.font[2], to.text.palfx, to.text.frgba)
-		}
-		//sc.top.DrawScaled(float32(sc.pos[0])+sys.lifebarOffsetX, float32(sc.pos[1]), layerno, sys.lifebarScale)
+func (to *LifeBarTrialsOverlay) draw(layerno int16, f []*Fnt) {
+	ct := sys.cgi[0].trialslist.currentTrial - 1
+	for i := int32(0); i < sys.cgi[0].trialslist.trialnumsteps[ct]; i++ {
+		to.text.lay.DrawText(float32(to.pos[0])+sys.lifebarOffsetX+float32(to.spacing[0]*i), float32(to.pos[1])+float32(to.spacing[1]*i), sys.lifebarScale, layerno,
+			sys.cgi[0].trialslist.trialsteps[ct][i], f[to.text.font[0]], to.text.font[1], to.text.font[2], to.text.palfx, to.text.frgba)
 	}
 }
 
@@ -3126,6 +3120,10 @@ func loadLifebar(deffile string) (*Lifebar, error) {
 		case "mode":
 			if l.mo == nil {
 				l.mo = readLifeBarMode(is, l.sff, l.at, l.fnt[:])
+			}
+		case "trials":
+			if l.to == nil {
+				l.to = readLifeBarTrialsOverlay(is, l.sff, l.at, l.fnt[:])
 			}
 		}
 	}

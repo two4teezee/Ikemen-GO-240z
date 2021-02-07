@@ -249,7 +249,7 @@ function menu.f_init()
 	togglePause(true)
 	main.pauseMenu = true
 	main.f_bgReset(motif.optionbgdef.bg)
-	if gamemode('training') || gamemode('trials') then
+	if gamemode('training') or gamemode('trials') then
 		sndPlay(motif.files.snd_data, motif.training_info.enter_snd[1], motif.training_info.enter_snd[2])
 		main.f_bgReset(motif.trainingbgdef.bg)
 		main.f_fadeReset('fadein', motif.training_info)
