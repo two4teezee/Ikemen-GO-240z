@@ -3213,7 +3213,7 @@ func (c *Char) changeStateEx(no int32, pn int, anim, ctrl int32, ffx bool) {
 }
 func (c *Char) changeState(no, anim, ctrl int32, ffx bool) {
 	c.changeStateEx(no, c.ss.sb.playerNo, anim, ctrl, ffx)
-	if sys.gameMode == "trials" && sys.cgi[0].trialslist.trialspresent {
+	if sys.gameMode == "trials" && sys.cgi[0].trialslist.trialspresent { //&& c.hitdefContact
 		c.TrialsChecker(no, anim)
 	}
 }
