@@ -1427,6 +1427,7 @@ const (
 )
 
 type ParsedTrials struct {
+	trialspresent    bool
 	trialnames       []string
 	numoftrials      int32
 	currentTrial     int32
@@ -1815,6 +1816,7 @@ func (c *Char) load(def string) error {
 	c.localscl = 320 / float32(c.localcoord)
 	gi.portraitscale = 1
 	var trialslist string
+	gi.trialslist.trialspresent = false
 	for i < len(lines) {
 		is, name, subname := ReadIniSection(lines, &i)
 		switch name {
@@ -1918,6 +1920,7 @@ func (c *Char) load(def string) error {
 							ii++
 						}
 					}
+					gi.trialslist.trialspresent = true
 				}
 			}
 		case "palette ":
@@ -3210,7 +3213,7 @@ func (c *Char) changeStateEx(no int32, pn int, anim, ctrl int32, ffx bool) {
 }
 func (c *Char) changeState(no, anim, ctrl int32, ffx bool) {
 	c.changeStateEx(no, c.ss.sb.playerNo, anim, ctrl, ffx)
-	if sys.gameMode == "trials" {
+	if sys.gameMode == "trials" && sys.cgi[0].trialslist.trialspresent {
 		c.TrialsChecker(no, anim)
 	}
 }

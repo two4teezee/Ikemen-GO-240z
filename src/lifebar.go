@@ -2559,18 +2559,22 @@ func (to *LifeBarTrialsOverlay) reset() {
 	to.success.Reset()
 }
 func (to *LifeBarTrialsOverlay) bgDraw(layerno int16) {
-	ct := sys.cgi[0].trialslist.currentTrial - 1
-	if ct < sys.cgi[0].trialslist.numoftrials {
-		to.bg.DrawScaled(float32(to.pos[0])+sys.lifebarOffsetX, float32(to.pos[1]), layerno, sys.lifebarScale)
-	} else if ct == sys.cgi[0].trialslist.numoftrials {
-		to.success.DrawScaled(float32(to.pos[0])+sys.lifebarOffsetX, float32(to.pos[1]), layerno, sys.lifebarScale)
+	if to.active && sys.cgi[0].trialslist.trialspresent {
+		ct := sys.cgi[0].trialslist.currentTrial - 1
+		if ct < sys.cgi[0].trialslist.numoftrials {
+			to.bg.DrawScaled(float32(to.pos[0])+sys.lifebarOffsetX, float32(to.pos[1]), layerno, sys.lifebarScale)
+		} else if ct == sys.cgi[0].trialslist.numoftrials {
+			to.success.DrawScaled(float32(to.pos[0])+sys.lifebarOffsetX, float32(to.pos[1]), layerno, sys.lifebarScale)
+		}
 	}
 }
 func (to *LifeBarTrialsOverlay) draw(layerno int16, f []*Fnt) {
-	ct := sys.cgi[0].trialslist.currentTrial - 1
-	for i := int32(0); i < sys.cgi[0].trialslist.trialnumsteps[ct]; i++ {
-		to.text.lay.DrawText(float32(to.pos[0])+sys.lifebarOffsetX+float32(to.spacing[0]*i), float32(to.pos[1])+float32(to.spacing[1]*i), sys.lifebarScale, layerno,
-			sys.cgi[0].trialslist.trialsteps[ct][i], f[to.text.font[0]], to.text.font[1], to.text.font[2], to.text.palfx, to.text.frgba)
+	if to.active && sys.cgi[0].trialslist.trialspresent {
+		ct := sys.cgi[0].trialslist.currentTrial - 1
+		for i := int32(0); i < sys.cgi[0].trialslist.trialnumsteps[ct]; i++ {
+			to.text.lay.DrawText(float32(to.pos[0])+sys.lifebarOffsetX+float32(to.spacing[0]*i), float32(to.pos[1])+float32(to.spacing[1]*i), sys.lifebarScale, layerno,
+				sys.cgi[0].trialslist.trialsteps[ct][i], f[to.text.font[0]], to.text.font[1], to.text.font[2], to.text.palfx, to.text.frgba)
+		}
 	}
 }
 
@@ -3322,6 +3326,8 @@ func (l *Lifebar) step() {
 	for i := range l.ai {
 		l.ai[i].step()
 	}
+	//LifeBarTrials
+	l.to.step()
 	//LifeBarMode
 	if _, ok := l.mo[sys.gameMode]; ok {
 		l.mo[sys.gameMode].step()
@@ -3396,6 +3402,7 @@ func (l *Lifebar) reset() {
 		l.wi[i].reset()
 	}
 	l.ti.reset()
+	l.to.reset()
 	for i := range l.co {
 		l.co[i].reset()
 	}
@@ -3531,6 +3538,9 @@ func (l *Lifebar) draw(layerno int16) {
 			//LifeBarTimer
 			l.tr.bgDraw(layerno)
 			l.tr.draw(layerno, l.fnt[:])
+			//LifeBarTimer
+			l.to.bgDraw(layerno)
+			l.to.draw(layerno, l.fnt[:])
 			//LifeBarScore
 			for i := range l.sc {
 				l.sc[i].bgDraw(layerno)
