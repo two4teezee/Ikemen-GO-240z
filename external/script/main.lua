@@ -2781,7 +2781,7 @@ main.t_itemname = {
 		main.teamMenu[1].turns = false
 		main.teamMenu[2].single = true
 		main.txt_mainSelect:update({text = motif.select_info.title_trials_text})
-		--main.luaPath = 'external/script/trials.lua'
+		main.luaPath = 'external/script/trials.lua'
 		setGameMode('trials')
 		return start.f_selectMode
 	end,

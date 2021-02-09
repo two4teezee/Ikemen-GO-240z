@@ -3213,9 +3213,6 @@ func (c *Char) changeStateEx(no int32, pn int, anim, ctrl int32, ffx bool) {
 }
 func (c *Char) changeState(no, anim, ctrl int32, ffx bool) {
 	c.changeStateEx(no, c.ss.sb.playerNo, anim, ctrl, ffx)
-	if sys.gameMode == "trials" && sys.cgi[0].trialslist.trialspresent { //&& c.hitdefContact
-		c.TrialsChecker(no, anim)
-	}
 }
 func (c *Char) selfState(no, anim, readplayerid, ctrl int32, ffx bool) {
 	var playerno int
@@ -3787,38 +3784,6 @@ func (c *Char) fvarGet(i int32) BytecodeValue {
 	}
 	sys.appendToConsole(c.warn() + fmt.Sprintf("fvar index %v out of range", i))
 	return BytecodeSF()
-}
-func (c *Char) TrialsChecker(no int32, anim int32) {
-	if sys.cgi[0].trialslist.currentTrial <= sys.cgi[0].trialslist.numoftrials && sys.cgi[0].trialslist.numoftrials > 0 {
-		//if currenttrialstep is greater than number of steps for that trial, reset currenttrialsteps and increment currenttrial
-		if sys.cgi[0].trialslist.currenttrialStep == sys.cgi[0].trialslist.trialnumsteps[sys.cgi[0].trialslist.currentTrial-1] {
-			sys.cgi[0].trialslist.currentTrial++
-			c.currenttrialstepAdd(0)
-			// else if combocount is reset, reset currenttrialsteps but do not increment currenttrial
-		} else if sys.cgi[0].trialslist.currenttrialStep > 0 && sys.lifebar.co[c.teamside].combo == 0 {
-			c.currenttrialstepAdd(0)
-			// else if currenttrialstep is less than number of trial steps, check for success and either increment up or reset
-		} else if sys.cgi[0].trialslist.currenttrialStep < sys.cgi[0].trialslist.trialnumsteps[sys.cgi[0].trialslist.currentTrial-1] {
-			// if stateno's match
-			if sys.cgi[0].trialslist.trialstateno[sys.cgi[0].trialslist.currentTrial-1][sys.cgi[0].trialslist.currenttrialStep] == no {
-				// check if animno was provide and if so, check whether they match
-				if sys.cgi[0].trialslist.trialanimno[sys.cgi[0].trialslist.currentTrial-1][sys.cgi[0].trialslist.currenttrialStep] != -2147483648 {
-					if sys.cgi[0].trialslist.trialanimno[sys.cgi[0].trialslist.currentTrial-1][sys.cgi[0].trialslist.currenttrialStep] == anim {
-						c.currenttrialstepAdd(1)
-					} else {
-						c.currenttrialstepAdd(0)
-					}
-				} else {
-					c.currenttrialstepAdd(1)
-				}
-			}
-			// Trial is now complete
-			if sys.cgi[0].trialslist.currenttrialStep == sys.cgi[0].trialslist.trialnumsteps[sys.cgi[0].trialslist.currentTrial-1] {
-				sys.cgi[0].trialslist.currentTrial++
-				c.currenttrialstepAdd(0)
-			}
-		}
-	}
 }
 func (c *Char) sysVarGet(i int32) BytecodeValue {
 	if i >= 0 && i < int32(NumSysVar) {
