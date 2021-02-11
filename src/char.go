@@ -561,8 +561,6 @@ type HitDef struct {
 	guardpoints                int32
 	redlife                    int32
 	score                      [2]float32
-	currenttrialstep           int32
-	//currenttrial			   int32
 }
 
 func (hd *HitDef) clear() {
@@ -608,37 +606,36 @@ type GetHitVar struct {
 	hitBy [][2]int32
 	//hit1           	[2]int32
 	//hit2           	[2]int32
-	attr             int32
-	_type            HitType
-	airanimtype      Reaction
-	groundanimtype   Reaction
-	airtype          HitType
-	groundtype       HitType
-	damage           int32
-	hitcount         int32
-	fallcount        int32
-	hitshaketime     int32
-	hittime          int32
-	slidetime        int32
-	ctrltime         int32
-	xvel             float32
-	yvel             float32
-	yaccel           float32
-	hitid            int32
-	xoff             float32
-	yoff             float32
-	fall             Fall
-	playerNo         int
-	fallf            bool
-	guarded          bool
-	p2getp1state     bool
-	forcestand       bool
-	id               int32
-	dizzypoints      int32
-	guardpoints      int32
-	redlife          int32
-	score            float32
-	currenttrialstep int32
+	attr           int32
+	_type          HitType
+	airanimtype    Reaction
+	groundanimtype Reaction
+	airtype        HitType
+	groundtype     HitType
+	damage         int32
+	hitcount       int32
+	fallcount      int32
+	hitshaketime   int32
+	hittime        int32
+	slidetime      int32
+	ctrltime       int32
+	xvel           float32
+	yvel           float32
+	yaccel         float32
+	hitid          int32
+	xoff           float32
+	yoff           float32
+	fall           Fall
+	playerNo       int
+	fallf          bool
+	guarded        bool
+	p2getp1state   bool
+	forcestand     bool
+	id             int32
+	dizzypoints    int32
+	guardpoints    int32
+	redlife        int32
+	score          float32
 }
 
 func (ghv *GetHitVar) clear() {
@@ -4277,15 +4274,12 @@ func (c *Char) currenttrialstep() int32 {
 	}
 	return sys.cgi[0].trialslist.currenttrialStep
 }
-func (c *Char) currenttrialstepAdd(val int32) {
+func (c *Char) currenttrialAdd(trial int32, step int32) {
 	if c.teamside == -1 {
 		return
 	}
-	if val == 0 {
-		sys.cgi[0].trialslist.currenttrialStep = 0
-	} else {
-		sys.cgi[0].trialslist.currenttrialStep++
-	}
+	sys.cgi[0].trialslist.currentTrial = trial
+	sys.cgi[0].trialslist.currenttrialStep = step
 }
 func (c *Char) consecutiveWins() int32 {
 	if c.teamside == -1 {

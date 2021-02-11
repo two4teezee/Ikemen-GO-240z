@@ -413,7 +413,6 @@ const (
 	OC_ex_gethitvar_playerno
 	OC_ex_gethitvar_redlife
 	OC_ex_gethitvar_score
-	OC_ex_gethitvar_currenttrialstep
 	OC_ex_ailevelf
 	OC_ex_animelemlength
 	OC_ex_animlength
@@ -1714,8 +1713,6 @@ func (be BytecodeExp) run_ex(c *Char, i *int, oc *Char) {
 		sys.bcStack.PushI(c.ghv.redlife)
 	case OC_ex_gethitvar_score:
 		sys.bcStack.PushF(c.ghv.score)
-	case OC_ex_gethitvar_currenttrialstep:
-		sys.bcStack.PushI(c.ghv.currenttrialstep)
 	case OC_ex_ailevelf:
 		sys.bcStack.PushF(c.aiLevel())
 	case OC_ex_animelemlength:
@@ -3710,7 +3707,6 @@ const (
 	hitDef_guardpoints
 	hitDef_redlife
 	hitDef_score
-	hitDef_currenttrialstep
 	hitDef_last = iota + afterImage_last + 1 - 1
 	hitDef_redirectid
 )
@@ -3992,8 +3988,6 @@ func (sc hitDef) runSub(c *Char, hd *HitDef, id byte, exp []BytecodeExp) bool {
 		if len(exp) > 1 {
 			hd.score[1] = exp[1].evalF(c)
 		}
-	case hitDef_currenttrialstep:
-		hd.currenttrialstep = exp[0].evalI(c)
 	default:
 		if !palFX(sc).runSub(c, &hd.palfx, id, exp) {
 			return false
@@ -7258,20 +7252,23 @@ func (sc targetScoreAdd) Run(c *Char, _ []int32) bool {
 	return false
 }
 
-type currenttrialstepAdd StateControllerBase
+type currenttrialAdd StateControllerBase
 
 const (
-	currenttrialstepAdd_value byte = iota
-	currenttrialstepAdd_redirectid
+	currenttrialAdd_currenttrial byte = iota
+	currenttrialAdd_currentstep
+	currenttrialAdd_redirectid
 )
 
-func (sc currenttrialstepAdd) Run(c *Char, _ []int32) bool {
+func (sc currenttrialAdd) Run(c *Char, _ []int32) bool {
 	crun := c
 	StateControllerBase(sc).run(c, func(id byte, exp []BytecodeExp) bool {
 		switch id {
-		case currenttrialstepAdd_value:
-			crun.currenttrialstepAdd(exp[0].evalI(c))
-		case currenttrialstepAdd_redirectid:
+		case currenttrialAdd_currenttrial:
+			crun.currenttrialAdd(exp[0].evalI(c))
+		case currenttrialAdd_currentstep:
+			crun.currenttrialAdd(exp[0].evalI(c))
+		case currenttrialAdd_redirectid:
 			if rid := sys.playerID(exp[0].evalI(c)); rid != nil {
 				crun = rid
 			} else {

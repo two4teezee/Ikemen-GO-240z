@@ -622,6 +622,11 @@ func systemScriptInit(l *lua.LState) {
 		l.Push(lua.LBool(sys.netInput.IsConnected()))
 		return 1
 	})
+	luaRegister(l, "currenttrialAdd", func(*lua.LState) int {
+		sys.cgi[0].trialslist.currentTrial = int32(numArg(l, 1))
+		sys.cgi[0].trialslist.currenttrialStep = int32(numArg(l, 2))
+		return 0
+	})
 	luaRegister(l, "dialogueReset", func(*lua.LState) int {
 		for _, p := range sys.chars {
 			if len(p) > 0 {
@@ -1926,10 +1931,6 @@ func systemScriptInit(l *lua.LState) {
 		sys.timerStart = int32(numArg(l, 1))
 		return 0
 	})
-	//luaRegister(l, "setLifebarTrials", func(*lua.LState) int {
-	//	sys.timerStart = int32(numArg(l, 1))
-	//	return 0
-	//})
 	luaRegister(l, "setLifeMul", func(l *lua.LState) int {
 		sys.lifeMul = float32(numArg(l, 1))
 		return 0
@@ -2779,6 +2780,22 @@ func triggerFunctions(l *lua.LState) {
 	})
 	luaRegister(l, "ctrl", func(*lua.LState) int {
 		l.Push(lua.LBool(sys.debugWC.ctrl()))
+		return 1
+	})
+	luaRegister(l, "currentTrial", func(*lua.LState) int {
+		l.Push(lua.LNumber(sys.debugWC.currentTrial()))
+		return 1
+	})
+	luaRegister(l, "currenttrialanimno", func(*lua.LState) int {
+		l.Push(lua.LNumber(sys.cgi[0].trialslist.trialanimno[sys.debugWC.currentTrial()][sys.debugWC.currenttrialstep()]))
+		return 1
+	})
+	luaRegister(l, "currenttrialstateno", func(*lua.LState) int {
+		l.Push(lua.LNumber(sys.cgi[0].trialslist.trialstateno[sys.debugWC.currentTrial()][sys.debugWC.currenttrialstep()]))
+		return 1
+	})
+	luaRegister(l, "currenttrialstep", func(*lua.LState) int {
+		l.Push(lua.LNumber(sys.debugWC.currenttrialstep()))
 		return 1
 	})
 	luaRegister(l, "drawgame", func(*lua.LState) int {

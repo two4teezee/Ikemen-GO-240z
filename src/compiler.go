@@ -162,8 +162,7 @@ func newCompiler() *Compiler {
 		"targetguardpointsadd": c.targetGuardPointsAdd,
 		"targetredlifeadd":     c.targetRedLifeAdd,
 		"targetscoreadd":       c.targetScoreAdd,
-		"currenttrialstepAdd":  c.currenttrialstepAdd,
-		//"trialsTracker":        c.trialsTracker,
+		"currenttrialAdd":      c.currenttrialAdd,
 	}
 	return c
 }
@@ -1751,8 +1750,6 @@ func (c *Compiler) expValue(out *BytecodeExp, in *string,
 				out.append(OC_ex_gethitvar_redlife)
 			case "score":
 				out.append(OC_ex_gethitvar_score)
-			case "currenttrialstep":
-				out.append(OC_ex_gethitvar_currenttrialstep)
 			default:
 				return bvNone(), Error("Invalid data: " + c.token)
 			}
@@ -5295,10 +5292,6 @@ func (c *Compiler) hitDefSub(is IniSection,
 		hitDef_score, VT_Float, 2, false); err != nil {
 		return err
 	}
-	if err := c.paramValue(is, sc, "currenttrialstep",
-		hitDef_currenttrialstep, VT_Int, 1, false); err != nil {
-		return err
-	}
 	return nil
 }
 func (c *Compiler) hitDef(is IniSection, sc *StateControllerBase,
@@ -7941,15 +7934,19 @@ func (c *Compiler) targetScoreAdd(is IniSection, sc *StateControllerBase,
 	})
 	return *ret, err
 }
-func (c *Compiler) currenttrialstepAdd(is IniSection, sc *StateControllerBase,
+func (c *Compiler) currenttrialAdd(is IniSection, sc *StateControllerBase,
 	_ int8) (StateController, error) {
-	ret, err := (*currenttrialstepAdd)(sc), c.stateSec(is, func() error {
+	ret, err := (*currenttrialAdd)(sc), c.stateSec(is, func() error {
 		if err := c.paramValue(is, sc, "redirectid",
-			currenttrialstepAdd_redirectid, VT_Int, 1, false); err != nil {
+			currenttrialAdd_redirectid, VT_Int, 1, false); err != nil {
 			return err
 		}
-		if err := c.paramValue(is, sc, "value",
-			currenttrialstepAdd_value, VT_Int, 1, true); err != nil {
+		if err := c.paramValue(is, sc, "currenttrial",
+			currenttrialAdd_currenttrial, VT_Int, 1, true); err != nil {
+			return err
+		}
+		if err := c.paramValue(is, sc, "currentstep",
+			currenttrialAdd_currentstep, VT_Int, 1, true); err != nil {
 			return err
 		}
 		return nil
@@ -7957,29 +7954,6 @@ func (c *Compiler) currenttrialstepAdd(is IniSection, sc *StateControllerBase,
 	return *ret, err
 }
 
-//func (c *Compiler) trialsTracker(is IniSection, sc *StateControllerBase,
-//	_ int8) (StateController, error) {
-//	ret, err := (*trialsTracker)(sc), c.stateSec(is, func() error {
-//		if err := c.paramValue(is, sc, "currenttrial",
-//			trialsTracker_currenttrial, VT_Int, 1, false); err != nil {
-//			return err
-//		}
-//		if err := c.paramValue(is, sc, "numberofsteps",
-//			trialsTracker_numberofsteps, VT_Float, 1, true); err != nil {
-//			return err
-//		}
-//		if err := c.paramValue(is, sc, "currentstep",
-//			trialsTracker_currentstep, VT_Float, 1, true); err != nil {
-//			return err
-//		}
-//		if err := c.paramValue(is, sc, "redirectid",
-//			trialsTracker_redirectid, VT_Int, 1, false); err != nil {
-//			return err
-//		}
-//		return nil
-//	})
-//	return *ret, err
-//}
 func (c *Compiler) null(is IniSection, sc *StateControllerBase,
 	_ int8) (StateController, error) {
 	return nullStateController, nil
