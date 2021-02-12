@@ -313,8 +313,6 @@ var triggerMap = map[string]int{
 	"animlength":       1,
 	"combocount":       1,
 	"consecutivewins":  1,
-	"currenttrial":     1,
-	"currenttrialstep": 1,
 	"dizzy":            1,
 	"dizzypoints":      1,
 	"dizzypointsmax":   1,
@@ -2635,10 +2633,6 @@ func (c *Compiler) expValue(out *BytecodeExp, in *string,
 		out.append(OC_ex_, OC_ex_timeremaining) // Only here for backwards compatibility purposes, going to be deprecated once Add004 updates.
 	case "timetotal":
 		out.append(OC_ex_, OC_ex_timetotal)
-	case "currenttrial":
-		out.append(OC_ex_, OC_ex_currenttrial)
-	case "currenttrialstep":
-		out.append(OC_ex_, OC_ex_currenttrialstep)
 	case "drawpalno":
 		out.append(OC_ex_, OC_ex_drawpalno)
 	case "=", "!=", ">", ">=", "<", "<=", "&", "&&", "^", "^^", "|", "||",
@@ -7941,12 +7935,8 @@ func (c *Compiler) currenttrialAdd(is IniSection, sc *StateControllerBase,
 			currenttrialAdd_redirectid, VT_Int, 1, false); err != nil {
 			return err
 		}
-		if err := c.paramValue(is, sc, "currenttrial",
-			currenttrialAdd_currenttrial, VT_Int, 1, true); err != nil {
-			return err
-		}
-		if err := c.paramValue(is, sc, "currentstep",
-			currenttrialAdd_currentstep, VT_Int, 1, true); err != nil {
+		if err := c.paramValue(is, sc, "value",
+			currenttrialAdd_value, VT_Int, 2, true); err != nil {
 			return err
 		}
 		return nil

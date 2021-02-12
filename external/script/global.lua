@@ -271,6 +271,8 @@ function loop()
 					start.challenger = main.playerInput
 				end
 			end
+		elseif gamemode('trials') and trialinfo('trialspresent') then
+			start.trialschecker()
 		end
 	end
 end

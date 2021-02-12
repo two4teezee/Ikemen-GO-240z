@@ -78,14 +78,14 @@ menu.t_itemname = {
 		return true
 	end,
 	--Trials List
-	['trialslist'] = function(t, item, cursorPosY, moveTxt, section)
-		if main.f_input(main.t_players, {'pal', 's'}) then
-			sndPlay(motif.files.snd_data, motif[section].cursor_done_snd[1], motif[section].cursor_done_snd[2])
-			menu.f_trialsParse()
-			menu.itemname = t.items[item].itemname
-		end
-		return true
-	end,
+	--['trialslist'] = function(t, item, cursorPosY, moveTxt, section)
+	--	if main.f_input(main.t_players, {'pal', 's'}) then
+	--		sndPlay(motif.files.snd_data, motif[section].cursor_done_snd[1], motif[section].cursor_done_snd[2])
+	--		menu.f_trialsParse()
+	--		menu.itemname = t.items[item].itemname
+	--	end
+	--	return true
+	--end,
 	--Command List
 	['commandlist'] = function(t, item, cursorPosY, moveTxt, section)
 		if main.f_input(main.t_players, {'pal', 's'}) then
@@ -243,13 +243,13 @@ for k, v in pairs(
 end
 
 menu.movelistChar = 1
-menu.trialslistChar = 1
+--menu.trialslistChar = 1
 function menu.f_init()
 	esc(false)
 	togglePause(true)
 	main.pauseMenu = true
 	main.f_bgReset(motif.optionbgdef.bg)
-	if gamemode('training') or gamemode('trials') then
+	if gamemode('training') then -- or gamemode('trials') then
 		sndPlay(motif.files.snd_data, motif.training_info.enter_snd[1], motif.training_info.enter_snd[2])
 		main.f_bgReset(motif.trainingbgdef.bg)
 		main.f_fadeReset('fadein', motif.training_info)
@@ -285,9 +285,9 @@ function menu.f_run()
 	elseif menu.itemname == 'commandlist' then
 		menu.f_commandlistRender(section, menu.t_movelists[menu.movelistChar])
 	--Trials List
-	elseif menu.itemname == 'trialslist' then
+	--elseif menu.itemname == 'trialslist' then
 		-- menu trials list Render will only be trials titles
-		menu.f_trialslistRender(section, menu.t_trialslist[menu.trialslistChar])
+		--menu.f_trialslistRender(section, menu.t_trialslist[menu.trialslistChar])
 	--Menu
 	else
 		menu.currentMenu[1]()
