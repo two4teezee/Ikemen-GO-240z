@@ -2769,8 +2769,9 @@ main.t_itemname = {
 		main.f_playerInput(main.playerInput, 1)
 		main.cpuSide[2] = false
 		main.forceChar[2] = {main.t_charDef[config.TrainingChar:lower()]}
-		main.lifebar.p1score = true
+		main.lifebar.p1score = false
 		main.lifebar.trials = true
+		main.lifebar.timer = true
 		main.roundTime = -1
 		main.selectMenu[2] = true
 		main.stageMenu = true
