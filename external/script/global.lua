@@ -212,6 +212,7 @@ function loop()
 		start.turnsRecoveryInit = false
 		start.rankInit = false
 		start.dialogueInit = false
+		start.trialsInit = false
 	end
 	--dialogue
 	if indialogue() then
