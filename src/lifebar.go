@@ -2553,6 +2553,7 @@ type LifeBarTrialsOverlay struct {
 	textbg        AnimLayout
 	currentbg     AnimLayout
 	completedbg   AnimLayout
+	successflag   int32
 	success       AnimLayout
 	allclear      AnimLayout
 	active        bool
@@ -2587,6 +2588,7 @@ func readLifeBarTrialsOverlay(is IniSection, sff *Sff,
 		to.completedbg = to.textbg
 	}
 	to.success = *ReadAnimLayout("bg.", is, sff, at, 0)
+	to.successflag = sys.cgi[0].trialslist.currentTrial - 1
 	return to
 }
 func (to *LifeBarTrialsOverlay) step() {
@@ -2602,6 +2604,7 @@ func (to *LifeBarTrialsOverlay) reset() {
 	to.success.Reset()
 	//consider changing this
 	sys.cgi[0].trialslist.currentTrial = 1
+	to.successflag = 0
 }
 func (to *LifeBarTrialsOverlay) bgDraw(layerno int16) {
 	if to.active && sys.cgi[0].trialslist.trialspresent {
@@ -2613,7 +2616,7 @@ func (to *LifeBarTrialsOverlay) bgDraw(layerno int16) {
 			for i := int32(0); i < sys.cgi[0].trialslist.trialnumsteps[ct]; i++ {
 				if i < sys.cgi[0].trialslist.currenttrialStep-1 {
 					to.completedbg.DrawScaled(float32(to.pos[0])+sys.lifebarOffsetX+float32(to.spacing[0]*i), float32(to.pos[1])+float32(to.spacing[1]*i), layerno, sys.lifebarScale)
-				} else if i == sys.cgi[0].trialslist.currenttrialStep-1 {
+				} else if i == sys.cgi[0].trialslist.currenttrialStep {
 					to.currentbg.DrawScaled(float32(to.pos[0])+sys.lifebarOffsetX+float32(to.spacing[0]*i), float32(to.pos[1])+float32(to.spacing[1]*i), layerno, sys.lifebarScale)
 				} else {
 					to.textbg.DrawScaled(float32(to.pos[0])+sys.lifebarOffsetX+float32(to.spacing[0]*i), float32(to.pos[1])+float32(to.spacing[1]*i), layerno, sys.lifebarScale)
@@ -2624,8 +2627,9 @@ func (to *LifeBarTrialsOverlay) bgDraw(layerno int16) {
 			to.allclear.DrawScaled(float32(to.pos[0])+sys.lifebarOffsetX, float32(to.pos[1]), layerno, sys.lifebarScale)
 		}
 		// if trial was successfully completed, show success anim
-		if sys.cgi[0].trialslist.currenttrialStep == sys.cgi[0].trialslist.trialnumsteps[ct] {
+		if sys.cgi[0].trialslist.currentTrial > to.successflag {
 			to.success.DrawScaled(float32(to.pos[0])+sys.lifebarOffsetX, float32(to.pos[1]), layerno, sys.lifebarScale)
+			to.successflag++
 		}
 	}
 }
@@ -2638,7 +2642,7 @@ func (to *LifeBarTrialsOverlay) draw(layerno int16, f []*Fnt) {
 				if i < sys.cgi[0].trialslist.currenttrialStep-1 {
 					to.completedtext.lay.DrawText(float32(to.pos[0])+sys.lifebarOffsetX+float32(to.spacing[0]*i), float32(to.pos[1])+float32(to.spacing[1]*i), sys.lifebarScale, layerno,
 						sys.cgi[0].trialslist.trialsteps[ct][i], f[to.completedtext.font[0]], to.completedtext.font[1], to.completedtext.font[2], to.completedtext.palfx, to.completedtext.frgba)
-				} else if i == sys.cgi[0].trialslist.currenttrialStep-1 {
+				} else if i == sys.cgi[0].trialslist.currenttrialStep {
 					to.currenttext.lay.DrawText(float32(to.pos[0])+sys.lifebarOffsetX+float32(to.spacing[0]*i), float32(to.pos[1])+float32(to.spacing[1]*i), sys.lifebarScale, layerno,
 						sys.cgi[0].trialslist.trialsteps[ct][i], f[to.currenttext.font[0]], to.currenttext.font[1], to.currenttext.font[2], to.currenttext.palfx, to.currenttext.frgba)
 				} else {
