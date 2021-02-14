@@ -3700,6 +3700,7 @@ function start.trialschecker()
 			numoftrials = trialinfo('numoftrials'),
 			currenttrial = trialinfo('currenttrial'),
 			currenttrialstep = trialinfo('currenttrialstep'),
+			maxsteps = 0,
 			trialnames = {},
 			trialnumsteps = {},
 			trialtext = {},
@@ -3707,16 +3708,13 @@ function start.trialschecker()
 			trialstateno = {},
 			trialanimno = {},
 		}
-		--print(start.trialsdata.active)
-		--print(start.trialsdata.numoftrials)
-		--print(start.trialsdata.currenttrial)
-		--print(start.trialsdata.currenttrialstep)
 		for i = 1, start.trialsdata.numoftrials, 1 do
 			currenttrialAdd(i,0)
 			start.trialsdata.trialnames[i] = trialinfo('currenttrialname')
-			--print(start.trialsdata.trialnames[i])
 			start.trialsdata.trialnumsteps[i] = trialinfo('currenttrialnumofsteps')
-			--print(start.trialsdata.trialnumsteps[i])
+			if start.trialsdata.trialnumsteps[i] > start.trialsdata.maxsteps then
+				start.trialsdata.maxsteps = start.trialsdata.trialnumsteps[i]
+			end
 			start.trialsdata.trialtext[i] = {}
 			start.trialsdata.trialglyphs[i] = {}
 			start.trialsdata.trialstateno[i] = {}
@@ -3724,28 +3722,82 @@ function start.trialschecker()
 			for j = 1, start.trialsdata.trialnumsteps[i], 1 do
 				currenttrialAdd(i,j-1)
 				start.trialsdata.trialtext[i][j] = trialinfo('currenttrialtext')
-				--print(start.trialsdata.trialtext[i][j])
 				start.trialsdata.trialglyphs[i][j] = trialinfo('currenttrialglyphs')
-				--print(start.trialsdata.trialglyphs[i][j])
 				start.trialsdata.trialstateno[i][j] = trialinfo('currenttrialstateno')
-				--print(start.trialsdata.trialstateno[i][j])
 				start.trialsdata.trialanimno[i][j] = trialinfo('currenttrialanimno')
-				--print(start.trialsdata.trialanimno[i][j])
 			end
 		end
 		currenttrialAdd(1,0)
 		start.trialsdata.active = true
 	end
 
-	local throwcheck = false
-	local animcheck = false
 	local ct = start.trialsdata.currenttrial
-	local cts = start.trialsdata.currenttrialstep - 1
+	local cts = start.trialsdata.currenttrialstep
+	start.trials_info = motif.trials_info
 
 	--write the draw logic here
-	--from now on, don't need to use currenttrialAdd, just operate internally
-	
-	if start.trialsdata.trialanimno[ct][cts] ~= -2147483648 then animcheck = true end
+	start.trialsdata.drawtextline = {}
+	start.trialsdata.drawcurrenttextline = {}
+	start.trialsdata.drawcompletedtextline = {}
+
+	--create trials text lines ahead of time
+	for i = 1, start.trialsdata.maxsteps, 1 do
+		local tempoffset = {motif.trials_info.pos[1]+motif.trials_info.text_offset[1]+motif.trials_info.spacing[1]*(i), motif.trials_info.pos[2]+motif.trials_info.text_offset[2]+motif.trials_info.spacing[2]*(i)}
+		start.trialsdata.drawtextline[i] = main.f_createTextImg(start.trials_info, 'text')
+		start.trialsdata.drawtextline[i]:update({x = tempoffset[1], y = tempoffset[2],})
+		start.trialsdata.drawcurrenttextline[i] = main.f_createTextImg(start.trials_info, 'currenttext')
+		start.trialsdata.drawcurrenttextline[i]:update({x = tempoffset[1], y = tempoffset[2],})
+		start.trialsdata.drawcompletedtextline[i] = main.f_createTextImg(start.trials_info, 'completedtext')
+		start.trialsdata.drawcompletedtextline[i]:update({x = tempoffset[1], y = tempoffset[2],})
+	end
+
+	if start.trialsdata.active then 
+		if ct < start.trialsdata.numoftrials + 1 then
+			--background for all lines
+			animUpdate(motif.trials_info.bg_data)
+			animDraw(motif.trials_info.bg_data)
+
+			--backgrounds and text for each line
+			for i = 1, start.trialsdata.trialnumsteps[ct], 1 do
+				if i < cts then
+					--to.completedbg.DrawScaled(float32(to.pos[0])+sys.lifebarOffsetX+float32(to.spacing[0]*i), float32(to.pos[1])+float32(to.spacing[1]*i), layerno, sys.lifebarScale)
+					start.trialsdata.drawtextline[i]:update({text = ''})
+					start.trialsdata.drawcurrenttextline[i]:update({text = ''})
+					start.trialsdata.drawcompletedtextline[i]:update({text = start.trialsdata.trialtext[ct][i]})
+					start.trialsdata.drawtextline[i]:draw()
+					start.trialsdata.drawcurrenttextline[i]:draw()
+					start.trialsdata.drawcompletedtextline[i]:draw()
+				elseif i == cts then
+					--to.currentbg.DrawScaled(float32(to.pos[0])+sys.lifebarOffsetX+float32(to.spacing[0]*i), float32(to.pos[1])+float32(to.spacing[1]*i), layerno, sys.lifebarScale)
+					start.trialsdata.drawtextline[i]:update({text = ''})
+					start.trialsdata.drawcurrenttextline[i]:update({text = start.trialsdata.trialtext[ct][i]})
+					start.trialsdata.drawcompletedtextline[i]:update({text = ''})
+					start.trialsdata.drawtextline[i]:draw()
+					start.trialsdata.drawcompletedtextline[i]:draw()
+					start.trialsdata.drawcurrenttextline[i]:draw()
+				else
+					--to.textbg.DrawScaled(float32(to.pos[0])+sys.lifebarOffsetX+float32(to.spacing[0]*i), float32(to.pos[1])+float32(to.spacing[1]*i), layerno, sys.lifebarScale)
+					start.trialsdata.drawtextline[i]:update({text = start.trialsdata.trialtext[ct][i]})
+					start.trialsdata.drawcurrenttextline[i]:update({text = ''})
+					start.trialsdata.drawcompletedtextline[i]:update({text = ''})
+					start.trialsdata.drawcurrenttextline[i]:draw()
+					start.trialsdata.drawcompletedtextline[i]:draw()
+					start.trialsdata.drawtextline[i]:draw()
+				end
+			end
+			--if all trials are completed, do not display backgrounds and show all clear anim instead
+		elseif ct == start.trialsdata.numoftrials then
+			--to.allclear.DrawScaled(float32(to.pos[0])+sys.lifebarOffsetX, float32(to.pos[1]), layerno, sys.lifebarScale)
+		end
+		--if trial was successfully completed, show success anim
+		if ct == start.trialsdata.numoftrials + 1 then
+			--to.success.DrawScaled(float32(to.pos[0])+sys.lifebarOffsetX, float32(to.pos[1]), layerno, sys.lifebarScale)
+		end
+	end
+
+	local throwcheck = false
+	local animcheck = false
+	if start.trialsdata.trialanimno[ct][cts+1] ~= -2147483648 then animcheck = true end
 
 	--Gating Criteria:
 	-- you'll want to change this if you're doing something odd with your chars 
@@ -3755,24 +3807,21 @@ function start.trialschecker()
 	-- 		3b) throwcheck passed OR
 	-- 		3c) projectile hit OR
 	-- 		2d) ???
-	if (stateno() == start.trialsdata.trialstateno[ct][cts]) and (anim() == start.trialsdata.trialanimno[ct][cts] or not(animcheck)) and (hitpausetime() > 1 and movehit()) then -- or (not(throwcheck) and (time() == 1))) then -- or (projhit() and hitshakeover()) or (root,map(SpVer)=var(5) || var(5)=-1) && 
-		--continue if currenttrial is less than max trial
-		if ct <= start.trialsdata.numoftrials then
 
+	if (stateno() == start.trialsdata.trialstateno[ct][cts+1]) and (anim() == start.trialsdata.trialanimno[ct][cts+1] or not(animcheck)) and (hitpausetime() > 1 and movehit()) then -- or (not(throwcheck) and (time() == 1))) then -- or (projhit() and hitshakeover()) or (root,map(SpVer)=var(5) || var(5)=-1) && 
+		--continue if currenttrial is less than max trial
+		if ct < start.trialsdata.numoftrials + 1 then
 			--currenttrialstep initializes at 0
 			ncts = cts + 1
-
 			--if next current step is 1 (first step so combocount is 0) or if next current step is greater than 1 and combocount is greater than 0... trial attempt is valid!
 			if ncts == 1 or (ncts > 1 and combocount() > 0) then
 				-- if next current step is equal to number of steps, trial is complete, move to next trial
-				if ncts >= start.trialsdata.currenttrialnumofsteps  then
-					start.trialsdata.currenttrial = start.trialsdata.currenttrial + 1
+				if ncts >= start.trialsdata.trialnumsteps[ct]  then
+					start.trialsdata.currenttrial = ct + 1
 					start.trialsdata.currenttrialstep = 0
-					--currenttrialAdd(trialinfo('currenttrial')+1,0)
 				-- otherwise, move to next trial step
-				elseif ncts < start.trialsdata.currenttrialnumofsteps then
+				elseif ncts < start.trialsdata.trialnumsteps[ct] then
 					start.trialsdata.currenttrialstep = ncts
-					--currenttrialAdd(trialinfo('currenttrial'),ncts)
 				end
 			--if next current step is greater than 1 but combocount is n 0... combo dropped, trial attempt failed!
 			elseif (ncts > 1 and combocount() == 0) then
@@ -3782,7 +3831,6 @@ function start.trialschecker()
 	elseif combocount() == 0 then
 		--gating criteria failed, trial attempt failed
 		start.trialsdata.currenttrialstep = 0
-		--currenttrialAdd(trialinfo('currenttrial'),0)
 	end
 end
 

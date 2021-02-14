@@ -2181,7 +2181,6 @@ function main.f_default()
 		p2ai = false,
 		p2score = false,
 		timer = false,
-		trials = false,
 	}
 	main.luaPath = 'external/script/default.lua' --path to script executed by start.f_selectMode()
 	main.makeRoster = false --if default roster for each match should be generated before first match
@@ -2770,7 +2769,6 @@ main.t_itemname = {
 		main.cpuSide[2] = false
 		main.forceChar[2] = {main.t_charDef[config.TrainingChar:lower()]}
 		main.lifebar.p1score = false
-		main.lifebar.trials = true
 		main.lifebar.timer = true
 		main.roundTime = -1
 		main.selectMenu[2] = true

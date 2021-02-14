@@ -1754,6 +1754,78 @@ local motif =
 		--p<pn>_rank_<num>_facing = 1, --Ikemen feature
 		--p<pn>_rank_<num>_scale = {1.0, 1.0}, --Ikemen feature
 	},
+	trials_info =
+	{
+		pos = {0, 0}, --Ikemen feature
+		spacing = {0, 0}, --Ikemen feature
+		snd = {-1, 0}, --Ikemen feature
+		bg_anim = -1, --Ikemen feature
+		bg_spr = {}, --Ikemen feature
+		bg_offset = {0, 0}, --Ikemen feature
+		bg_facing = 1, --Ikemen feature
+		bg_scale = {1.0, 1.0}, --Ikemen feature
+		bg_displaytime = 0, --Ikemen feature
+		--bg_layerno = 0, --Ikemen feature
+		text_offset = {0,0}, --Ikemen feature
+		text_font = {'f-6x9.def', 0, 1, 255, 255, 255}, --Ikemen feature
+		text_font_scale = {1.0, 1.0}, --Ikemen feature
+		text_text = '', --Ikemen feature
+		textbg_anim = -1, --Ikemen feature
+		textbg_spr = {}, --Ikemen feature
+		textbg_offset = {0, 0}, --Ikemen feature
+		textbg_facing = 1, --Ikemen feature
+		textbg_scale = {1.0, 1.0}, --Ikemen feature
+		textbg_displaytime = 0, --Ikemen feature
+		--textbg_layerno = 0, --Ikemen feature
+		currenttext_offset = {0,0}, --Ikemen feature
+		currenttext_font = {'f-6x9.def', 0, 1, 255, 255, 255}, --Ikemen feature
+		currenttext_font_scale = {1.0, 1.0}, --Ikemen feature
+		currenttext_text = '', --Ikemen feature
+		currenttextbg_anim = -1, --Ikemen feature
+		currenttextbg_spr = {}, --Ikemen feature
+		currenttextbg_offset = {0, 0}, --Ikemen feature
+		currenttextbg_facing = 1, --Ikemen feature
+		currenttextbg_scale = {1.0, 1.0}, --Ikemen feature
+		currenttextbg_displaytime = 0, --Ikemen feature
+		--currenttextbg_layerno = 0, --Ikemen feature
+		completedtext_offset = {0,0}, --Ikemen feature
+		completedtext_font = {'f-6x9.def', 0, 1, 255, 255, 255}, --Ikemen feature
+		completedtext_font_scale = {1.0, 1.0}, --Ikemen feature
+		completedtext_text = '', --Ikemen feature
+		completedtextbg_anim = -1, --Ikemen feature
+		completedtextbg_spr = {}, --Ikemen feature
+		completedtextbg_offset = {0, 0}, --Ikemen feature
+		completedtextbg_facing = 1, --Ikemen feature
+		completedtextbg_scale = {1.0, 1.0}, --Ikemen feature
+		completedtextbg_displaytime = 0, --Ikemen feature
+		--completedtextbg_layerno = 0, --Ikemen feature
+		glyphs_offset = {0, 0}, --Ikemen feature
+		success_anim = -1, --Ikemen feature
+		success_spr = {}, --Ikemen feature
+		success_offset = {0, 0}, --Ikemen feature
+		success_facing = 1, --Ikemen feature
+		success_scale = {1.0, 1.0}, --Ikemen feature
+		success_displaytime = 0, --Ikemen feature
+		success_layerno = 0, --Ikemen feature
+		success_snd = {-1, 0}, --Ikemen feature
+		success_text_offset = {0,0}, --Ikemen feature
+		success_text_font = {'f-6x9.def', 0, 1, 255, 255, 255}, --Ikemen feature
+		success_text_font_scale = {1.0, 1.0}, --Ikemen feature
+		successtext_text = '', --Ikemen feature
+		allclear_anim = -1, --Ikemen feature
+		allclear_spr = {}, --Ikemen feature
+		allclear_offset = {0, 0}, --Ikemen feature
+		allclear_facing = 1, --Ikemen feature
+		allclear_scale = {1.0, 1.0}, --Ikemen feature
+		allclear_displaytime = 0, --Ikemen feature
+		allclear_layerno = 0, --Ikemen feature
+		allclear_snd = {-1, 0}, --Ikemen feature
+		allclear_text_offset = {0, 0}, --Ikemen feature
+		allclear_text_font = {'f-6x9.def', 0, 1, 255, 255, 255}, --Ikemen feature
+		allclear_text_font_scale = {1.0, 1.0}, --Ikemen feature
+		allclear_text_text = '', --Ikemen feature
+		resetonsuccess = 0, --Ikemen feature
+	},
 	dialogue_info =
 	{
 		enabled = 0, --Ikemen feature
@@ -2088,65 +2160,6 @@ local motif =
 		['_)'] = {129, 0}, --Close
 		['_('] = {130, 0}, --Away
 		['_`'] = {135, 0}, --Small Dot
-	},
-	trials_info =
-	{
-		enabled = 0, --Ikemen feature
-		bars_display = 1, --Ikemen feature
-		snd_time = 0, --Ikemen feature
-		snd = {-1, 0}, --Ikemen feature
-		p1_pos = {0, 0}, --Ikemen feature
-		--p2_pos = {0, 0}, --Ikemen feature
-		p1_score_offset = {0, 0}, --Ikemen feature
-		p1_score_font = {'f-4x6.fnt', 0, 0, 255, 255, 255}, --Ikemen feature
-		p1_score_font_scale = {1.0, 1.0}, --Ikemen feature
-		p1_score_font_height = -1, --Ikemen feature
-		p1_score_text = '%s', --Ikemen feature
-		p1_score_displaytime = 0, --Ikemen feature
-		--p2_score_offset = {0, 0}, --Ikemen feature
-		--p2_score_font = {'f-4x6.fnt', 0, 0, 255, 255, 255}, --Ikemen feature
-		--p2_score_font_scale = {1.0, 1.0}, --Ikemen feature
-		--p2_score_font_height = -1, --Ikemen feature
-		--p2_score_text = '%s', --Ikemen feature
-		--p2_score_displaytime = 0, --Ikemen feature
-		p1_bg_anim = -1, --Ikemen feature
-		p1_bg_spr = {}, --Ikemen feature
-		p1_bg_offset = {0, 0}, --Ikemen feature
-		p1_bg_facing = 1, --Ikemen feature
-		p1_bg_scale = {1.0, 1.0}, --Ikemen feature
-		p1_bg_displaytime = 0, --Ikemen feature
-		--p2_bg_anim = -1, --Ikemen feature
-		--p2_bg_spr = {}, --Ikemen feature
-		--p2_bg_offset = {0, 0}, --Ikemen feature
-		--p2_bg_facing = 1, --Ikemen feature
-		--p2_bg_scale = {1.0, 1.0}, --Ikemen feature
-		--p2_bg_displaytime = 0, --Ikemen feature
-		p1_gauge_displaytime = 0, --Ikemen feature
-		--p2_gauge_displaytime = 0, --Ikemen feature
-		p1_rank_displaytime = 0, --Ikemen feature
-		--p2_rank_displaytime = 0, --Ikemen feature
-		p1_icon_displaytime = 0, --Ikemen feature
-		--p2_icon_displaytime = 0, --Ikemen feature
-		p1_icon_spacing = {0, 0}, --Ikemen feature
-		--p2_icon_spacing = {0, 0}, --Ikemen feature
-		--p<pn>_gauge_<type>_anim = -1, --Ikemen feature
-		--p<pn>_gauge_<type>_spr = {}, --Ikemen feature
-		--p<pn>_gauge_<type>_offset  = {0, 0}, --Ikemen feature
-		--p<pn>_gauge_<type>_facing = 1, --Ikemen feature
-		--p<pn>_gauge_<type>_scale = {1.0, 1.0}, --Ikemen feature
-		--p<pn>_gauge_<type>_window = {}, --Ikemen feature
-		--p<pn>_gauge_<type>_ticks = 0, --Ikemen feature
-		--p<pn>_gauge_<type>_max = 0, --Ikemen feature
-		--p<pn>_icon_<icon>_anim = -1, --Ikemen feature
-		--p<pn>_icon_<icon>_spr = {}, --Ikemen feature
-		--p<pn>_icon_<icon>_offset  = {0, 0}, --Ikemen feature
-		--p<pn>_icon_<icon>_facing = 1, --Ikemen feature
-		--p<pn>_icon_<icon>_scale = {1.0, 1.0}, --Ikemen feature
-		--p<pn>_rank_<num>_anim = -1, --Ikemen feature
-		--p<pn>_rank_<num>_spr = {}, --Ikemen feature
-		--p<pn>_rank_<num>_offset  = {0, 0}, --Ikemen feature
-		--p<pn>_rank_<num>_facing = 1, --Ikemen feature
-		--p<pn>_rank_<num>_scale = {1.0, 1.0}, --Ikemen feature
 	},
 	anim = {},
 }
@@ -2798,7 +2811,7 @@ function motif.f_loadCursorData()
 end
 
 --creates fadein/fadeout anim data
-for _, v in ipairs({'title_info', 'select_info', 'vs_screen', 'demo_mode', 'continue_screen', 'victory_screen', 'win_screen', 'survival_results_screen', 'vs100_kumite_results_screen', 'time_attack_results_screen', 'time_challenge_results_screen', 'score_challenge_results_screen', 'boss_rush_results_screen', 'option_info', 'replay_info', 'menu_info', 'training_info', 'attract_mode', 'challenger_info', 'hiscore_info', 'tournament_info'}) do
+for _, v in ipairs({'title_info', 'select_info', 'vs_screen', 'demo_mode', 'continue_screen', 'victory_screen', 'win_screen', 'survival_results_screen', 'vs100_kumite_results_screen', 'time_attack_results_screen', 'time_challenge_results_screen', 'score_challenge_results_screen', 'boss_rush_results_screen', 'option_info', 'replay_info', 'menu_info', 'training_info', 'attract_mode', 'challenger_info', 'hiscore_info', 'tournament_info','trials_info'}) do
 	if motif[v].fadein_anim ~= -1 then
 		motif.f_loadSprData(motif[v], {s = 'fadein_', x = 0, y = 0})
 	end
@@ -2851,6 +2864,16 @@ motif.f_loadSprData(motif.continue_screen, {s = 'counter_', x = 0, y = 0})
 
 --challenger spr/anim data
 motif.f_loadSprData(motif.challenger_info, {s = 'bg_', x = 0, y = 0})
+
+--trials spr/anim data
+local tr_pos = motif.trials_info
+for _, v in ipairs({
+	{s = 'bg_',			x = tr_pos.pos[1] + tr_pos.bg_offset[1],		y = tr_pos.pos[2] + tr_pos.bg_offset[2],		},
+	{s = 'success_',    x = tr_pos.pos[1] + tr_pos.success_offset[1],	y = tr_pos.pos[2] + tr_pos.success_offset[2],	},
+	{s = 'allclear_',   x = tr_pos.pos[1] + tr_pos.allclear_offset[1],	y = tr_pos.pos[2] + tr_pos.allclear_offset[2],	},
+}) do
+	motif.f_loadSprData(motif.trials_info, v)
+end
 
 --arrows spr/anim data
 for _, v in ipairs({motif.title_info, motif.option_info, motif.replay_info, motif.menu_info, motif.training_info, motif.attract_mode}) do

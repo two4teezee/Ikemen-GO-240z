@@ -2542,119 +2542,6 @@ func (ai *LifeBarAiLevel) draw(layerno int16, f []*Fnt, ailv float32) {
 	}
 }
 
-type LifeBarTrialsOverlay struct {
-	pos           [2]int32
-	spacing       [2]int32
-	text          LbText
-	currenttext   LbText
-	completedtext LbText
-	glyphs_offset [2]int32
-	bg            AnimLayout
-	textbg        AnimLayout
-	currentbg     AnimLayout
-	completedbg   AnimLayout
-	successflag   int32
-	success       AnimLayout
-	allclear      AnimLayout
-	active        bool
-}
-
-func newLifeBarTrialsOverlay() *LifeBarTrialsOverlay {
-	return &LifeBarTrialsOverlay{}
-}
-func readLifeBarTrialsOverlay(is IniSection, sff *Sff,
-	at AnimationTable, f []*Fnt) *LifeBarTrialsOverlay {
-	to := newLifeBarTrialsOverlay()
-	is.ReadI32("pos", &to.pos[0], &to.pos[1])
-	is.ReadI32("spacing", &to.spacing[0], &to.spacing[1])
-	to.text = *readLbText("text.", is, "", 0, f, 0)
-	to.currenttext = *readLbText("currenttext.", is, "", 0, f, 0)
-	to.completedtext = *readLbText("completedtext.", is, "", 0, f, 0)
-	if to.currenttext.font[0] < 0 {
-		to.currenttext = to.text
-	}
-	if to.completedtext.font[0] < 0 {
-		to.completedtext = to.text
-	}
-	is.ReadI32("glyphs.offset", &to.glyphs_offset[0], &to.glyphs_offset[1])
-	to.bg = *ReadAnimLayout("bg.", is, sff, at, 0)
-	to.textbg = *ReadAnimLayout("bg.", is, sff, at, 0)
-	to.currentbg = *ReadAnimLayout("currentbg.", is, sff, at, 0)
-	to.completedbg = *ReadAnimLayout("currentbg.", is, sff, at, 0)
-	if len(to.currentbg.anim.frames) <= 0 && len(to.textbg.anim.frames) > 0 {
-		to.currentbg = to.textbg
-	}
-	if len(to.completedbg.anim.frames) <= 0 && len(to.textbg.anim.frames) > 0 {
-		to.completedbg = to.textbg
-	}
-	to.success = *ReadAnimLayout("bg.", is, sff, at, 0)
-	to.successflag = sys.cgi[0].trialslist.currentTrial - 1
-	return to
-}
-func (to *LifeBarTrialsOverlay) step() {
-	to.bg.Action()
-	to.textbg.Action()
-	to.currentbg.Action()
-	to.success.Action()
-}
-func (to *LifeBarTrialsOverlay) reset() {
-	to.bg.Reset()
-	to.textbg.Reset()
-	to.currentbg.Reset()
-	to.success.Reset()
-	//consider changing this
-	sys.cgi[0].trialslist.currentTrial = 1
-	to.successflag = 0
-}
-func (to *LifeBarTrialsOverlay) bgDraw(layerno int16) {
-	if to.active && sys.cgi[0].trialslist.trialspresent {
-		ct := sys.cgi[0].trialslist.currentTrial - 1
-		if ct < sys.cgi[0].trialslist.numoftrials {
-			// background for all lines
-			to.bg.DrawScaled(float32(to.pos[0])+sys.lifebarOffsetX, float32(to.pos[1]), layerno, sys.lifebarScale)
-			// backgrounds for each line
-			for i := int32(0); i < sys.cgi[0].trialslist.trialnumsteps[ct]; i++ {
-				if i < sys.cgi[0].trialslist.currenttrialStep-1 {
-					to.completedbg.DrawScaled(float32(to.pos[0])+sys.lifebarOffsetX+float32(to.spacing[0]*i), float32(to.pos[1])+float32(to.spacing[1]*i), layerno, sys.lifebarScale)
-				} else if i == sys.cgi[0].trialslist.currenttrialStep {
-					to.currentbg.DrawScaled(float32(to.pos[0])+sys.lifebarOffsetX+float32(to.spacing[0]*i), float32(to.pos[1])+float32(to.spacing[1]*i), layerno, sys.lifebarScale)
-				} else {
-					to.textbg.DrawScaled(float32(to.pos[0])+sys.lifebarOffsetX+float32(to.spacing[0]*i), float32(to.pos[1])+float32(to.spacing[1]*i), layerno, sys.lifebarScale)
-				}
-			}
-			// if all trials are completed, do not display backgrounds and show all clear anim instead
-		} else if ct == sys.cgi[0].trialslist.numoftrials {
-			to.allclear.DrawScaled(float32(to.pos[0])+sys.lifebarOffsetX, float32(to.pos[1]), layerno, sys.lifebarScale)
-		}
-		// if trial was successfully completed, show success anim
-		if sys.cgi[0].trialslist.currentTrial > to.successflag {
-			to.success.DrawScaled(float32(to.pos[0])+sys.lifebarOffsetX, float32(to.pos[1]), layerno, sys.lifebarScale)
-			to.successflag++
-		}
-	}
-}
-func (to *LifeBarTrialsOverlay) draw(layerno int16, f []*Fnt) {
-	if to.active && sys.cgi[0].trialslist.trialspresent {
-		ct := sys.cgi[0].trialslist.currentTrial - 1
-		// if trials are still active, then draw text
-		if ct < sys.cgi[0].trialslist.numoftrials {
-			for i := int32(0); i < sys.cgi[0].trialslist.trialnumsteps[ct]; i++ {
-				if i < sys.cgi[0].trialslist.currenttrialStep-1 {
-					to.completedtext.lay.DrawText(float32(to.pos[0])+sys.lifebarOffsetX+float32(to.spacing[0]*i), float32(to.pos[1])+float32(to.spacing[1]*i), sys.lifebarScale, layerno,
-						sys.cgi[0].trialslist.trialsteps[ct][i], f[to.completedtext.font[0]], to.completedtext.font[1], to.completedtext.font[2], to.completedtext.palfx, to.completedtext.frgba)
-				} else if i == sys.cgi[0].trialslist.currenttrialStep {
-					to.currenttext.lay.DrawText(float32(to.pos[0])+sys.lifebarOffsetX+float32(to.spacing[0]*i), float32(to.pos[1])+float32(to.spacing[1]*i), sys.lifebarScale, layerno,
-						sys.cgi[0].trialslist.trialsteps[ct][i], f[to.currenttext.font[0]], to.currenttext.font[1], to.currenttext.font[2], to.currenttext.palfx, to.currenttext.frgba)
-				} else {
-					to.text.lay.DrawText(float32(to.pos[0])+sys.lifebarOffsetX+float32(to.spacing[0]*i), float32(to.pos[1])+float32(to.spacing[1]*i), sys.lifebarScale, layerno,
-						sys.cgi[0].trialslist.trialsteps[ct][i], f[to.text.font[0]], to.text.font[1], to.text.font[2], to.text.palfx, to.text.frgba)
-				}
-				// need to write glyphs display
-			}
-		}
-	}
-}
-
 type LifeBarMode struct {
 	pos  [2]int32
 	text LbText
@@ -2724,7 +2611,6 @@ type Lifebar struct {
 	sc         [2]*LifeBarScore
 	ma         *LifeBarMatch
 	ai         [2]*LifeBarAiLevel
-	to         *LifeBarTrialsOverlay
 	mo         map[string]*LifeBarMode
 	missing    map[string]int
 	active     bool
@@ -3202,10 +3088,6 @@ func loadLifebar(deffile string) (*Lifebar, error) {
 			if l.mo == nil {
 				l.mo = readLifeBarMode(is, l.sff, l.at, l.fnt[:])
 			}
-		case "trials":
-			if l.to == nil {
-				l.to = readLifeBarTrialsOverlay(is, l.sff, l.at, l.fnt[:])
-			}
 		}
 	}
 	//fightfx scale
@@ -3403,8 +3285,6 @@ func (l *Lifebar) step() {
 	for i := range l.ai {
 		l.ai[i].step()
 	}
-	//LifeBarTrials
-	l.to.step()
 	//LifeBarMode
 	if _, ok := l.mo[sys.gameMode]; ok {
 		l.mo[sys.gameMode].step()
