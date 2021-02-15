@@ -3727,6 +3727,7 @@ function start.trialschecker()
 				start.trialsdata.trialanimno[i][j] = trialinfo('currenttrialanimno')
 			end
 		end
+		currenttrialAdd(1,0)
 		--initialize all of the graphic trial line elements
 		start.trialsdata.drawtextline = {}
 		start.trialsdata.drawcurrenttextline = {}
@@ -3734,15 +3735,17 @@ function start.trialschecker()
 		start.trialsdata.drawtextbg = {}
 		start.trialsdata.drawcurrentbg = {}
 		start.trialsdata.drawcompletedbg = {}
-		start.trialsdata.drawsuccess = false
+		start.trialsdata.drawglyphline = {}
+		start.trialsdata.drawsuccess = 0
+		start.trialsdata.drawtrialcounter = main.f_createTextImg(motif.trials_info, 'trialcounter')
+		start.trialsdata.drawtrialcounter:update({x = motif.trials_info.pos[1]+motif.trials_info.trialcounter_offset[1], y = motif.trials_info.pos[2]+motif.trials_info.trialcounter_offset[2],})
 		for i = 1, start.trialsdata.maxsteps, 1 do
-			local tempoffset = {motif.trials_info.pos[1]+motif.trials_info.text_offset[1]+motif.trials_info.spacing[1]*(i), motif.trials_info.pos[2]+motif.trials_info.text_offset[2]+motif.trials_info.spacing[2]*(i)}
-			start.trialsdata.drawtextline[i] = main.f_createTextImg(motif.trials_info, 'text')
-			start.trialsdata.drawtextline[i]:update({x = tempoffset[1], y = tempoffset[2],})
-			start.trialsdata.drawcurrenttextline[i] = main.f_createTextImg(motif.trials_info, 'currenttext')
-			start.trialsdata.drawcurrenttextline[i]:update({x = tempoffset[1], y = tempoffset[2],})
-			start.trialsdata.drawcompletedtextline[i] = main.f_createTextImg(motif.trials_info, 'completedtext')
-			start.trialsdata.drawcompletedtextline[i]:update({x = tempoffset[1], y = tempoffset[2],})
+			start.trialsdata.drawtextline[i] = main.f_createTextImg(motif.trials_info, 'upcomingstep_text')
+			start.trialsdata.drawtextline[i]:update({x = motif.trials_info.pos[1]+motif.trials_info.upcomingstep_text_offset[1]+motif.trials_info.spacing[1]*(i-1), y = motif.trials_info.pos[2]+motif.trials_info.upcomingstep_text_offset[2]+motif.trials_info.spacing[2]*(i-1),})
+			start.trialsdata.drawcurrenttextline[i] = main.f_createTextImg(motif.trials_info, 'currentstep_text')
+			start.trialsdata.drawcurrenttextline[i]:update({x = motif.trials_info.pos[1]+motif.trials_info.currentstep_text_offset[1]+motif.trials_info.spacing[1]*(i-1), y = motif.trials_info.pos[2]+motif.trials_info.currentstep_text_offset[2]+motif.trials_info.spacing[2]*(i-1),})
+			start.trialsdata.drawcompletedtextline[i] = main.f_createTextImg(motif.trials_info, 'completedstep_text')
+			start.trialsdata.drawcompletedtextline[i]:update({x = motif.trials_info.pos[1]+motif.trials_info.completedstep_text_offset[1]+motif.trials_info.spacing[1]*(i-1), y = motif.trials_info.pos[2]+motif.trials_info.completedstep_text_offset[2]+motif.trials_info.spacing[2]*(i-1),})
 		end
 		start.trialsdata.active = true
 	end
@@ -3752,15 +3755,28 @@ function start.trialschecker()
 
 	if start.trialsdata.active then 
 		if ct <= start.trialsdata.numoftrials then
+			--trials counter
+			local trtext = motif.trials_info.trialcounter_text
+			trtext = trtext:gsub('%%s', tostring(ct)):gsub('%%t', tostring(start.trialsdata.numoftrials))
+			start.trialsdata.drawtrialcounter:update({text = trtext})
+			start.trialsdata.drawtrialcounter:draw()
+
 			--background for all lines
 			animUpdate(motif.trials_info.bg_data)
 			animDraw(motif.trials_info.bg_data)
 
 			--backgrounds and text for each line
 			for i = 1, start.trialsdata.trialnumsteps[ct], 1 do
-				local tempoffset = {motif.trials_info.pos[1]+motif.trials_info.text_offset[1]+motif.trials_info.spacing[1]*(i), motif.trials_info.pos[2]+motif.trials_info.text_offset[2]+motif.trials_info.spacing[2]*(i)}
+				--local tempoffset = {motif.trials_info.pos[1]+motif.trials_info.text_offset[1]+motif.trials_info.spacing[1]*(i), motif.trials_info.pos[2]+motif.trials_info.text_offset[2]+motif.trials_info.spacing[2]*(i)}
+				local tempoffset = {motif.trials_info.spacing[1]*(i-2),motif.trials_info.spacing[2]*(i-2)}
+				--local font_def = main.font_def[motif.trials_info.text_font[1] .. motif.trials_info.text_font_height]
+				--local glyphscaleX = font_def.Size[2] * motif.trials_info.text_font_scale[2] / motif.glyphs_data[start.trialsdata.trialglyphs[ct][i]].info.Size[2] * motif.trials_info.glyphs_scale[1]
+				--local glyphscaleY = font_def.Size[2] * motif.trials_info.text_font_scale[2] / motif.glyphs_data[start.trialsdata.trialglyphs[ct][i]].info.Size[2] * motif.trials_info.glyphs_scale[2]
 				if i < cts + 1 then
-					--to.completedbg.DrawScaled(float32(to.pos[0])+sys.lifebarOffsetX+float32(to.spacing[0]*i), float32(to.pos[1])+float32(to.spacing[1]*i), layerno, sys.lifebarScale)
+					start.trialsdata.drawtextbg[i] = 0
+					start.trialsdata.drawcurrentbg[i] = 0
+					start.trialsdata.drawcompletedbg[i] = main.f_animPosDraw(motif.trials_info.completedstep_bg_data, tempoffset[1], tempoffset[2], 1, true)
+
 					start.trialsdata.drawtextline[i]:update({text = ''})
 					start.trialsdata.drawcurrenttextline[i]:update({text = ''})
 					start.trialsdata.drawcompletedtextline[i]:update({text = start.trialsdata.trialtext[ct][i]})
@@ -3768,45 +3784,45 @@ function start.trialschecker()
 					start.trialsdata.drawcurrenttextline[i]:draw()
 					start.trialsdata.drawcompletedtextline[i]:draw()
 
-					start.trialsdata.drawtextbg[i] = 0
-					start.trialsdata.drawcurrentbg[i] = 0
-					start.trialsdata.drawcompletedbg[i] = main.f_animPosDraw(motif.trials_info.completedbg_data, tempoffset[1], tempoffset[2], 1, true)
+				--	animSetScale(motif.glyphs_data[start.trialsdata.trialglyphs[ct][i]].anim, glyphscaleX, glyphscaleY)
+				--	start.trialsdata.drawglyphline[i] = main.f_animPosDraw(motif.glyphs_data[start.trialsdata.trialglyphs[ct][i]].anim, tempoffset[1], tempoffset[2], 1, true)
+				--animDraw(motif.glyphs_data[start.trialsdata.trialglyphs[ct][i]].anim)
 				elseif i == cts + 1 then
-					--to.currentbg.DrawScaled(float32(to.pos[0])+sys.lifebarOffsetX+float32(to.spacing[0]*i), float32(to.pos[1])+float32(to.spacing[1]*i), layerno, sys.lifebarScale)
+					start.trialsdata.drawtextbg[i] = 0
+					start.trialsdata.drawcompletedbg[i] = 0
+					start.trialsdata.drawcurrentbg[i] = main.f_animPosDraw(motif.trials_info.currentstep_bg_data, tempoffset[1], tempoffset[2], 1, true)
+
 					start.trialsdata.drawtextline[i]:update({text = ''})
 					start.trialsdata.drawcurrenttextline[i]:update({text = start.trialsdata.trialtext[ct][i]})
 					start.trialsdata.drawcompletedtextline[i]:update({text = ''})
 					start.trialsdata.drawtextline[i]:draw()
 					start.trialsdata.drawcompletedtextline[i]:draw()
 					start.trialsdata.drawcurrenttextline[i]:draw()
-
-					start.trialsdata.drawtextbg[i] = 0
-					start.trialsdata.drawcompletedbg[i] = 0
-					start.trialsdata.drawcurrentbg[i] = main.f_animPosDraw(motif.trials_info.currentbg_data, tempoffset[1], tempoffset[2], 1, true)
 				else
-					--to.textbg.DrawScaled(float32(to.pos[0])+sys.lifebarOffsetX+float32(to.spacing[0]*i), float32(to.pos[1])+float32(to.spacing[1]*i), layerno, sys.lifebarScale)
+					start.trialsdata.drawcurrentbg[i] = 0
+					start.trialsdata.drawcompletedbg[i] = 0
+					start.trialsdata.drawtextbg[i] = main.f_animPosDraw(motif.trials_info.upcomingstep_bg_data, tempoffset[1], tempoffset[2], 1, true)
+
 					start.trialsdata.drawtextline[i]:update({text = start.trialsdata.trialtext[ct][i]})
 					start.trialsdata.drawcurrenttextline[i]:update({text = ''})
 					start.trialsdata.drawcompletedtextline[i]:update({text = ''})
 					start.trialsdata.drawcurrenttextline[i]:draw()
 					start.trialsdata.drawcompletedtextline[i]:draw()
 					start.trialsdata.drawtextline[i]:draw()
-
-					start.trialsdata.drawcurrentbg[i] = 0
-					start.trialsdata.drawcompletedbg[i] = 0
-					start.trialsdata.drawtextbg[i] = main.f_animPosDraw(motif.trials_info.textbg_data, tempoffset[1], tempoffset[2], 1, true)
 				end
 			end
 			--if all trials are completed, do not display backgrounds and show all clear anim instead
-		elseif ct == start.trialsdata.numoftrials then
-			animUpdate(motif.trials_info.allclear_data)
-			animDraw(motif.trials_info.allclear_data)
+		elseif ct > start.trialsdata.numoftrials then
+			start.trialsdata.drawsuccess = 0
+			freezeLifeBarTimer(true)
+			start.trialsdata.drawtrialcounter:update({text = 'All Trials Clear!'})
+			start.trialsdata.drawtrialcounter:draw()
+			animUpdate(motif.trials_info.allclear_bg_data)
+			animDraw(motif.trials_info.allclear_bg_data)
+			animUpdate(motif.trials_info.allclear_front_data)
+			animDraw(motif.trials_info.allclear_front_data)
 		end
 	end
-
-	local throwcheck = false
-	local animcheck = false
-	if start.trialsdata.trialanimno[ct][cts+1] ~= -2147483648 then animcheck = true end
 
 	--Gating Criteria:
 	-- you'll want to change this if you're doing something odd with your chars 
@@ -3819,20 +3835,21 @@ function start.trialschecker()
 
 	--(root,hitpausetime>1 && root,movehit || enemynear,map(projhit) && !enemynear,hitshakeover || var(8)>0 && root,time=1) && 
 	--(root,map(SpVer)=var(5) || var(5)=-1) &&(root,anim=var(7)||var(7)=-1) && root,map(T_list)=var(1)  && !var(4)
-
-	if (stateno() == start.trialsdata.trialstateno[ct][cts+1]) and (anim() == start.trialsdata.trialanimno[ct][cts+1] or not(animcheck)) and ((hitpausetime() > 1 and movehit()) or (projhittime(numproj()) > 1 and hitshakeover()) or throwcheck) then -- or (root,map(SpVer)=var(5) || var(5)=-1) && 
-		--continue if currenttrial is less than max trial
-		if ct < start.trialsdata.numoftrials + 1 then
+	if ct <= start.trialsdata.numoftrials then
+		local throwcheck = false
+		local animcheck = false
+		if start.trialsdata.trialanimno[ct][cts+1] ~= -2147483648 then animcheck = true end
+		if (stateno() == start.trialsdata.trialstateno[ct][cts+1]) and (anim() == start.trialsdata.trialanimno[ct][cts+1] or not(animcheck)) and ((hitpausetime() > 1 and movehit()) or (projhittime(numproj()) > 1 and hitshakeover()) or throwcheck) then -- or (root,map(SpVer)=var(5) || var(5)=-1) && 
 			--currenttrialstep initializes at 0
 			ncts = cts + 1
-			--if next current step is 1 (first step so combocount is 0) or if next current step is greater than 1 and combocount is greater than 0... trial attempt is valid!
+			--if next current step is 1 or if next current step is greater than 1 and combocount is greater than 0... trial attempt is valid!
 			if ncts == 1 or (ncts > 1 and combocount() > 0) then
 				-- if next current step is equal to number of steps, trial is complete, move to next trial
 				if ncts >= start.trialsdata.trialnumsteps[ct]  then
 					start.trialsdata.currenttrial = ct + 1
 					start.trialsdata.currenttrialstep = 0
-					--if trial was successfully completed, show success anim
-					start.trialsdata.drawsuccess = true
+					--if trial was successfully completed, grab success anim length and display it
+					if ct < start.trialsdata.numoftrials then start.trialsdata.drawsuccess = math.max(animGetLength(motif.trials_info.success_front_data), animGetLength(motif.trials_info.success_bg_data)) end
 				-- otherwise, move to next trial step
 				elseif ncts < start.trialsdata.trialnumsteps[ct] then
 					start.trialsdata.currenttrialstep = ncts
@@ -3841,15 +3858,17 @@ function start.trialschecker()
 			elseif (ncts > 1 and combocount() == 0) then
 				start.trialsdata.currenttrialstep = 0
 			end
+		elseif combocount() == 0 then
+			--gating criteria failed, trial attempt failed
+			start.trialsdata.currenttrialstep = 0
 		end
-	elseif combocount() == 0 then
-		--gating criteria failed, trial attempt failed
-		start.trialsdata.currenttrialstep = 0
 	end
-	if start.trialsdata.drawsuccess then
-		print(motif.trials_info.success_data)
-		animUpdate(motif.trials_info.success_data)
-		animDraw(motif.trials_info.success_data)
+	if start.trialsdata.drawsuccess > 0 then
+		animUpdate(motif.trials_info.success_bg_data)
+		animDraw(motif.trials_info.success_bg_data)
+		animUpdate(motif.trials_info.success_front_data)
+		animDraw(motif.trials_info.success_front_data)
+		start.trialsdata.drawsuccess = start.trialsdata.drawsuccess - 1
 	end
 end
 

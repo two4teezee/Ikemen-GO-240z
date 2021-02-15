@@ -2295,27 +2295,32 @@ func (tr *LifeBarTimer) draw(layerno int16, f []*Fnt) {
 	if tr.active && sys.lifebar.ti.framespercount > 0 &&
 		tr.text.font[0] >= 0 && int(tr.text.font[0]) < len(f) && f[tr.text.font[0]] != nil { //&& sys.time >= 0 {
 		text := tr.text.text
-		totalSec := float64(timeTotal()) / 60
-		if sys.time < 0 {
-			totalSec = float64(timeByTickCounts()) / 60
+		if sys.timerFrozen {
+			text = fmt.Sprintf(sys.timerVal)
+		} else {
+			totalSec := float64(timeTotal()) / 60
+			if sys.time < 0 {
+				totalSec = float64(timeByTickCounts()) / 60
+			}
+			h := math.Floor(totalSec / 3600)
+			m := math.Floor((totalSec/3600 - h) * 60)
+			s := math.Floor(((totalSec/3600-h)*60 - m) * 60)
+			x := math.Floor((((totalSec/3600-h)*60-m)*60 - s) * 100)
+			ms, ss, xs := fmt.Sprintf("%.0f", m), fmt.Sprintf("%.0f", s), fmt.Sprintf("%.0f", x)
+			if len(ms) < 2 {
+				ms = "0" + ms
+			}
+			if len(ss) < 2 {
+				ss = "0" + ss
+			}
+			if len(xs) < 2 {
+				xs = "0" + xs
+			}
+			text = strings.Replace(text, "%m", ms, 1)
+			text = strings.Replace(text, "%s", ss, 1)
+			text = strings.Replace(text, "%x", xs, 1)
+			sys.timerVal = text
 		}
-		h := math.Floor(totalSec / 3600)
-		m := math.Floor((totalSec/3600 - h) * 60)
-		s := math.Floor(((totalSec/3600-h)*60 - m) * 60)
-		x := math.Floor((((totalSec/3600-h)*60-m)*60 - s) * 100)
-		ms, ss, xs := fmt.Sprintf("%.0f", m), fmt.Sprintf("%.0f", s), fmt.Sprintf("%.0f", x)
-		if len(ms) < 2 {
-			ms = "0" + ms
-		}
-		if len(ss) < 2 {
-			ss = "0" + ss
-		}
-		if len(xs) < 2 {
-			xs = "0" + xs
-		}
-		text = strings.Replace(text, "%m", ms, 1)
-		text = strings.Replace(text, "%s", ss, 1)
-		text = strings.Replace(text, "%x", xs, 1)
 		tr.text.lay.DrawText(float32(tr.pos[0])+sys.lifebarOffsetX, float32(tr.pos[1]), sys.lifebarScale, layerno,
 			text, f[tr.text.font[0]], tr.text.font[1], tr.text.font[2], tr.text.palfx, tr.text.frgba)
 		tr.top.DrawScaled(float32(tr.pos[0])+sys.lifebarOffsetX, float32(tr.pos[1]), layerno, sys.lifebarScale)
@@ -3359,7 +3364,6 @@ func (l *Lifebar) reset() {
 		l.wi[i].reset()
 	}
 	l.ti.reset()
-	l.to.reset()
 	for i := range l.co {
 		l.co[i].reset()
 	}
@@ -3495,9 +3499,6 @@ func (l *Lifebar) draw(layerno int16) {
 			//LifeBarTimer
 			l.tr.bgDraw(layerno)
 			l.tr.draw(layerno, l.fnt[:])
-			//LifeBarTimer
-			l.to.bgDraw(layerno)
-			l.to.draw(layerno, l.fnt[:])
 			//LifeBarScore
 			for i := range l.sc {
 				l.sc[i].bgDraw(layerno)

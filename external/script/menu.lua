@@ -375,6 +375,8 @@ function menu.f_commandlistParse()
 					tbl = sel,
 					commandlist = start.f_getCharData(sel.ref).commandlist,
 				})
+				print(tbl)
+				print(commandlist)
 			end
 		end
 	end

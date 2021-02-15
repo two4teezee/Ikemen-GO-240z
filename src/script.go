@@ -775,6 +775,10 @@ func systemScriptInit(l *lua.LState) {
 		l.Push(newUserData(l, fnt))
 		return 1
 	})
+	luaRegister(l, "freezeLifeBarTimer", func(*lua.LState) int {
+		sys.timerFrozen = boolArg(l, 1)
+		return 0
+	})
 	luaRegister(l, "game", func(l *lua.LState) int {
 		load := func() error {
 			sys.loader.runTread()
@@ -947,6 +951,7 @@ func systemScriptInit(l *lua.LState) {
 				tbl.RawSetString("p1score", lua.LNumber(sc[0]))
 				tbl.RawSetString("p2score", lua.LNumber(sc[1]))
 				sys.timerStart = 0
+				sys.timerFrozen = false
 				sys.timerRounds = []int32{}
 				sys.scoreStart = [2]float32{}
 				sys.scoreRounds = [][2]float32{}
@@ -1888,8 +1893,6 @@ func systemScriptInit(l *lua.LState) {
 					sys.lifebar.ai[1].active = lua.LVAsBool(value)
 				case "mode":
 					sys.lifebar.activeMode = lua.LVAsBool(value)
-				case "trials":
-					sys.lifebar.to.active = lua.LVAsBool(value)
 				case "bars":
 					sys.lifebar.activeBars = lua.LVAsBool(value)
 				case "lifebar":

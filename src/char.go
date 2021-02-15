@@ -1854,31 +1854,32 @@ func (c *Char) load(def string) error {
 						trials, _ = LoadText(file)
 						return nil
 					})
-					// Parse trials -- refer to trials.lua for sample trials file
 					var triallines []string
 					triallines = SplitAndTrim(trials, "\n")
 					gi.trialslist.numoftrials = 0
 					gi.trialslist.currentTrial = 1
 					gi.trialslist.currenttrialStep = 0
-					ii := 0
 					j := 0
+					for j < len(triallines) {
+						_, name, _ := ReadIniSection(triallines, &j)
+						switch name {
+						case "trialdef":
+							gi.trialslist.numoftrials++
+						}
+					}
+					gi.trialslist.trialnumsteps = make([]int32, gi.trialslist.numoftrials)
+					gi.trialslist.trialnames = make([]string, gi.trialslist.numoftrials)
+					gi.trialslist.trialsteps = make([][]string, gi.trialslist.numoftrials)
+					gi.trialslist.trialglyphs = make([][]string, gi.trialslist.numoftrials)
+					gi.trialslist.trialstateno = make([][]int32, gi.trialslist.numoftrials)
+					gi.trialslist.trialanimno = make([][]int32, gi.trialslist.numoftrials)
+					ii := 0
+					j = 0
 					for j < len(triallines) {
 						is, name, _ := ReadIniSection(triallines, &j)
 						var steps string
 						var ok bool
 						switch name {
-						case "trialinfo":
-							if steps, ok = is.getString("numoftrials"); !ok {
-								break
-							}
-							stepstemp, _ := strconv.ParseInt(steps, 10, 32)
-							gi.trialslist.numoftrials = int32(stepstemp)
-							gi.trialslist.trialnumsteps = make([]int32, gi.trialslist.numoftrials)
-							gi.trialslist.trialnames = make([]string, gi.trialslist.numoftrials)
-							gi.trialslist.trialsteps = make([][]string, gi.trialslist.numoftrials)
-							gi.trialslist.trialglyphs = make([][]string, gi.trialslist.numoftrials)
-							gi.trialslist.trialstateno = make([][]int32, gi.trialslist.numoftrials)
-							gi.trialslist.trialanimno = make([][]int32, gi.trialslist.numoftrials)
 						case "trialdef":
 							if steps, ok = is.getString("trial.steps"); !ok {
 								break
