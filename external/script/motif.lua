@@ -2868,9 +2868,12 @@ motif.f_loadSprData(motif.challenger_info, {s = 'bg_', x = 0, y = 0})
 --trials spr/anim data
 local tr_pos = motif.trials_info
 for _, v in ipairs({
-	{s = 'bg_',			x = tr_pos.pos[1] + tr_pos.bg_offset[1],		y = tr_pos.pos[2] + tr_pos.bg_offset[2],		},
-	{s = 'success_',    x = tr_pos.pos[1] + tr_pos.success_offset[1],	y = tr_pos.pos[2] + tr_pos.success_offset[2],	},
-	{s = 'allclear_',   x = tr_pos.pos[1] + tr_pos.allclear_offset[1],	y = tr_pos.pos[2] + tr_pos.allclear_offset[2],	},
+	{s = 'bg_',				x = tr_pos.pos[1] + tr_pos.bg_offset[1],			y = tr_pos.pos[2] + tr_pos.bg_offset[2],			},
+	{s = 'success_',    	x = tr_pos.pos[1] + tr_pos.success_offset[1],		y = tr_pos.pos[2] + tr_pos.success_offset[2],		},
+	{s = 'allclear_',   	x = tr_pos.pos[1] + tr_pos.allclear_offset[1],		y = tr_pos.pos[2] + tr_pos.allclear_offset[2],		},
+	{s = 'textbg_',			x = tr_pos.pos[1] + tr_pos.textbg_offset[1],		y = tr_pos.pos[2] + tr_pos.textbg_offset[2],		},
+	{s = 'currentbg_',		x = tr_pos.pos[1] + tr_pos.currentbg_offset[1],		y = tr_pos.pos[2] + tr_pos.currentbg_offset[2],		},
+	{s = 'completedbg_',	x = tr_pos.pos[1] + tr_pos.completedbg_offset[1],	y = tr_pos.pos[2] + tr_pos.completedbg_offset[2],	},
 }) do
 	motif.f_loadSprData(motif.trials_info, v)
 end
