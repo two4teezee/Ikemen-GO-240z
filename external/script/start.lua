@@ -3707,6 +3707,7 @@ function start.f_trialschecker()
 			trialglyphs = {},
 			trialstateno = {},
 			trialanimno = {},
+			trialisthrow = {},
 		}
 		for i = 1, start.trialsdata.numoftrials, 1 do
 			currenttrialAdd(i,0)
@@ -3719,12 +3720,14 @@ function start.f_trialschecker()
 			start.trialsdata.trialglyphs[i] = {}
 			start.trialsdata.trialstateno[i] = {}
 			start.trialsdata.trialanimno[i] = {}
+			start.trialsdata.trialisthrow[i] = {}
 			for j = 1, start.trialsdata.trialnumsteps[i], 1 do
 				currenttrialAdd(i,j-1)
 				start.trialsdata.trialtext[i][j] = trialinfo('currenttrialtext')
 				start.trialsdata.trialglyphs[i][j] = trialinfo('currenttrialglyphs')
 				start.trialsdata.trialstateno[i][j] = trialinfo('currenttrialstateno')
 				start.trialsdata.trialanimno[i][j] = trialinfo('currenttrialanimno')
+				start.trialsdata.trialisthrow[i][j] = trialinfo('currenttrialisthrow')
 			end
 		end
 		currenttrialAdd(1,0)

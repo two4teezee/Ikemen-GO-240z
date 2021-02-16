@@ -1434,6 +1434,7 @@ type ParsedTrials struct {
 	trialglyphs      [][]string
 	trialstateno     [][]int32
 	trialanimno      [][]int32
+	trialisthrow     [][]bool
 }
 
 type CharGlobalInfo struct {
@@ -1873,6 +1874,7 @@ func (c *Char) load(def string) error {
 					gi.trialslist.trialglyphs = make([][]string, gi.trialslist.numoftrials)
 					gi.trialslist.trialstateno = make([][]int32, gi.trialslist.numoftrials)
 					gi.trialslist.trialanimno = make([][]int32, gi.trialslist.numoftrials)
+					gi.trialslist.trialisthrow = make([][]bool, gi.trialslist.numoftrials)
 					ii := 0
 					j = 0
 					for j < len(triallines) {
@@ -1895,6 +1897,7 @@ func (c *Char) load(def string) error {
 							glyphstemp := make([]string, gi.trialslist.trialnumsteps[ii])
 							statetemp := make([]int32, gi.trialslist.trialnumsteps[ii])
 							animtemp := make([]int32, gi.trialslist.trialnumsteps[ii])
+							throwtemp := make([]bool, gi.trialslist.trialnumsteps[ii])
 							for k := 0; k < int(gi.trialslist.trialnumsteps[ii]); k++ {
 								texttemp[k] = is[("trial.line" + strconv.Itoa(k+1) + ".text")]
 								glyphstemp[k] = is[("trial.line" + strconv.Itoa(k+1) + ".glyphs")]
@@ -1902,7 +1905,7 @@ func (c *Char) load(def string) error {
 									temp, _ := strconv.ParseInt(is[("trial.line"+strconv.Itoa(k+1)+".stateno")], 10, 32)
 									statetemp[k] = int32(temp)
 								} else {
-									break //sc.trialslist.trialstateno[i][k] = ""
+									break
 								}
 								if is[("trial.line"+strconv.Itoa(k+1)+".anim")] != "" {
 									temp, _ := strconv.ParseInt(is[("trial.line"+strconv.Itoa(k+1)+".anim")], 10, 32)
@@ -1910,11 +1913,22 @@ func (c *Char) load(def string) error {
 								} else {
 									animtemp[k] = int32(math.NaN())
 								}
+								if is[("trial.line"+strconv.Itoa(k+1)+".isthrow")] != "" {
+									temp, _ := strconv.ParseInt(is[("trial.line"+strconv.Itoa(k+1)+".isthrow")], 10, 32)
+									if temp != 0 {
+										throwtemp[k] = true
+									} else {
+										throwtemp[k] = false
+									}
+								} else {
+									throwtemp[k] = false
+								}
 							}
 							gi.trialslist.trialsteps[ii] = texttemp
 							gi.trialslist.trialglyphs[ii] = glyphstemp
 							gi.trialslist.trialstateno[ii] = statetemp
 							gi.trialslist.trialanimno[ii] = animtemp
+							gi.trialslist.trialisthrow[ii] = throwtemp
 							ii++
 						}
 					}

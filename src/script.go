@@ -2807,6 +2807,8 @@ func triggerFunctions(l *lua.LState) {
 			l.Push(lua.LNumber(sys.cgi[0].trialslist.trialstateno[int(sys.cgi[0].trialslist.currentTrial)-1][int(sys.cgi[0].trialslist.currenttrialStep)]))
 		case "currenttrialanimno":
 			l.Push(lua.LNumber(sys.cgi[0].trialslist.trialanimno[int(sys.cgi[0].trialslist.currentTrial)-1][int(sys.cgi[0].trialslist.currenttrialStep)]))
+		case "currenttrialisthrow":
+			l.Push(lua.LBool(sys.cgi[0].trialslist.trialisthrow[int(sys.cgi[0].trialslist.currentTrial)-1][int(sys.cgi[0].trialslist.currenttrialStep)]))
 		}
 		return 1
 	})

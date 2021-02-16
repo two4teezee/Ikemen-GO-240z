@@ -133,8 +133,7 @@ Debug Options:
 		"data/guardbreak.zss",
 		"data/rank.zss",
 		"data/score.zss",
-		"data/tag.zss",
-		"data/trials.zss"
+		"data/tag.zss"
     ],
 	"ControllerStickSensitivity": 0.4,
 	"Credits": 10,
