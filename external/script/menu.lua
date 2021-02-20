@@ -297,7 +297,7 @@ end
 --;===========================================================
 --; COMMAND LIST
 --;===========================================================
-local function f_commandlistData(t, str, align, col)
+function menu.f_commandlistData(t, str, align, col)
 	local t_insert = {}
 	str = str .. '<#>'
 	for m1, m2 in str:gmatch('(.-)<([^%g <>]+)>') do
@@ -357,7 +357,7 @@ function menu.f_commandlistParse()
 								elseif tabs > 1 then
 									align = -1 --right align
 								end
-								subt, col = f_commandlistData(subt, m, align, col)
+								subt, col = menu.f_commandlistData(subt, m, align, col)
 							end
 							table.insert(t, subt)
 						end
