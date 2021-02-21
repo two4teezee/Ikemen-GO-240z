@@ -3777,7 +3777,7 @@ function start.f_trialschecker()
 	local cts = start.trialsdata.currenttrialstep
 
 	if start.trialsdata.active then 
-		if ct <= start.trialsdata.numoftrials then
+		if ct <= start.trialsdata.numoftrials and start.trialsdata.drawsuccess == 0 then
 			--trials counter
 			local trtext = motif.trials_info.trialcounter_text
 			trtext = trtext:gsub('%%s', tostring(ct)):gsub('%%t', tostring(start.trialsdata.numoftrials))
@@ -3877,7 +3877,7 @@ function start.f_trialschecker()
 	-- 		3c) projectile hit OR
 	-- 		3d) is a throw bool set to true by trials list OR...
 
-	if ct <= start.trialsdata.numoftrials then
+	if ct <= start.trialsdata.numoftrials and start.trialsdata.drawsuccess == 0 then
 		local throwcheck = false
 		local animcheck = false
 		local specialvar = false --placeholder for general purpose trials boolean, to be revisited

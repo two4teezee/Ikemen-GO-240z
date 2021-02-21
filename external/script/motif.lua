@@ -1810,6 +1810,7 @@ local motif =
 		glyphs_scale = {1.0,1.0}, --Ikemen feature
 		glyphs_spacing = {0,0}, --Ikemen feature
 		glyphs_align = 1, --Ikemen feature
+		success_pos = {0, 0}, --Ikemen feature
 		success_snd = {-1, 0}, --Ikemen feature
 		success_bg_anim = -1, --Ikemen feature
 		success_bg_spr = {}, --Ikemen feature
@@ -1828,6 +1829,7 @@ local motif =
 		success_text_font_scale = {1.0, 1.0}, --Ikemen feature
 		success_text_font_height = -1, --Ikemen feature
 		success_text_text = '', --Ikemen feature
+		allclear_pos = {0, 0}, --Ikemen feature
 		allclear_snd = {-1, 0}, --Ikemen feature
 		allclear_bg_anim = -1, --Ikemen feature
 		allclear_bg_spr = {}, --Ikemen feature
@@ -2890,14 +2892,14 @@ motif.f_loadSprData(motif.challenger_info, {s = 'bg_', x = 0, y = 0})
 --trials spr/anim data
 local tr_pos = motif.trials_info
 for _, v in ipairs({
-	{s = 'bg_',					x = tr_pos.pos[1] + tr_pos.bg_offset[1],					y = tr_pos.pos[2] + tr_pos.bg_offset[2],				},
-	{s = 'success_bg_',    		x = tr_pos.pos[1] + tr_pos.success_bg_offset[1],			y = tr_pos.pos[2] + tr_pos.success_bg_offset[2],		},
-	{s = 'allclear_bg_',	   	x = tr_pos.pos[1] + tr_pos.allclear_bg_offset[1],			y = tr_pos.pos[2] + tr_pos.allclear_bg_offset[2],		},
-	{s = 'success_front_',    	x = tr_pos.pos[1] + tr_pos.success_front_offset[1],			y = tr_pos.pos[2] + tr_pos.success_front_offset[2],		},
-	{s = 'allclear_front_',   	x = tr_pos.pos[1] + tr_pos.allclear_front_offset[1],		y = tr_pos.pos[2] + tr_pos.allclear_front_offset[2],	},
-	{s = 'upcomingstep_bg_',	x = tr_pos.pos[1] + tr_pos.upcomingstep_bg_offset[1],		y = tr_pos.pos[2] + tr_pos.upcomingstep_bg_offset[2],	},
-	{s = 'currentstep_bg_',		x = tr_pos.pos[1] + tr_pos.currentstep_bg_offset[1],		y = tr_pos.pos[2] + tr_pos.currentstep_bg_offset[2],	},
-	{s = 'completedstep_bg_',	x = tr_pos.pos[1] + tr_pos.completedstep_bg_offset[1],		y = tr_pos.pos[2] + tr_pos.completedstep_bg_offset[2],	},
+	{s = 'bg_',					x = tr_pos.pos[1] + tr_pos.bg_offset[1],						y = tr_pos.pos[2] + tr_pos.bg_offset[2],						},
+	{s = 'success_bg_',    		x = tr_pos.success_pos[1] + tr_pos.success_bg_offset[1],		y = tr_pos.success_pos[2] + tr_pos.success_bg_offset[2],		},
+	{s = 'allclear_bg_',	   	x = tr_pos.allclear_pos[1] + tr_pos.allclear_bg_offset[1],		y = tr_pos.allclear_pos[2] + tr_pos.allclear_bg_offset[2],		},
+	{s = 'success_front_',    	x = tr_pos.success_pos[1] + tr_pos.success_front_offset[1],		y = tr_pos.success_pos[2] + tr_pos.success_front_offset[2],		},
+	{s = 'allclear_front_',   	x = tr_pos.allclear_pos[1] + tr_pos.allclear_front_offset[1],	y = tr_pos.allclear_pos[2] + tr_pos.allclear_front_offset[2],	},
+	{s = 'upcomingstep_bg_',	x = tr_pos.pos[1] + tr_pos.upcomingstep_bg_offset[1],			y = tr_pos.pos[2] + tr_pos.upcomingstep_bg_offset[2],			},
+	{s = 'currentstep_bg_',		x = tr_pos.pos[1] + tr_pos.currentstep_bg_offset[1],			y = tr_pos.pos[2] + tr_pos.currentstep_bg_offset[2],			},
+	{s = 'completedstep_bg_',	x = tr_pos.pos[1] + tr_pos.completedstep_bg_offset[1],			y = tr_pos.pos[2] + tr_pos.completedstep_bg_offset[2],			},
 }) do
 	motif.f_loadSprData(motif.trials_info, v)
 end
