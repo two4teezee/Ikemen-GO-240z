@@ -1809,6 +1809,7 @@ local motif =
 		glyphs_offset = {0, 0}, --Ikemen feature
 		glyphs_scale = {1.0,1.0}, --Ikemen feature
 		glyphs_spacing = {0,0}, --Ikemen feature
+		glyphs_align = 1, --Ikemen feature
 		success_snd = {-1, 0}, --Ikemen feature
 		success_bg_anim = -1, --Ikemen feature
 		success_bg_spr = {}, --Ikemen feature
