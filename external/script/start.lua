@@ -3692,6 +3692,7 @@ start.trialsInit = false
 
 function start.f_trialschecker()
 	if not start.trialsInit then
+		setPower(3000)
 		--bring trials data in from Go trials data parser
 		start.trialsInit = true
 		start.trialsdata = {
@@ -3760,6 +3761,7 @@ function start.f_trialschecker()
 		start.trialsdata.drawcurrenttextline = {}
 		start.trialsdata.drawcompletedtextline = {}
 		start.trialsdata.drawsuccess = 0
+		start.trialsdata.drawallclear = math.max(animGetLength(motif.trials_info.allclear_front_data), animGetLength(motif.trials_info.allclear_bg_data)) 
 		start.trialsdata.drawtrialcounter = main.f_createTextImg(motif.trials_info, 'trialcounter')
 		start.trialsdata.drawtrialcounter:update({x = motif.trials_info.pos[1]+motif.trials_info.trialcounter_offset[1], y = motif.trials_info.pos[2]+motif.trials_info.trialcounter_offset[2],})
 		for i = 1, start.trialsdata.maxsteps, 1 do
@@ -3790,7 +3792,7 @@ function start.f_trialschecker()
 						
 			--background and text for each line: completedstep, currentstep, and upcomingstep
 			for i = 1, start.trialsdata.trialnumsteps[ct], 1 do
-				local tempoffset = {motif.trials_info.spacing[1]*(i-2),motif.trials_info.spacing[2]*(i-2)}
+				local tempoffset = {motif.trials_info.spacing[1]*(i-1),motif.trials_info.spacing[2]*(i-1)}
 				if i < cts + 1 then
 					main.f_animPosDraw(motif.trials_info.completedstep_bg_data, tempoffset[1], tempoffset[2], 1, true)
 					start.trialsdata.drawcompletedtextline[i]:update({text = start.trialsdata.trialtext[ct][i]})
@@ -3855,16 +3857,19 @@ function start.f_trialschecker()
 
 		--if all trials are completed, stop any ongoing anims, freeze timer, kill all trial lines/bgs and show all clear anim instead
 		elseif ct > start.trialsdata.numoftrials then
+			if start.trialsdata.drawallclear ~= 0 then
+				sndPlay(motif.files.snd_data, motif.trials_info.allclear_snd[1], motif.trials_info.allclear_snd[2])
+				animUpdate(motif.trials_info.allclear_bg_data)
+				animDraw(motif.trials_info.allclear_bg_data)
+				animUpdate(motif.trials_info.allclear_front_data)
+				animDraw(motif.trials_info.allclear_front_data)
+				main.f_createTextImg(motif.trials_info, 'allclear_text')
+				start.trialsdata.drawallclear = start.trialsdata.drawallclear - 1
+			end
 			start.trialsdata.drawsuccess = 0
 			freezeLifeBarTimer(true)
 			start.trialsdata.drawtrialcounter:update({text = 'All Trials Clear'})
-			start.trialsdata.drawtrialcounter:draw()
-			animUpdate(motif.trials_info.allclear_bg_data)
-			animDraw(motif.trials_info.allclear_bg_data)
-			animUpdate(motif.trials_info.allclear_front_data)
-			animDraw(motif.trials_info.allclear_front_data)
-			sndPlay(motif.files.snd_data, motif.trials_info.allclear_snd[1], motif.trials_info.allclear_snd[2])
-			main.f_createTextImg(motif.trials_info, 'allclear_text')
+			start.trialsdata.drawtrialcounter:draw()			
 		end
 	end
 
@@ -3899,6 +3904,7 @@ function start.f_trialschecker()
 							start.trialsdata.drawsuccess = math.max(motif.trials_info.success_front_displaytime, motif.trials_info.success_bg_displaytime) 
 						end
 					end
+					setPower(3000)
 				-- otherwise, move to next trial step
 				elseif ncts < start.trialsdata.trialnumsteps[ct] then
 					start.trialsdata.currenttrialstep = ncts
@@ -3906,20 +3912,25 @@ function start.f_trialschecker()
 			--if next current step is greater than 1 but combocount is n 0... combo dropped, trial attempt failed!
 			elseif (ncts > 1 and combocount() == 0) then
 				start.trialsdata.currenttrialstep = 0
+				setPower(3000)
 			end
 		elseif combocount() == 0 then
 			--gating criteria failed, trial attempt failed
 			start.trialsdata.currenttrialstep = 0
+			setPower(3000)
 		end
 	end
 	if start.trialsdata.drawsuccess > 0 then
+		sndPlay(motif.files.snd_data, motif.trials_info.success_snd[1], motif.trials_info.success_snd[2])
 		animUpdate(motif.trials_info.success_bg_data)
 		animDraw(motif.trials_info.success_bg_data)
 		animUpdate(motif.trials_info.success_front_data)
 		animDraw(motif.trials_info.success_front_data)
 		start.trialsdata.drawsuccess = start.trialsdata.drawsuccess - 1
-		sndPlay(motif.files.snd_data, motif.trials_info.success_snd[1], motif.trials_info.success_snd[2])
 		main.f_createTextImg(motif.trials_info, 'success_text')
+		if start.trialsdata.drawsuccess == 0 and motif.trials_info.resetonsuccess == 1 then
+			--write in logic here
+		end
 	end
 end
 
