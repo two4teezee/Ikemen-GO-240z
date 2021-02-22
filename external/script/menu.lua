@@ -457,7 +457,7 @@ function menu.f_commandlistRender(section, t)
 		local width = 0
 		for k, v in ipairs(cmdList[n]) do
 			if v.text ~= '' then
-				alignOffset = 0
+				--alignOffset = 0
 				if v.align == 0 then --center align
 					alignOffset = motif[section].movelist_window_width * 0.5
 				elseif v.align == -1 then --right align

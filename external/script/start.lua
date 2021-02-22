@@ -3744,11 +3744,19 @@ function start.f_trialschecker()
 				for moves in movelistline:gmatch('(	*[^	]+)') do
 					moves = moves .. '<#>'
 					start.trialsdata.drawglyphline[i][j] = {}
-					m = 1
+					tempglyphs = {}
 					for m1, m2 in moves:gmatch('(.-)<([^%g <>]+)>') do
 						if not m2:match('^#[A-Za-z0-9]+$') and not m2:match('^/$') and not m2:match('^#$') then
-							start.trialsdata.drawglyphline[i][j][m] = m2
-							m = m + 1
+							tempglyphs[#tempglyphs+1] = m2
+						end
+					end
+					if motif.trials_info.glyphs_align == -1 then
+						for ii = #tempglyphs, 1, -1 do
+							start.trialsdata.drawglyphline[i][j][#start.trialsdata.drawglyphline[i][j]+1] = tempglyphs[ii]
+						end
+					else
+						for ii = 1, #tempglyphs do
+							start.trialsdata.drawglyphline[i][j][ii] = tempglyphs[ii]
 						end
 					end
 				end
@@ -3843,7 +3851,9 @@ function start.f_trialschecker()
 						--	motif.trials_info.glyphs_window[4] - motif.trials_info.glyphs_window[2]
 						--)
 						animDraw(motif.glyphs_data[start.trialsdata.drawglyphline[ct][i][m]].anim)
-						width = motif.glyphs_data[start.trialsdata.drawglyphline[ct][i][m]].info.Size[1] * scaleX + motif.trials_info.glyphs_spacing[1]
+						if m < #start.trialsdata.drawglyphline[ct][i] then
+							width = motif.glyphs_data[start.trialsdata.drawglyphline[ct][i][m]].info.Size[1] * scaleX + motif.trials_info.glyphs_spacing[1]
+						end
 						if motif.trials_info.glyphs_align == 1 then
 							lengthOffset = lengthOffset + width
 						elseif motif.trials_info.glyphs_align == -1 then
