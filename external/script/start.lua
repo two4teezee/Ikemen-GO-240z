@@ -3765,7 +3765,6 @@ function start.f_trialschecker()
 		currenttrialAdd(1,0)
 
 		--initialize all of the graphic trial line elements
-		start.trialsdata.drawcurrentlinebg = {}
 		start.trialsdata.drawupcomingtextline = {}
 		start.trialsdata.drawcurrenttextline = {}
 		start.trialsdata.drawcompletedtextline = {}
@@ -3780,8 +3779,9 @@ function start.f_trialschecker()
 			start.trialsdata.drawcurrenttextline[i]:update({x = motif.trials_info.pos[1]+motif.trials_info.currentstep_text_offset[1]+motif.trials_info.spacing[1]*(i-1), y = motif.trials_info.pos[2]+motif.trials_info.currentstep_text_offset[2]+motif.trials_info.spacing[2]*(i-1),})
 			start.trialsdata.drawcompletedtextline[i] = main.f_createTextImg(motif.trials_info, 'completedstep_text')
 			start.trialsdata.drawcompletedtextline[i]:update({x = motif.trials_info.pos[1]+motif.trials_info.completedstep_text_offset[1]+motif.trials_info.spacing[1]*(i-1), y = motif.trials_info.pos[2]+motif.trials_info.completedstep_text_offset[2]+motif.trials_info.spacing[2]*(i-1),})
-			start.trialsdata.drawcurrentlinebg[i] = {}
 		end
+		start.trialsdata.windowXrange = motif.trials_info.window[3] - motif.trials_info.window[1]
+		start.trialsdata.windowYrange = motif.trials_info.window[4] - motif.trials_info.window[2]
 		start.trialsdata.active = true
 	end
 
@@ -3811,19 +3811,18 @@ function start.f_trialschecker()
 					sub = 'current'
 				else
 					sub = 'upcoming'
-					--animSetScale(motif.trials_info.upcomingstep_bg_data, i, 1)
-					--animSetPos(motif.trials_info.upcomingstep_bg_data, 100/i,250)
 				end
-				main.f_animPosDraw(motif.trials_info[sub .. 'step_bg_data'], tempoffset[1], tempoffset[2], 1, true)
-				start.trialsdata['draw' .. sub .. 'textline'][i]:update({text = start.trialsdata.trialtext[ct][i]})
-				start.trialsdata['draw' .. sub .. 'textline'][i]:draw()
+
 				--textwidth = fontGetTextWidth(main.font[motif.trials_info[sub .. 'step_text_font'] .. motif.trials_info[sub .. 'step_text_font_height']], start.trialsdata.trialtext[ct][i]) * motif.trials_info[sub .. 'step_text_font_scale'][1]
 
 				--glyphs for each line:
-				lengthOffset = 0
-				alignOffset = 0
-				align = 1
-				width = 0
+				local lengthOffset = 0
+				local alignOffset = 0
+				local align = 1
+				local width = 0
+				local glyphdraw = {}
+				local glyphscale = {}
+				local glyphpos = {}
 				local font_def = main.font_def[motif.trials_info[sub .. 'step_text_font'][1] .. motif.trials_info[sub .. 'step_text_font_height']]
 				for m in pairs(start.trialsdata.drawglyphline[ct][i]) do
 					if motif.glyphs_data[start.trialsdata.drawglyphline[ct][i][m]] ~= nil then
@@ -3841,13 +3840,12 @@ function start.f_trialschecker()
 						if motif.trials_info.glyphs_align == -1 then
 							alignOffset = alignOffset - motif.glyphs_data[start.trialsdata.drawglyphline[ct][i][m]].info.Size[1] * scaleX
 						end
-						animSetScale(motif.glyphs_data[start.trialsdata.drawglyphline[ct][i][m]].anim, scaleX, scaleY)
-						animSetPos(
-							motif.glyphs_data[start.trialsdata.drawglyphline[ct][i][m]].anim,
+						glyphscale[m] = {scaleX, scaleY}
+						glyphpos[m] = {
 							math.floor(motif.trials_info.pos[1] + motif.trials_info.glyphs_offset[1] + alignOffset + lengthOffset), --+ motif.trials_info.spacing[1]*(i-1)),
 							motif.trials_info.pos[2] + motif.trials_info.glyphs_offset[2] + motif.trials_info.spacing[2]*(i-1)
-						)
-						animDraw(motif.glyphs_data[start.trialsdata.drawglyphline[ct][i][m]].anim)
+						}
+						glyphdraw[m] = motif.glyphs_data[start.trialsdata.drawglyphline[ct][i][m]].anim
 						if m < #start.trialsdata.drawglyphline[ct][i] then
 							width = motif.glyphs_data[start.trialsdata.drawglyphline[ct][i][m]].info.Size[1] * scaleX + motif.trials_info.glyphs_spacing[1]
 						end
@@ -3861,7 +3859,31 @@ function start.f_trialschecker()
 					end
 				end
 
-				animSetScale(motif.trials_info[sub .. 'step_bg_data'], 2, 1)
+				-------experimental
+				--scaleXX = 2
+				--scaleYY = 1
+ 				--animSetScale(motif.trials_info[sub .. 'step_bg_data'], scaleXX, scaleYY)
+				--if scaleXX ~= 1 then
+				--	temptemppos = {
+				--		-(motif.trials_info.pos[1] - math.abs(tempoffset[1]*scaleXX)),
+				--		tempoffset[2]/scaleYY
+				--	}
+				--else
+				--	temptemppos = {tempoffset[1], tempoffset[2]}
+				--end
+				--animSetPos(motif.trials_info[sub .. 'step_bg_data'], temptemppos[1], temptemppos[2])
+				---------end experimental
+
+				animSetPos(motif.trials_info[sub .. 'step_bg_data'], tempoffset[1], tempoffset[2])
+				animUpdate(motif.trials_info[sub .. 'step_bg_data'])
+				animDraw(motif.trials_info[sub .. 'step_bg_data'])
+				start.trialsdata['draw' .. sub .. 'textline'][i]:update({text = start.trialsdata.trialtext[ct][i]})
+				start.trialsdata['draw' .. sub .. 'textline'][i]:draw()
+				for m = 1, #glyphdraw, 1 do
+					animSetScale(glyphdraw[m], glyphscale[m][1], glyphscale[m][2])
+					animSetPos(glyphdraw[m], glyphpos[m][1], glyphpos[m][2])
+					animDraw(glyphdraw[m])
+				end
 
 			end
 

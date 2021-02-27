@@ -1758,7 +1758,6 @@ local motif =
 	{
 		pos = {0, 0}, --Ikemen feature
 		spacing = {0, 0}, --Ikemen feature
-		snd = {-1, 0}, --Ikemen feature
 		window = {0,0,0,0}, --Ikemen feature
 		trialcounter_offset = {0,0}, --Ikemen feature
 		trialcounter_font = {'f-6x9.def', 0, 1, 255, 255, 255}, --Ikemen feature
