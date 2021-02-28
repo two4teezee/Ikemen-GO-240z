@@ -3774,11 +3774,8 @@ function start.f_trialschecker()
 		start.trialsdata.drawtrialcounter:update({x = motif.trials_info.pos[1]+motif.trials_info.trialcounter_offset[1], y = motif.trials_info.pos[2]+motif.trials_info.trialcounter_offset[2],})
 		for i = 1, start.trialsdata.maxsteps, 1 do
 			start.trialsdata.drawupcomingtextline[i] = main.f_createTextImg(motif.trials_info, 'upcomingstep_text')
-			start.trialsdata.drawupcomingtextline[i]:update({x = motif.trials_info.pos[1]+motif.trials_info.upcomingstep_text_offset[1]+motif.trials_info.spacing[1]*(i-1), y = motif.trials_info.pos[2]+motif.trials_info.upcomingstep_text_offset[2]+motif.trials_info.spacing[2]*(i-1),})
 			start.trialsdata.drawcurrenttextline[i] = main.f_createTextImg(motif.trials_info, 'currentstep_text')
-			start.trialsdata.drawcurrenttextline[i]:update({x = motif.trials_info.pos[1]+motif.trials_info.currentstep_text_offset[1]+motif.trials_info.spacing[1]*(i-1), y = motif.trials_info.pos[2]+motif.trials_info.currentstep_text_offset[2]+motif.trials_info.spacing[2]*(i-1),})
 			start.trialsdata.drawcompletedtextline[i] = main.f_createTextImg(motif.trials_info, 'completedstep_text')
-			start.trialsdata.drawcompletedtextline[i]:update({x = motif.trials_info.pos[1]+motif.trials_info.completedstep_text_offset[1]+motif.trials_info.spacing[1]*(i-1), y = motif.trials_info.pos[2]+motif.trials_info.completedstep_text_offset[2]+motif.trials_info.spacing[2]*(i-1),})
 		end
 		start.trialsdata.windowXrange = motif.trials_info.window[3] - motif.trials_info.window[1]
 		start.trialsdata.windowYrange = motif.trials_info.window[4] - motif.trials_info.window[2]
@@ -3799,10 +3796,20 @@ function start.f_trialschecker()
 			--background for all lines
 			animUpdate(motif.trials_info.bg_data)
 			animDraw(motif.trials_info.bg_data)
-						
+
+			startonstep = 1
+			drawtothisstep = start.trialsdata.trialnumsteps[ct]
+			--for vertical trial layouts, determine if all assets will be drawn within the trials window range, or if scrolling needs to be enabled
+			if start.trialsdata.trialnumsteps[ct]*motif.trials_info.spacing[2] > start.trialsdata.windowYrange and motif.trials_info.trialslayout == 0 then
+				startonstep = math.max(cts-2, 1)
+				if (drawtothisstep - startonstep)*motif.trials_info.spacing[2] > start.trialsdata.windowYrange then
+					drawtothisstep = math.min(startonstep+math.floor(start.trialsdata.windowYrange/motif.trials_info.spacing[2]),start.trialsdata.trialnumsteps[ct])
+				end
+			end
+									
 			--background and text for each line: completedstep, currentstep, and upcomingstep
-			for i = 1, start.trialsdata.trialnumsteps[ct], 1 do
-				local tempoffset = {motif.trials_info.spacing[1]*(i-1),motif.trials_info.spacing[2]*(i-1)}
+			for i = startonstep, drawtothisstep, 1 do
+				local tempoffset = {motif.trials_info.spacing[1]*(i-startonstep),motif.trials_info.spacing[2]*(i-startonstep)}
 				sub = 'current'
 				if i < cts + 1 then
 					sub = 'completed'
@@ -3813,7 +3820,15 @@ function start.f_trialschecker()
 					sub = 'upcoming'
 				end
 
-				--textwidth = fontGetTextWidth(main.font[motif.trials_info[sub .. 'step_text_font'] .. motif.trials_info[sub .. 'step_text_font_height']], start.trialsdata.trialtext[ct][i]) * motif.trials_info[sub .. 'step_text_font_scale'][1]
+				if startonstep ~= 1 then
+					start.trialsdata.drawupcomingtextline[i]:update({x = motif.trials_info.pos[1]+motif.trials_info.upcomingstep_text_offset[1]+motif.trials_info.spacing[1]*(i-startonstep), y = motif.trials_info.pos[2]+motif.trials_info.upcomingstep_text_offset[2]+motif.trials_info.spacing[2]*(i-startonstep),})
+					start.trialsdata.drawcurrenttextline[i]:update({x = motif.trials_info.pos[1]+motif.trials_info.currentstep_text_offset[1]+motif.trials_info.spacing[1]*(i-startonstep), y = motif.trials_info.pos[2]+motif.trials_info.currentstep_text_offset[2]+motif.trials_info.spacing[2]*(i-startonstep),})
+					start.trialsdata.drawcompletedtextline[i]:update({x = motif.trials_info.pos[1]+motif.trials_info.completedstep_text_offset[1]+motif.trials_info.spacing[1]*(i-startonstep), y = motif.trials_info.pos[2]+motif.trials_info.completedstep_text_offset[2]+motif.trials_info.spacing[2]*(i-startonstep),})
+				else
+					start.trialsdata.drawupcomingtextline[i]:update({x = motif.trials_info.pos[1]+motif.trials_info.upcomingstep_text_offset[1]+motif.trials_info.spacing[1]*(i-1), y = motif.trials_info.pos[2]+motif.trials_info.upcomingstep_text_offset[2]+motif.trials_info.spacing[2]*(i-1),})
+					start.trialsdata.drawcurrenttextline[i]:update({x = motif.trials_info.pos[1]+motif.trials_info.currentstep_text_offset[1]+motif.trials_info.spacing[1]*(i-1), y = motif.trials_info.pos[2]+motif.trials_info.currentstep_text_offset[2]+motif.trials_info.spacing[2]*(i-1),})
+					start.trialsdata.drawcompletedtextline[i]:update({x = motif.trials_info.pos[1]+motif.trials_info.completedstep_text_offset[1]+motif.trials_info.spacing[1]*(i-1), y = motif.trials_info.pos[2]+motif.trials_info.completedstep_text_offset[2]+motif.trials_info.spacing[2]*(i-1),})
+				end
 
 				--glyphs for each line:
 				local lengthOffset = 0
@@ -3843,7 +3858,7 @@ function start.f_trialschecker()
 						glyphscale[m] = {scaleX, scaleY}
 						glyphpos[m] = {
 							math.floor(motif.trials_info.pos[1] + motif.trials_info.glyphs_offset[1] + alignOffset + lengthOffset), --+ motif.trials_info.spacing[1]*(i-1)),
-							motif.trials_info.pos[2] + motif.trials_info.glyphs_offset[2] + motif.trials_info.spacing[2]*(i-1)
+							motif.trials_info.pos[2] + motif.trials_info.glyphs_offset[2] + motif.trials_info.spacing[2]*(i-startonstep)
 						}
 						glyphdraw[m] = motif.glyphs_data[start.trialsdata.drawglyphline[ct][i][m]].anim
 						if m < #start.trialsdata.drawglyphline[ct][i] then
@@ -3858,6 +3873,11 @@ function start.f_trialschecker()
 						end
 					end
 				end
+
+				--determine widths 
+				local textwidth = 0 --fontGetTextWidth(main.font[motif.trialsinfo[sub .. 'step_text_font'] .. motif.trialsinfo[sub .. 'step_text_font_height']], start.trialsdata.trialtext[ct][i]) * motif.trialsinfo[sub .. 'step_text_font_scale'][1] + motif.trialsinfo.spacing[1]
+				local totalwidth = textwidth + lengthOffset
+				print(totalwidth)
 
 				-------experimental
 				--scaleXX = 2

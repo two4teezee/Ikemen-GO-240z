@@ -1759,6 +1759,8 @@ local motif =
 		pos = {0, 0}, --Ikemen feature
 		spacing = {0, 0}, --Ikemen feature
 		window = {0,0,0,0}, --Ikemen feature
+		resetonsuccess = 0, --Ikemen feature
+		trialslayout = 0, --Ikemen feature
 		trialcounter_offset = {0,0}, --Ikemen feature
 		trialcounter_font = {'f-6x9.def', 0, 1, 255, 255, 255}, --Ikemen feature
 		trialcounter_font_scale = {1.0, 1.0}, --Ikemen feature
@@ -1878,8 +1880,6 @@ local motif =
 		allclear_text_font_scale = {1.0, 1.0}, --Ikemen feature
 		allclear_text_font_height = -1, --Ikemen feature
 		allclear_text_text = '', --Ikemen feature
-		resetonsuccess = 0, --Ikemen feature
-		adjuststepwidthtocontents = 0, --Ikemen feature
 	},
 	dialogue_info =
 	{
