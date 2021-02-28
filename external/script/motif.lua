@@ -1782,16 +1782,12 @@ local motif =
 		upcomingstep_bg_offset = {0, 0}, --Ikemen feature
 		upcomingstep_bg_facing = 1, --Ikemen feature
 		upcomingstep_bg_scale = {1.0, 1.0}, --Ikemen feature
-		upcomingstep_bgin_anim = -1, --Ikemen feature
-		upcomingstep_bgin_spr = {}, --Ikemen feature
-		upcomingstep_bgin_offset = {0, 0}, --Ikemen feature
-		upcomingstep_bgin_facing = 1, --Ikemen feature
-		upcomingstep_bgin_scale = {1.0, 1.0}, --Ikemen feature
-		upcomingstep_bgout_anim = -1, --Ikemen feature
-		upcomingstep_bgout_spr = {}, --Ikemen feature
-		upcomingstep_bgout_offset = {0, 0}, --Ikemen feature
-		upcomingstep_bgout_facing = 1, --Ikemen feature
-		upcomingstep_bgout_scale = {1.0, 1.0}, --Ikemen feature
+		upcomingstep_bginc_anim = -1, --Ikemen feature
+		upcomingstep_bginc_spr = {}, --Ikemen feature
+		upcomingstep_bginc_offset = {0, 0}, --Ikemen feature
+		upcomingstep_bginc_facing = 1, --Ikemen feature
+		upcomingstep_bginc_scale = {1.0, 1.0}, --Ikemen feature
+		upcomingstep_bginc_displaytime = -1, --Ikemen feature
 		currentstep_text_offset = {0,0}, --Ikemen feature
 		currentstep_text_font = {'f-6x9.def', 0, 1, 255, 255, 255}, --Ikemen feature
 		currentstep_text_font_scale = {1.0, 1.0}, --Ikemen feature
@@ -1803,18 +1799,12 @@ local motif =
 		currentstep_bg_facing = 1, --Ikemen feature
 		currentstep_bg_scale = {1.0, 1.0}, --Ikemen feature
 		currentstep_bg_displaytime = -1, --Ikemen feature
-		currentstep_bgin_anim = -1, --Ikemen feature
-		currentstep_bgin_spr = {}, --Ikemen feature
-		currentstep_bgin_offset = {0, 0}, --Ikemen feature
-		currentstep_bgin_facing = 1, --Ikemen feature
-		currentstep_bgin_scale = {1.0, 1.0}, --Ikemen feature
-		currentstep_bgin_displaytime = -1, --Ikemen feature
-		currentstep_bgout_anim = -1, --Ikemen feature
-		currentstep_bgout_spr = {}, --Ikemen feature
-		currentstep_bgout_offset = {0, 0}, --Ikemen feature
-		currentstep_bgout_facing = 1, --Ikemen feature
-		currentstep_bgout_scale = {1.0, 1.0}, --Ikemen feature
-		currentstep_bgout_displaytime = -1, --Ikemen feature
+		currentstep_bginc_anim = -1, --Ikemen feature
+		currentstep_bginc_spr = {}, --Ikemen feature
+		currentstep_bginc_offset = {0, 0}, --Ikemen feature
+		currentstep_bginc_facing = 1, --Ikemen feature
+		currentstep_bginc_scale = {1.0, 1.0}, --Ikemen feature
+		currentstep_bginc_displaytime = -1, --Ikemen feature
 		completedstep_text_offset = {0,0}, --Ikemen feature
 		completedstep_text_font = {'f-6x9.def', 0, 1, 255, 255, 255}, --Ikemen feature
 		completedstep_text_font_scale = {1.0, 1.0}, --Ikemen feature
@@ -1826,18 +1816,12 @@ local motif =
 		completedstep_bg_facing = 1, --Ikemen feature
 		completedstep_bg_scale = {1.0, 1.0}, --Ikemen feature
 		completedstep_bg_displaytime = -1, --Ikemen feature
-		completedstep_bgin_anim = -1, --Ikemen feature
-		completedstep_bgin_spr = {}, --Ikemen feature
-		completedstep_bgin_offset = {0, 0}, --Ikemen feature
-		completedstep_bgin_facing = 1, --Ikemen feature
-		completedstep_bgin_scale = {1.0, 1.0}, --Ikemen feature
-		completedstep_bgin_displaytime = -1, --Ikemen feature
-		completedstep_bgout_anim = -1, --Ikemen feature
-		completedstep_bgout_spr = {}, --Ikemen feature
-		completedstep_bgout_offset = {0, 0}, --Ikemen feature
-		completedstep_bgout_facing = 1, --Ikemen feature
-		completedstep_bgout_scale = {1.0, 1.0}, --Ikemen feature
-		completedstep_bgout_displaytime = -1, --Ikemen feature
+		completedstep_bginc_anim = -1, --Ikemen feature
+		completedstep_bginc_spr = {}, --Ikemen feature
+		completedstep_bginc_offset = {0, 0}, --Ikemen feature
+		completedstep_bginc_facing = 1, --Ikemen feature
+		completedstep_bginc_scale = {1.0, 1.0}, --Ikemen feature
+		completedstep_bginc_displaytime = -1, --Ikemen feature
 		glyphs_offset = {0, 0}, --Ikemen feature
 		glyphs_scale = {1.0,1.0}, --Ikemen feature
 		glyphs_spacing = {0,0}, --Ikemen feature
@@ -2929,8 +2913,11 @@ for _, v in ipairs({
 	{s = 'success_front_',    	x = tr_pos.success_pos[1] + tr_pos.success_front_offset[1],		y = tr_pos.success_pos[2] + tr_pos.success_front_offset[2],		},
 	{s = 'allclear_front_',   	x = tr_pos.allclear_pos[1] + tr_pos.allclear_front_offset[1],	y = tr_pos.allclear_pos[2] + tr_pos.allclear_front_offset[2],	},
 	{s = 'upcomingstep_bg_',	x = tr_pos.pos[1] + tr_pos.upcomingstep_bg_offset[1],			y = tr_pos.pos[2] + tr_pos.upcomingstep_bg_offset[2],			},
+	{s = 'upcomingstep_bginc_',	x = tr_pos.pos[1] + tr_pos.upcomingstep_bginc_offset[1],		y = tr_pos.pos[2] + tr_pos.upcomingstep_bginc_offset[2],		},
 	{s = 'currentstep_bg_',		x = tr_pos.pos[1] + tr_pos.currentstep_bg_offset[1],			y = tr_pos.pos[2] + tr_pos.currentstep_bg_offset[2],			},
+	{s = 'currentstep_bginc_',	x = tr_pos.pos[1] + tr_pos.currentstep_bginc_offset[1],			y = tr_pos.pos[2] + tr_pos.currentstep_bginc_offset[2],			},
 	{s = 'completedstep_bg_',	x = tr_pos.pos[1] + tr_pos.completedstep_bg_offset[1],			y = tr_pos.pos[2] + tr_pos.completedstep_bg_offset[2],			},
+	{s = 'completedstep_bginc_',x = tr_pos.pos[1] + tr_pos.completedstep_bginc_offset[1],		y = tr_pos.pos[2] + tr_pos.completedstep_bginc_offset[2],		},
 }) do
 	motif.f_loadSprData(motif.trials_info, v)
 end
