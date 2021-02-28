@@ -3777,13 +3777,15 @@ function start.f_trialschecker()
 			start.trialsdata.drawcurrenttextline[i] = main.f_createTextImg(motif.trials_info, 'currentstep_text')
 			start.trialsdata.drawcompletedtextline[i] = main.f_createTextImg(motif.trials_info, 'completedstep_text')
 		end
-		start.trialsdata.windowXrange = motif.trials_info.window[3] - motif.trials_info.window[1]
-		start.trialsdata.windowYrange = motif.trials_info.window[4] - motif.trials_info.window[2]
+		local windowXrange = motif.trials_info.window[3] - motif.trials_info.window[1]
+		local windowYrange = motif.trials_info.window[4] - motif.trials_info.window[2]
 		start.trialsdata.active = true
 	end
 
 	local ct = start.trialsdata.currenttrial
 	local cts = start.trialsdata.currenttrialstep
+	local accwidth = 0
+	local addrow = 0
 
 	if start.trialsdata.active then 
 		if ct <= start.trialsdata.numoftrials and start.trialsdata.drawsuccess == 0 then
@@ -3800,10 +3802,10 @@ function start.f_trialschecker()
 			startonstep = 1
 			drawtothisstep = start.trialsdata.trialnumsteps[ct]
 			--for vertical trial layouts, determine if all assets will be drawn within the trials window range, or if scrolling needs to be enabled
-			if start.trialsdata.trialnumsteps[ct]*motif.trials_info.spacing[2] > start.trialsdata.windowYrange and motif.trials_info.trialslayout == 0 then
+			if start.trialsdata.trialnumsteps[ct]*motif.trials_info.spacing[2] > windowYrange and motif.trials_info.trialslayout == 0 then
 				startonstep = math.max(cts-2, 1)
-				if (drawtothisstep - startonstep)*motif.trials_info.spacing[2] > start.trialsdata.windowYrange then
-					drawtothisstep = math.min(startonstep+math.floor(start.trialsdata.windowYrange/motif.trials_info.spacing[2]),start.trialsdata.trialnumsteps[ct])
+				if (drawtothisstep - startonstep)*motif.trials_info.spacing[2] > windowYrange then
+					drawtothisstep = math.min(startonstep+math.floor(windowYrange/motif.trials_info.spacing[2]),start.trialsdata.trialnumsteps[ct])
 				end
 			end
 									
@@ -3874,10 +3876,17 @@ function start.f_trialschecker()
 					end
 				end
 
-				--determine widths 
-				local textwidth = 0 --fontGetTextWidth(main.font[motif.trialsinfo[sub .. 'step_text_font'] .. motif.trialsinfo[sub .. 'step_text_font_height']], start.trialsdata.trialtext[ct][i]) * motif.trialsinfo[sub .. 'step_text_font_scale'][1] + motif.trialsinfo.spacing[1]
-				local totalwidth = textwidth + lengthOffset
-				print(totalwidth)
+				--for horizontal trial layouts, monitor accumulated width and add a row if it's about to be exceeded; reset positions for all items to be drawn if conditions are met
+				if motif.trials_info.trialslayout == 1 then
+					--determine widths
+					local textwidth = fontGetTextWidth(main.font[motif.trials_info[sub .. 'step_text_font'][1] .. motif.trials_info[sub .. 'step_text_font_height']], start.trialsdata.trialtext[ct][i]) * motif.trials_info[sub .. 'step_text_font_scale'][1] + motif.trials_info.spacing[1]
+					--local bgwidths = 
+					accwidth = accwidth + textwidth + lengthOffset
+					if accwidth > windowXrange then
+						accwidth = 0
+						addrow = addrow + 1
+					end
+				end
 
 				-------experimental
 				--scaleXX = 2
@@ -3981,7 +3990,7 @@ function start.f_trialschecker()
 		start.trialsdata.drawsuccess = start.trialsdata.drawsuccess - 1
 		main.f_createTextImg(motif.trials_info, 'success_text')
 		if start.trialsdata.drawsuccess == 0 and motif.trials_info.resetonsuccess == 1 then
-			--write in logic here
+			--write reset on success logic here
 		end
 	end
 end
