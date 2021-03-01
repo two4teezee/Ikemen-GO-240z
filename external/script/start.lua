@@ -3829,6 +3829,7 @@ function start.f_trialschecker()
 				local glyphdraw = {}
 				local glyphscale = {}
 				local glyphpos = {}
+				local prevglyphwidth = lengthOffset
 				local font_def = main.font_def[motif.trials_info[sub .. 'step_text_font'][1] .. motif.trials_info[sub .. 'step_text_font_height']]
 				for m in pairs(start.trialsdata.drawglyphline[ct][i]) do
 					if motif.glyphs_data[start.trialsdata.drawglyphline[ct][i][m]] ~= nil then
@@ -3858,9 +3859,7 @@ function start.f_trialschecker()
 							motif.trials_info.pos[2] + motif.trials_info.glyphs_offset[2] + motif.trials_info.spacing[2]*(i-startonstep)
 						}
 						glyphdraw[m] = motif.glyphs_data[start.trialsdata.drawglyphline[ct][i][m]].anim
-						--if m < #start.trialsdata.drawglyphline[ct][i] then
-							width = motif.glyphs_data[start.trialsdata.drawglyphline[ct][i][m]].info.Size[1] * scaleX + motif.trials_info.glyphs_spacing[1]
-						--end
+						width = motif.glyphs_data[start.trialsdata.drawglyphline[ct][i][m]].info.Size[1] * scaleX + motif.trials_info.glyphs_spacing[1]
 						if motif.trials_info.glyphs_align == 1 or motif.trials_info.trialslayout == 1 then
 							lengthOffset = lengthOffset + width
 						elseif motif.trials_info.glyphs_align == -1 then
@@ -3872,7 +3871,7 @@ function start.f_trialschecker()
 				end
 
 				local bgelementwidth = 0
-				local glyphwidth = {lengthOffset, lengthOffset}
+				local glyphwidth = lengthOffset
 				--for horizontal trial layouts, monitor accumulated width and add a row if it's about to be exceeded; reset positions for all items to be drawn if conditions are met
 				if motif.trials_info.trialslayout == 1 then
 					--determine widths
@@ -3887,14 +3886,14 @@ function start.f_trialschecker()
 					end
 					accwidth = accwidth + lengthOffset + bgincwidth -- + textwidth
 					bgelementwidth = lengthOffset -- + textwidth
-					glyphwidth[2] = lengthOffset
+					glyphwidth = lengthOffset
 					
 					--if needed, return the current line and modify offsets
 					if accwidth > start.trialsdata.windowXrange then
 						accwidth = 0
 						addrow = addrow + 1
 						bgincwidth = 0
-						glyphwidth[2] = lengthOffset + glyphwidth[1]
+						glyphwidth = glyphwidth + prevglyphwidth
 					end
 
 					tempoffset[2] = motif.trials_info.spacing[2]*(addrow)
@@ -3902,39 +3901,24 @@ function start.f_trialschecker()
 					for m in pairs(start.trialsdata.drawglyphline[ct][i]) do
 						print(addrow, accwidth, bgincwidth, glyphwidth)
 						glyphpos[m] = {
-							glyphpos[m][1] - motif.trials_info.glyphs_offset[1] + (accwidth-bgincwidth-glyphwidth[2]),
+							glyphpos[m][1] - motif.trials_info.glyphs_offset[1] + (accwidth-bgincwidth-glyphwidth),
 							--math.floor(motif.trials_info.pos[1] + motif.trials_info.glyphs_offset[1] + alignOffset + lengthOffset), --+ motif.trials_info.spacing[1]*(i-1)),
 							motif.trials_info.pos[2] + motif.trials_info.glyphs_offset[2] + tempoffset[2]
 						}
 					end
 					
 					if i > 1 or accwidth ~= 0 then
-						animSetPos(motif.trials_info[sub .. 'step_bginc_data'], accwidth-glyphwidth[2]-bgincwidth, tempoffset[2]) -- -textwidth
+						animSetPos(motif.trials_info[sub .. 'step_bginc_data'], accwidth-glyphwidth-bgincwidth, tempoffset[2]) -- -textwidth
 						animUpdate(motif.trials_info[sub .. 'step_bginc_data'])
 						animDraw(motif.trials_info[sub .. 'step_bginc_data'])
 					end
 
 				end
-				-------experimental
-				--scaleXX = 2
-				--scaleYY = 1
- 				--animSetScale(motif.trials_info[sub .. 'step_bg_data'], scaleXX, scaleYY)
-				--if scaleXX ~= 1 then
-				--	temptemppos = {
-				--		-(motif.trials_info.pos[1] - math.abs(tempoffset[1]*scaleXX)),
-				--		tempoffset[2]/scaleYY
-				--	}
-				--else
-				--	temptemppos = {tempoffset[1], tempoffset[2]}
-				--end
-				--animSetPos(motif.trials_info[sub .. 'step_bg_data'], temptemppos[1], temptemppos[2])
-				---------end experimental
-
+			
 				animSetPos(motif.trials_info[sub .. 'step_bg_data'], tempoffset[1], tempoffset[2])
 				animUpdate(motif.trials_info[sub .. 'step_bg_data'])
 				animDraw(motif.trials_info[sub .. 'step_bg_data'])
 
-				--always draw this last
 				if motif.trials_info.trialslayout == 0 then
 					start.trialsdata['draw' .. sub .. 'textline'][i]:update({
 						x = motif.trials_info.pos[1]+motif.trials_info.upcomingstep_text_offset[1]+motif.trials_info.spacing[1]*(i-startonstep), 
