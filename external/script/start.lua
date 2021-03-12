@@ -3690,10 +3690,11 @@ end
 --;===========================================================
 start.trialsInit = false
 
-function start.f_trialschecker()
+function start.f_trialsbuilder()
 	if not start.trialsInit then
 		setPower(3000)
-		--bring trials data in from Go trials data parser
+		--The trials data is read and stored in Go and a state controller called currenttrialAdd(currenttrial, currenttrialstep) 
+		--can increment through. This part was not migrated to Lua on purpose, if the trials mode is ever migrated to Go instead.
 		start.trialsInit = true
 		start.trialsdata = {
 			active = false,
@@ -3702,48 +3703,53 @@ function start.f_trialschecker()
 			currenttrial = trialinfo('currenttrial'),
 			currenttrialstep = trialinfo('currenttrialstep'),
 			maxsteps = 0,
-			trialnames = {},
-			trialnumsteps = {},
-			trialtext = {},
-			trialglyphs = {},
-			trialstateno = {},
-			trialanimno = {},
-			trialisthrow = {},
+			trial = {}
 		}
-		--The trials data is read and stored in Go and a state controller called currenttrialAdd(currenttrial, currenttrialstep) 
-		--can increment through. This part was not migrated to Lua on purpose, if the trials mode is ever migrated to Go instead.
-		start.trialsdata.drawglyphline = {}
-
+		start.trialsdata.bgelemdata = {
+			currentbgsize = animGetSpriteInfo(motif.trials_info.currentstep_bg_data),
+			upcomingbgsize = animGetSpriteInfo(motif.trials_info.upcomingstep_bg_data),
+			completedbgsize = animGetSpriteInfo(motif.trials_info.completedstep_bg_data),
+			currentbgincwidth = animGetSpriteInfo(motif.trials_info.currentstep_bginc_data),
+			upcomingbgincwidth = animGetSpriteInfo(motif.trials_info.upcomingstep_bginc_data),
+			completedbgincwidth = animGetSpriteInfo(motif.trials_info.completedstep_bginc_data),
+		}
 		for i = 1, start.trialsdata.numoftrials, 1 do
 			currenttrialAdd(i,0)
-			start.trialsdata.trialnames[i] = trialinfo('currenttrialname')
-			start.trialsdata.trialnumsteps[i] = trialinfo('currenttrialnumofsteps')
-			if start.trialsdata.trialnumsteps[i] > start.trialsdata.maxsteps then
-				start.trialsdata.maxsteps = start.trialsdata.trialnumsteps[i]
+			start.trialsdata.trial[i] = {
+				name = trialinfo('currenttrialname'),
+				numsteps = trialinfo('currenttrialnumofsteps'),
+				text = {},
+				glyphs = {},
+				stateno = {},
+				animno = {},
+				isthrow = {},
+				glyphline = {},
+			}
+			if start.trialsdata.trial[i].numsteps > start.trialsdata.maxsteps then
+				start.trialsdata.maxsteps = start.trialsdata.trial[i].numsteps
 			end
-			start.trialsdata.trialtext[i] = {}
-			start.trialsdata.trialglyphs[i] = {}
-			start.trialsdata.trialstateno[i] = {}
-			start.trialsdata.trialanimno[i] = {}
-			start.trialsdata.trialisthrow[i] = {}
-			start.trialsdata.drawglyphline[i] = {}
-			for j = 1, start.trialsdata.trialnumsteps[i], 1 do
+			for j = 1, start.trialsdata.trial[i].numsteps, 1 do
 				currenttrialAdd(i,j-1)
-				start.trialsdata.trialtext[i][j] = trialinfo('currenttrialtext')
-				start.trialsdata.trialglyphs[i][j] = trialinfo('currenttrialglyphs')
-				start.trialsdata.trialstateno[i][j] = trialinfo('currenttrialstateno')
-				start.trialsdata.trialanimno[i][j] = trialinfo('currenttrialanimno')
-				start.trialsdata.trialisthrow[i][j] = trialinfo('currenttrialisthrow')
-
-				--initialize glyphs draw lines
-				local movelistline = start.trialsdata.trialglyphs[i][j]
+				start.trialsdata.trial[i].text[j] = trialinfo('currenttrialtext')
+				start.trialsdata.trial[i].glyphs[j] = trialinfo('currenttrialglyphs')
+				start.trialsdata.trial[i].stateno[j] = trialinfo('currenttrialstateno')
+				start.trialsdata.trial[i].animno[j] = trialinfo('currenttrialanimno')
+				start.trialsdata.trial[i].isthrow[j] = trialinfo('currenttrialisthrow')
+				start.trialsdata.trial[i].glyphline[j] = {
+					glyph = {},
+					pos = {},
+					width = {},
+					alignOffset = {},
+					lengthOffset = {},
+					scale = {}
+				}
+				local movelistline = start.trialsdata.trial[i].glyphs[j]
 				for k, v in main.f_sortKeys(motif.glyphs, function(t, a, b) return string.len(a) > string.len(b) end) do
 					movelistline = movelistline:gsub(main.f_escapePattern(k), '<' .. numberToRune(v[1] + 0xe000) .. '>')
 				end
 				movelistline = movelistline:gsub('%s+$', '')
 				for moves in movelistline:gmatch('(	*[^	]+)') do
 					moves = moves .. '<#>'
-					start.trialsdata.drawglyphline[i][j] = {}
 					tempglyphs = {}
 					for m1, m2 in moves:gmatch('(.-)<([^%g <>]+)>') do
 						if not m2:match('^#[A-Za-z0-9]+$') and not m2:match('^/$') and not m2:match('^#$') then
@@ -3752,87 +3758,31 @@ function start.f_trialschecker()
 					end
 					if motif.trials_info.glyphs_align == -1 then
 						for ii = #tempglyphs, 1, -1 do
-							start.trialsdata.drawglyphline[i][j][#start.trialsdata.drawglyphline[i][j]+1] = tempglyphs[ii]
+							start.trialsdata.trial[i].glyphline[j].glyph[#start.trialsdata.trial[i].glyphline[j].glyph+1] = tempglyphs[ii]
+							start.trialsdata.trial[i].glyphline[j].pos[#start.trialsdata.trial[i].glyphline[j].glyph+1] = {0,0}
+							start.trialsdata.trial[i].glyphline[j].width[#start.trialsdata.trial[i].glyphline[j].glyph+1] = 0
+							start.trialsdata.trial[i].glyphline[j].alignOffset[#start.trialsdata.trial[i].glyphline[j].glyph+1] = 0
+							start.trialsdata.trial[i].glyphline[j].lengthOffset[#start.trialsdata.trial[i].glyphline[j].glyph+1] = 0
+							start.trialsdata.trial[i].glyphline[j].scale[#start.trialsdata.trial[i].glyphline[j].glyph+1] = {1,1}
 						end
 					else
 						for ii = 1, #tempglyphs do
-							start.trialsdata.drawglyphline[i][j][ii] = tempglyphs[ii]
+							start.trialsdata.trial[i].glyphline[j].glyph[ii] = tempglyphs[ii]
+							start.trialsdata.trial[i].glyphline[j].pos[ii] = {0,0}
+							start.trialsdata.trial[i].glyphline[j].width[ii] = 0
+							start.trialsdata.trial[i].glyphline[j].alignOffset[ii] = 0
+							start.trialsdata.trial[i].glyphline[j].lengthOffset[ii] = 0
+							start.trialsdata.trial[i].glyphline[j].scale[ii] = {1,1}
 						end
 					end
 				end
-			end
-		end
-		currenttrialAdd(1,0)
-
-		--initialize all of the graphic trial line elements
-		start.trialsdata.drawupcomingtextline = {}
-		start.trialsdata.drawcurrenttextline = {}
-		start.trialsdata.drawcompletedtextline = {}
-		start.trialsdata.drawsuccess = 0
-		start.trialsdata.drawallclear = math.max(animGetLength(motif.trials_info.allclear_front_data), animGetLength(motif.trials_info.allclear_bg_data)) 
-		start.trialsdata.drawtrialcounter = main.f_createTextImg(motif.trials_info, 'trialcounter')
-		start.trialsdata.drawtrialcounter:update({x = motif.trials_info.pos[1]+motif.trials_info.trialcounter_offset[1], y = motif.trials_info.pos[2]+motif.trials_info.trialcounter_offset[2],})
-		for i = 1, start.trialsdata.maxsteps, 1 do
-			start.trialsdata.drawupcomingtextline[i] = main.f_createTextImg(motif.trials_info, 'upcomingstep_text')
-			start.trialsdata.drawcurrenttextline[i] = main.f_createTextImg(motif.trials_info, 'currentstep_text')
-			start.trialsdata.drawcompletedtextline[i] = main.f_createTextImg(motif.trials_info, 'completedstep_text')
-		end
-		start.trialsdata.windowXrange = motif.trials_info.window[3] - motif.trials_info.window[1]
-		start.trialsdata.windowYrange = motif.trials_info.window[4] - motif.trials_info.window[2]
-		start.trialsdata.active = true
-	end
-
-	local ct = start.trialsdata.currenttrial
-	local cts = start.trialsdata.currenttrialstep
-	local accwidth = 0
-	local addrow = 0
-
-	if start.trialsdata.active then 
-		if ct <= start.trialsdata.numoftrials and start.trialsdata.drawsuccess == 0 then
-			--trials counter
-			local trtext = motif.trials_info.trialcounter_text
-			trtext = trtext:gsub('%%s', tostring(ct)):gsub('%%t', tostring(start.trialsdata.numoftrials))
-			start.trialsdata.drawtrialcounter:update({text = trtext})
-			start.trialsdata.drawtrialcounter:draw()
-
-			--background for all lines
-			animUpdate(motif.trials_info.bg_data)
-			animDraw(motif.trials_info.bg_data)
-
-			local startonstep = 1
-			local drawtothisstep = start.trialsdata.trialnumsteps[ct]
-			--for vertical trial layouts, determine if all assets will be drawn within the trials window range, or if scrolling needs to be enabled
-			if start.trialsdata.trialnumsteps[ct]*motif.trials_info.spacing[2] > start.trialsdata.windowYrange and motif.trials_info.trialslayout == 0 then
-				startonstep = math.max(cts-2, 1)
-				if (drawtothisstep - startonstep)*motif.trials_info.spacing[2] > start.trialsdata.windowYrange then
-					drawtothisstep = math.min(startonstep+math.floor(start.trialsdata.windowYrange/motif.trials_info.spacing[2]),start.trialsdata.trialnumsteps[ct])
-				end
-			end
-									
-			--background and text for each line: completedstep, currentstep, and upcomingstep
-			for i = startonstep, drawtothisstep, 1 do
-				local tempoffset = {motif.trials_info.spacing[1]*(i-startonstep),motif.trials_info.spacing[2]*(i-startonstep)}
-				sub = 'current'
-				if i < cts + 1 then
-					sub = 'completed'
-				elseif i == cts + 1 then
-					sub = 'current'
-				else
-					sub = 'upcoming'
-				end
-				
-				--glyphs for each line:
 				local lengthOffset = 0
 				local alignOffset = 0
 				local align = 1
 				local width = 0
-				local glyphdraw = {}
-				local glyphscale = {}
-				local glyphpos = {}
-				local prevglyphwidth = lengthOffset
-				local font_def = main.font_def[motif.trials_info[sub .. 'step_text_font'][1] .. motif.trials_info[sub .. 'step_text_font_height']]
-				for m in pairs(start.trialsdata.drawglyphline[ct][i]) do
-					if motif.glyphs_data[start.trialsdata.drawglyphline[ct][i][m]] ~= nil then
+				local font_def = main.font_def[motif.trials_info.currentstep_text_font[1] .. motif.trials_info.currentstep_text_font_height] 
+				for m in pairs(start.trialsdata.trial[i].glyphline[j].glyph) do
+					if motif.glyphs_data[start.trialsdata.trial[i].glyphline[j].glyph[m]] ~= nil then
 						if motif.trials_info.trialslayout == 0 then
 							if motif.trials_info.glyphs_align == 0 then --center align
 								alignOffset = motif.trials_info.glyphs_offset[1] * 0.5
@@ -3847,112 +3797,175 @@ function start.f_trialschecker()
 						local scaleX = motif.trials_info.glyphs_scale[1]
 						local scaleY = motif.trials_info.glyphs_scale[2]
 						if motif.trials_info.trialslayout == 0 then
-							scaleX = font_def.Size[2] * motif.trials_info[sub .. 'step_text_font_scale'][2] / motif.glyphs_data[start.trialsdata.drawglyphline[ct][i][m]].info.Size[2] * motif.trials_info.glyphs_scale[1]
-							scaleY = font_def.Size[2] * motif.trials_info[sub .. 'step_text_font_scale'][2] / motif.glyphs_data[start.trialsdata.drawglyphline[ct][i][m]].info.Size[2] * motif.trials_info.glyphs_scale[2]
+							scaleX = font_def.Size[2] * motif.trials_info.currentstep_text_font_scale[2] / motif.glyphs_data[start.trialsdata.trial[i].glyphline[j].glyph[m]].info.Size[2] * motif.trials_info.glyphs_scale[1]
+							scaleY = font_def.Size[2] * motif.trials_info.currentstep_text_font_scale[2] / motif.glyphs_data[start.trialsdata.trial[i].glyphline[j].glyph[m]].info.Size[2] * motif.trials_info.glyphs_scale[2]
 						end
-						if motif.trials_info.glyphs_align == -1 and motif.trials_info.trialslayout == 0 then
-							alignOffset = alignOffset - motif.glyphs_data[start.trialsdata.drawglyphline[ct][i][m]].info.Size[1] * scaleX
+						if motif.trials_info.glyphs_align == -1 then
+							alignOffset = alignOffset - motif.glyphs_data[start.trialsdata.trial[i].glyphline[j].glyph[m]].info.Size[1] * scaleX
 						end
-						glyphscale[m] = {scaleX, scaleY}
-						glyphpos[m] = {
-							math.floor(motif.trials_info.pos[1] + motif.trials_info.glyphs_offset[1] + alignOffset + lengthOffset), --+ motif.trials_info.spacing[1]*(i-1)),
-							motif.trials_info.pos[2] + motif.trials_info.glyphs_offset[2] + motif.trials_info.spacing[2]*(i-startonstep)
+						start.trialsdata.trial[i].glyphline[j].alignOffset[m] = alignOffset
+						start.trialsdata.trial[i].glyphline[j].scale[m] = {scaleX, scaleY}
+						start.trialsdata.trial[i].glyphline[j].pos[m] = {
+							math.floor(motif.trials_info.pos[1] + motif.trials_info.glyphs_offset[1] + alignOffset + lengthOffset),
+							motif.trials_info.pos[2] + motif.trials_info.glyphs_offset[2]
 						}
-						glyphdraw[m] = motif.glyphs_data[start.trialsdata.drawglyphline[ct][i][m]].anim
-						width = motif.glyphs_data[start.trialsdata.drawglyphline[ct][i][m]].info.Size[1] * scaleX + motif.trials_info.glyphs_spacing[1]
-						if motif.trials_info.glyphs_align == 1 or motif.trials_info.trialslayout == 1 then
-							lengthOffset = lengthOffset + width
+						start.trialsdata.trial[i].glyphline[j].width[m] = math.floor(motif.glyphs_data[start.trialsdata.trial[i].glyphline[j].glyph[m]].info.Size[1] * scaleX + motif.trials_info.glyphs_spacing[1])
+						if motif.trials_info.glyphs_align == 1 then
+							lengthOffset = lengthOffset + start.trialsdata.trial[i].glyphline[j].width[m]
 						elseif motif.trials_info.glyphs_align == -1 then
-							lengthOffset = lengthOffset - width
+							lengthOffset = lengthOffset - start.trialsdata.trial[i].glyphline[j].width[m]
 						else
-							lengthOffset = lengthOffset + width / 2
+							lengthOffset = lengthOffset + start.trialsdata.trial[i].glyphline[j].width[m] / 2
 						end
+						start.trialsdata.trial[i].glyphline[j].lengthOffset[m] = lengthOffset
 					end
 				end
+			end
+		end
+		currenttrialAdd(1,0)
+		start.trialsdata.draw ={
+			upcomingtextline = {},
+			currenttextline = {},
+			completedtextline = {},
+			success = 0,
+			allclear = math.max(animGetLength(motif.trials_info.allclear_front_data), animGetLength(motif.trials_info.allclear_bg_data)),
+			trialcounter = main.f_createTextImg(motif.trials_info, 'trialcounter'),
+			windowXrange = motif.trials_info.window[3] - motif.trials_info.window[1],
+			windowYrange = motif.trials_info.window[4] - motif.trials_info.window[2],
+		}
+		start.trialsdata.draw.trialcounter:update({x = motif.trials_info.pos[1]+motif.trials_info.trialcounter_offset[1], y = motif.trials_info.pos[2]+motif.trials_info.trialcounter_offset[2],})
+		for i = 1, start.trialsdata.maxsteps, 1 do
+			start.trialsdata.draw.upcomingtextline[i] = main.f_createTextImg(motif.trials_info, 'upcomingstep_text')
+			start.trialsdata.draw.currenttextline[i] = main.f_createTextImg(motif.trials_info, 'currentstep_text')
+			start.trialsdata.draw.completedtextline[i] = main.f_createTextImg(motif.trials_info, 'completedstep_text')
+		end
+	end
+end
 
-				local bgelementwidth = 0
-				local glyphwidth = lengthOffset
-				--for horizontal trial layouts, monitor accumulated width and add a row if it's about to be exceeded; reset positions for all items to be drawn if conditions are met
+function start.f_trialsdrawer()
+	if start.trialsInit and roundstate() == 2 then
+		start.trialsdata.active = true
+	end
+	ct = start.trialsdata.currenttrial
+	cts = start.trialsdata.currenttrialstep
+	local accwidth = 0
+	local addrow = 0
+	if start.trialsdata.active then 
+		if ct <= start.trialsdata.numoftrials and start.trialsdata.draw.success == 0 then
+			local trtext = motif.trials_info.trialcounter_text
+			trtext = trtext:gsub('%%s', tostring(ct)):gsub('%%t', tostring(start.trialsdata.numoftrials))
+			start.trialsdata.draw.trialcounter:update({text = trtext})
+			start.trialsdata.draw.trialcounter:draw()
+			animUpdate(motif.trials_info.bg_data)
+			animDraw(motif.trials_info.bg_data)
+
+			local startonstep = 1
+			local drawtothisstep = start.trialsdata.trial[ct].numsteps
+			--for vertical trial layouts, determine if all assets will be drawn within the trials window range, or if scrolling needs to be enabled
+			if start.trialsdata.trial[ct].numsteps*motif.trials_info.spacing[2] > start.trialsdata.draw.windowYrange and motif.trials_info.trialslayout == 0 then
+				startonstep = math.max(cts-2, 1)
+				if (drawtothisstep - startonstep)*motif.trials_info.spacing[2] > start.trialsdata.draw.windowYrange then
+					drawtothisstep = math.min(startonstep+math.floor(start.trialsdata.draw.windowYrange/motif.trials_info.spacing[2]),start.trialsdata.trialnumsteps[ct])
+				end
+			end
+			for i = startonstep, drawtothisstep, 1 do
+				local tempoffset = {motif.trials_info.spacing[1]*(i-startonstep),motif.trials_info.spacing[2]*(i-startonstep)}
+				sub = 'current'
+				if i < cts + 1 then
+					sub = 'completed'
+				elseif i == cts + 1 then
+					sub = 'current'
+				else
+					sub = 'upcoming'
+				end
+				local bgtargetscale = {1,1}
+				local bgtargetpos = {0,0}
+				local padding = 0
+				local totaloffset = 0
+				local bgincwidth = 0
 				if motif.trials_info.trialslayout == 1 then
-					--determine widths
-					--local textwidth = fontGetTextWidth(main.font[motif.trials_info[sub .. 'step_text_font'][1] .. motif.trials_info[sub .. 'step_text_font_height']], start.trialsdata.trialtext[ct][i]) * motif.trials_info[sub .. 'step_text_font_scale'][1] + motif.trials_info.spacing[1]
-					
-					--with horizontal trial layouts, only glyphs are displayed
-					local bgincwidth = animGetSpriteInfo(motif.trials_info[sub .. 'step_bginc_data'])
-					if bgincwidth ~= nil and (i > 1 or accwidth ~= 0) then
-						bgincwidth = bgincwidth.Size[1]
-					else
-						bgincwidth = 0
-					end
-					accwidth = accwidth + lengthOffset + bgincwidth -- + textwidth
-					bgelementwidth = lengthOffset -- + textwidth
-					glyphwidth = lengthOffset
-					
-					--if needed, return the current line and modify offsets
-					if accwidth > start.trialsdata.windowXrange then
+					local bgsize = {0,0}
+					if start.trialsdata.bgelemdata[sub .. 'bgincwidth'] ~= nil then bgincwidth = math.floor(start.trialsdata.bgelemdata[sub .. 'bgincwidth'].Size[1]) end
+					if start.trialsdata.bgelemdata[sub .. 'bgsize'] ~= nil then bgsize = start.trialsdata.bgelemdata[sub .. 'bgsize'].Size end
+					totaloffset = start.trialsdata.trial[ct].glyphline[i].lengthOffset[#start.trialsdata.trial[ct].glyphline[i].lengthOffset]
+					padding = motif.trials_info.spacing[1]
+					accwidth = accwidth + totaloffset + padding + bgincwidth + padding
+					if accwidth - motif.trials_info.spacing[1] > start.trialsdata.draw.windowXrange then
 						accwidth = 0
+						accwidth = accwidth + totaloffset + padding + bgincwidth + padding
 						addrow = addrow + 1
-						bgincwidth = 0
-						glyphwidth = glyphwidth + prevglyphwidth
 					end
-
 					tempoffset[2] = motif.trials_info.spacing[2]*(addrow)
-
-					for m in pairs(start.trialsdata.drawglyphline[ct][i]) do
-						print(addrow, accwidth, bgincwidth, glyphwidth)
-						glyphpos[m] = {
-							glyphpos[m][1] - motif.trials_info.glyphs_offset[1] + (accwidth-bgincwidth-glyphwidth),
-							--math.floor(motif.trials_info.pos[1] + motif.trials_info.glyphs_offset[1] + alignOffset + lengthOffset), --+ motif.trials_info.spacing[1]*(i-1)),
-							motif.trials_info.pos[2] + motif.trials_info.glyphs_offset[2] + tempoffset[2]
-						}
+					local gpoffset = 0
+					for m in pairs(start.trialsdata.trial[ct].glyphline[i].glyph) do
+						if m > 1 then gpoffset = start.trialsdata.trial[ct].glyphline[i].lengthOffset[m-1] end
+						start.trialsdata.trial[ct].glyphline[i].pos[m][1] = motif.trials_info.pos[1] + start.trialsdata.trial[ct].glyphline[i].alignOffset[m] + (accwidth-totaloffset-bgincwidth-padding) + gpoffset-- + start.trialsdata.glyphline[ct][i][m].lengthOffset --+ motif.trials_info.spacing[1]*(i-1)),
 					end
-					
-					if i > 1 or accwidth ~= 0 then
-						animSetPos(motif.trials_info[sub .. 'step_bginc_data'], accwidth-glyphwidth-bgincwidth, tempoffset[2]) -- -textwidth
-						animUpdate(motif.trials_info[sub .. 'step_bginc_data'])
-						animDraw(motif.trials_info[sub .. 'step_bginc_data'])
-					end
-
+					bgtargetscale = {
+						(padding + totaloffset + padding)/bgsize[1],
+						1
+					}
+					bgtargetpos = {
+						motif.trials_info.pos[1] + motif.trials_info[sub .. 'step_bg_offset'][1] + start.trialsdata.trial[ct].glyphline[i].alignOffset[1] + (accwidth-totaloffset-bgincwidth-2*padding), -- + start.trialsdata.glyphline[ct][i][m].lengthOffset),
+						start.trialsdata.trial[ct].glyphline[i].pos[1][2] + motif.trials_info[sub .. 'step_bg_offset'][2] + tempoffset[2]
+					}
 				end
-			
-				animSetPos(motif.trials_info[sub .. 'step_bg_data'], tempoffset[1], tempoffset[2])
-				animUpdate(motif.trials_info[sub .. 'step_bg_data'])
-				animDraw(motif.trials_info[sub .. 'step_bg_data'])
-
 				if motif.trials_info.trialslayout == 0 then
-					start.trialsdata['draw' .. sub .. 'textline'][i]:update({
+					animSetPos(
+						motif.trials_info[sub .. 'step_bg_data'], 
+						motif.trials_info.pos[1] + motif.trials_info[sub .. 'step_bg_offset'][1] + tempoffset[1], 
+						motif.trials_info.pos[2] + motif.trials_info[sub .. 'step_bg_offset'][2] + tempoffset[2]
+					)
+					animUpdate(motif.trials_info[sub .. 'step_bg_data'])
+					animDraw(motif.trials_info[sub .. 'step_bg_data'])
+					start.trialsdata.draw[sub .. 'textline'][i]:update({
 						x = motif.trials_info.pos[1]+motif.trials_info.upcomingstep_text_offset[1]+motif.trials_info.spacing[1]*(i-startonstep), 
 						y = motif.trials_info.pos[2]+motif.trials_info.upcomingstep_text_offset[2]+motif.trials_info.spacing[2]*(i-startonstep),
-						text = start.trialsdata.trialtext[ct][i]
+						text = start.trialsdata.trial[ct].text[i]
 					})
-					start.trialsdata['draw' .. sub .. 'textline'][i]:draw()
+					start.trialsdata.draw[sub .. 'textline'][i]:draw()
+				elseif motif.trials_info.trialslayout == 1 then
+					animSetScale(motif.trials_info[sub .. 'step_bg_data'], bgtargetscale[1], bgtargetscale[2])
+					animSetPos(motif.trials_info[sub .. 'step_bg_data'], bgtargetpos[1], bgtargetpos[2])
+					animUpdate(motif.trials_info[sub .. 'step_bg_data'])
+					animDraw(motif.trials_info[sub .. 'step_bg_data'])
+					if i ~= start.trialsdata.trial[ct].numsteps then
+						local suffix = 'step_bginc_'
+						if i == cts then suffix = 'step_bginctocts_' end
+						animSetPos(
+							motif.trials_info[sub .. suffix .. 'data'], 
+							motif.trials_info.pos[1] + motif.trials_info[sub .. suffix .. 'offset'][1] + start.trialsdata.trial[ct].glyphline[i].alignOffset[1] + (accwidth-bgincwidth), -- + start.trialsdata.glyphline[ct][i][m].lengthOffset),
+							start.trialsdata.trial[ct].glyphline[i].pos[1][2] + motif.trials_info[sub .. suffix .. 'offset'][2] + tempoffset[2]
+						)
+						animUpdate(motif.trials_info[sub .. suffix .. 'data'])
+						animDraw(motif.trials_info[sub .. suffix .. 'data'])
+					end
 				end
-				for m = 1, #glyphdraw, 1 do
-					animSetScale(glyphdraw[m], glyphscale[m][1], glyphscale[m][2])
-					animSetPos(glyphdraw[m], glyphpos[m][1], glyphpos[m][2])
-					animDraw(glyphdraw[m])
+				for m in pairs(start.trialsdata.trial[ct].glyphline[i].glyph) do
+					animSetScale(motif.glyphs_data[start.trialsdata.trial[ct].glyphline[i].glyph[m]].anim, start.trialsdata.trial[ct].glyphline[i].scale[m][1], start.trialsdata.trial[ct].glyphline[i].scale[m][2])
+					animSetPos(motif.glyphs_data[start.trialsdata.trial[ct].glyphline[i].glyph[m]].anim, start.trialsdata.trial[ct].glyphline[i].pos[m][1], start.trialsdata.trial[ct].glyphline[i].pos[m][2]+tempoffset[2])
+					animDraw(motif.glyphs_data[start.trialsdata.trial[ct].glyphline[i].glyph[m]].anim)
 				end
-
 			end
-
-		--if all trials are completed, stop any ongoing anims, freeze timer, kill all trial lines/bgs and show all clear anim instead
 		elseif ct > start.trialsdata.numoftrials then
-			if start.trialsdata.drawallclear ~= 0 then
+			if start.trialsdata.draw.allclear ~= 0 then
 				sndPlay(motif.files.snd_data, motif.trials_info.allclear_snd[1], motif.trials_info.allclear_snd[2])
 				animUpdate(motif.trials_info.allclear_bg_data)
 				animDraw(motif.trials_info.allclear_bg_data)
 				animUpdate(motif.trials_info.allclear_front_data)
 				animDraw(motif.trials_info.allclear_front_data)
 				main.f_createTextImg(motif.trials_info, 'allclear_text')
-				start.trialsdata.drawallclear = start.trialsdata.drawallclear - 1
+				start.trialsdata.draw.allclear = start.trialsdata.draw.allclear - 1
 			end
-			start.trialsdata.drawsuccess = 0
+			start.trialsdata.draw.success = 0
 			freezeLifeBarTimer(true)
-			start.trialsdata.drawtrialcounter:update({text = 'All Trials Clear'})
-			start.trialsdata.drawtrialcounter:draw()			
+			start.trialsdata.draw.trialcounter:update({text = 'All Trials Clear'})
+			start.trialsdata.draw.trialcounter:draw()			
 		end
 	end
+end
 
+function start.f_trialschecker()
 	--Gating Criteria:
 	-- you'll want to change this if you're doing something odd with your chars 
 	-- 1) stateno matches, AND
@@ -3960,57 +3973,57 @@ function start.f_trialschecker()
 	-- 		3a) move hit OR
 	-- 		3b) throwcheck passed OR
 	-- 		3c) projectile hit OR
-	-- 		3d) is a throw bool set to true by trials list OR...
 
-	if ct <= start.trialsdata.numoftrials and start.trialsdata.drawsuccess == 0 then
+	if ct <= start.trialsdata.numoftrials and start.trialsdata.draw.success == 0 and start.trialsdata.active then
 		local throwcheck = false
 		local animcheck = false
 		local specialvar = false --placeholder for general purpose trials boolean, to be revisited
-		if start.trialsdata.trialanimno[ct][cts+1] ~= -2147483648 then animcheck = true end
-		if (stateno() == start.trialsdata.trialstateno[ct][cts+1]) and (anim() == start.trialsdata.trialanimno[ct][cts+1] or not(animcheck)) and ((hitpausetime() > 1 and movehit()) or (projhittime(numproj()) > 1 and hitshakeover()) or throwcheck or specialvar) then -- or (root,map(SpVer)=var(5) || var(5)=-1) && 
-			--currenttrialstep initializes at 0
+		if start.trialsdata.trial[ct].animno[cts+1] ~= -2147483648 then animcheck = true end
+		if (stateno() == start.trialsdata.trial[ct].stateno[cts+1]) and (anim() == start.trialsdata.trial[ct].animno[cts+1] or not(animcheck)) and ((hitpausetime() > 1 and movehit()) or (projhittime(numproj()) > 1 and hitshakeover()) or throwcheck or specialvar) then
 			ncts = cts + 1
-			--if next current step is 1 or if next current step is greater than 1 and combocount is greater than 0... trial attempt is valid!
 			if ncts == 1 or (ncts > 1 and combocount() > 0) then
-				-- if next current step is equal to number of steps, trial is complete, move to next trial
-				if ncts >= start.trialsdata.trialnumsteps[ct]  then
+				if ncts >= start.trialsdata.trial[ct].numsteps  then
 					start.trialsdata.currenttrial = ct + 1
 					start.trialsdata.currenttrialstep = 0
-					--if trial was successfully completed, grab success anim length and display it
 					if ct < start.trialsdata.numoftrials then 
 						if (motif.trials_info.success_front_displaytime == -1) and (motif.trials_info.success_bg_displaytime == -1) then
-							start.trialsdata.drawsuccess = math.max(animGetLength(motif.trials_info.success_front_data), animGetLength(motif.trials_info.success_bg_data)) 
+							start.trialsdata.draw.success = math.max(animGetLength(motif.trials_info.success_front_data), animGetLength(motif.trials_info.success_bg_data)) 
 						else 
-							start.trialsdata.drawsuccess = math.max(motif.trials_info.success_front_displaytime, motif.trials_info.success_bg_displaytime) 
+							start.trialsdata.draw.success = math.max(motif.trials_info.success_front_displaytime, motif.trials_info.success_bg_displaytime) 
 						end
 					end
 					setPower(3000)
-				-- otherwise, move to next trial step
-				elseif ncts < start.trialsdata.trialnumsteps[ct] then
+				elseif ncts < start.trialsdata.trial[ct].numsteps then
 					start.trialsdata.currenttrialstep = ncts
 				end
-			--if next current step is greater than 1 but combocount is n 0... combo dropped, trial attempt failed!
 			elseif (ncts > 1 and combocount() == 0) then
 				start.trialsdata.currenttrialstep = 0
 				setPower(3000)
 			end
 		elseif combocount() == 0 then
-			--gating criteria failed, trial attempt failed
 			start.trialsdata.currenttrialstep = 0
 			setPower(3000)
 		end
 	end
-	if start.trialsdata.drawsuccess > 0 then
+	if start.trialsdata.draw.success > 0 then
 		sndPlay(motif.files.snd_data, motif.trials_info.success_snd[1], motif.trials_info.success_snd[2])
 		animUpdate(motif.trials_info.success_bg_data)
 		animDraw(motif.trials_info.success_bg_data)
 		animUpdate(motif.trials_info.success_front_data)
 		animDraw(motif.trials_info.success_front_data)
-		start.trialsdata.drawsuccess = start.trialsdata.drawsuccess - 1
+		start.trialsdata.draw.success = start.trialsdata.draw.success - 1
 		main.f_createTextImg(motif.trials_info, 'success_text')
-		if start.trialsdata.drawsuccess == 0 and motif.trials_info.resetonsuccess == 1 then
+		if start.trialsdata.draw.success == 0 and motif.trials_info.resetonsuccess == 1 then
 			--write reset on success logic here
 		end
+	end
+end
+function start.f_trialsmode()
+	if not start.trialsInit then
+		start.f_trialsbuilder()
+	else
+		start.f_trialsdrawer()
+		start.f_trialschecker()
 	end
 end
 

@@ -78,14 +78,14 @@ menu.t_itemname = {
 		return true
 	end,
 	--Trials List
-	--['trialslist'] = function(t, item, cursorPosY, moveTxt, section)
-	--	if main.f_input(main.t_players, {'pal', 's'}) then
-	--		sndPlay(motif.files.snd_data, motif[section].cursor_done_snd[1], motif[section].cursor_done_snd[2])
-	--		menu.f_trialsParse()
-	--		menu.itemname = t.items[item].itemname
-	--	end
-	--	return true
-	--end,
+	['trialslist'] = function(t, item, cursorPosY, moveTxt, section)
+		if main.f_input(main.t_players, {'pal', 's'}) then
+			sndPlay(motif.files.snd_data, motif[section].cursor_done_snd[1], motif[section].cursor_done_snd[2])
+			menu.f_trialsList()
+			menu.itemname = t.items[item].itemname
+		end
+		return true
+	end,
 	--Command List
 	['commandlist'] = function(t, item, cursorPosY, moveTxt, section)
 		if main.f_input(main.t_players, {'pal', 's'}) then
@@ -243,13 +243,12 @@ for k, v in pairs(
 end
 
 menu.movelistChar = 1
---menu.trialslistChar = 1
 function menu.f_init()
 	esc(false)
 	togglePause(true)
 	main.pauseMenu = true
 	main.f_bgReset(motif.optionbgdef.bg)
-	if gamemode('training') then -- or gamemode('trials') then
+	if gamemode('training') then
 		sndPlay(motif.files.snd_data, motif.training_info.enter_snd[1], motif.training_info.enter_snd[2])
 		main.f_bgReset(motif.trainingbgdef.bg)
 		main.f_fadeReset('fadein', motif.training_info)
@@ -286,8 +285,7 @@ function menu.f_run()
 		menu.f_commandlistRender(section, menu.t_movelists[menu.movelistChar])
 	--Trials List
 	--elseif menu.itemname == 'trialslist' then
-		-- menu trials list Render will only be trials titles
-		--menu.f_trialslistRender(section, menu.t_trialslist[menu.trialslistChar])
+	--	menu.f_trialsList(section, start.trialsdata)
 	--Menu
 	else
 		menu.currentMenu[1]()
@@ -532,6 +530,22 @@ function menu.f_commandlistRender(section, t)
 			animUpdate(motif[section].movelist_arrow_down_data)
 			animDraw(motif[section].movelist_arrow_down_data)
 		end
+	end
+end
+function menu.f_trialsList(section, t)
+	main.f_cmdInput()
+	local trialsList = {}
+	--draw overlay
+	menu[section .. '_movelist_overlay']:draw()
+	--draw title
+	menu[section .. '_txt_title']:update({text = main.f_itemnameUpper(motif[section].movelist_title_text:gsub('%%s', t.name), motif[section].movelist_title_uppercase == 1)})
+	menu[section .. '_txt_title']:draw()
+	if gamemode('trials') then
+		if t.active then
+			--lots of stuff
+		end
+	else
+
 	end
 end
 return menu

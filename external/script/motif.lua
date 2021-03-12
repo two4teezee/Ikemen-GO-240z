@@ -1782,12 +1782,12 @@ local motif =
 		upcomingstep_bg_offset = {0, 0}, --Ikemen feature
 		upcomingstep_bg_facing = 1, --Ikemen feature
 		upcomingstep_bg_scale = {1.0, 1.0}, --Ikemen feature
+		upcomingstep_bg_displaytime = -1, --Ikemen feature
 		upcomingstep_bginc_anim = -1, --Ikemen feature
 		upcomingstep_bginc_spr = {}, --Ikemen feature
 		upcomingstep_bginc_offset = {0, 0}, --Ikemen feature
 		upcomingstep_bginc_facing = 1, --Ikemen feature
 		upcomingstep_bginc_scale = {1.0, 1.0}, --Ikemen feature
-		upcomingstep_bginc_displaytime = -1, --Ikemen feature
 		currentstep_text_offset = {0,0}, --Ikemen feature
 		currentstep_text_font = {'f-6x9.def', 0, 1, 255, 255, 255}, --Ikemen feature
 		currentstep_text_font_scale = {1.0, 1.0}, --Ikemen feature
@@ -1804,7 +1804,6 @@ local motif =
 		currentstep_bginc_offset = {0, 0}, --Ikemen feature
 		currentstep_bginc_facing = 1, --Ikemen feature
 		currentstep_bginc_scale = {1.0, 1.0}, --Ikemen feature
-		currentstep_bginc_displaytime = -1, --Ikemen feature
 		completedstep_text_offset = {0,0}, --Ikemen feature
 		completedstep_text_font = {'f-6x9.def', 0, 1, 255, 255, 255}, --Ikemen feature
 		completedstep_text_font_scale = {1.0, 1.0}, --Ikemen feature
@@ -1821,7 +1820,11 @@ local motif =
 		completedstep_bginc_offset = {0, 0}, --Ikemen feature
 		completedstep_bginc_facing = 1, --Ikemen feature
 		completedstep_bginc_scale = {1.0, 1.0}, --Ikemen feature
-		completedstep_bginc_displaytime = -1, --Ikemen feature
+		completedstep_bginctocts_anim = -1, --Ikemen feature
+		completedstep_bginctocts_spr = {}, --Ikemen feature
+		completedstep_bginctocts_offset = {0, 0}, --Ikemen feature
+		completedstep_bginctocts_facing = 1, --Ikemen feature
+		completedstep_bginctocts_scale = {1.0, 1.0}, --Ikemen feature
 		glyphs_offset = {0, 0}, --Ikemen feature
 		glyphs_scale = {1.0,1.0}, --Ikemen feature
 		glyphs_spacing = {0,0}, --Ikemen feature
@@ -2442,6 +2445,7 @@ function motif.setBaseMenuInfo()
 	motif.menu_info.menu_itemname_menuinput_inputdefault = "Default"
 	motif.menu_info.menu_itemname_menuinput_back = "Back"
 	motif.menu_info.menu_itemname_commandlist = "Command List"
+	--motif.menu_info.menu_itemname_trialslist = "Trials List"
 	motif.menu_info.menu_itemname_characterchange = "Character Change"
 	motif.menu_info.menu_itemname_exit = "Exit"
 	main.t_sort.menu_info = {}
@@ -2454,6 +2458,7 @@ function motif.setBaseMenuInfo()
 		"menuinput_inputdefault",
 		"menuinput_back",
 		"commandlist",
+		--"trialslist",
 		"characterchange",
 		"exit",
 	}
@@ -2468,6 +2473,7 @@ function motif.setBaseTrainingInfo()
 	motif.training_info.menu_itemname_menuinput_inputdefault = "Default"
 	motif.training_info.menu_itemname_menuinput_back = "Back"
 	motif.training_info.menu_itemname_commandlist = "Command List"
+	--motif.training_info.menu_itemname_trialslist = "Trials List"
 	motif.training_info.menu_itemname_characterchange = "Character Change"
 	motif.training_info.menu_itemname_exit = "Exit"
 	main.t_sort.training_info = {}
@@ -2480,6 +2486,7 @@ function motif.setBaseTrainingInfo()
 		"menuinput_inputdefault",
 		"menuinput_back",
 		"commandlist",
+		--"trialslist",
 		"characterchange",
 		"exit",
 	}
@@ -2912,12 +2919,20 @@ for _, v in ipairs({
 	{s = 'allclear_bg_',	   	x = tr_pos.allclear_pos[1] + tr_pos.allclear_bg_offset[1],		y = tr_pos.allclear_pos[2] + tr_pos.allclear_bg_offset[2],		},
 	{s = 'success_front_',    	x = tr_pos.success_pos[1] + tr_pos.success_front_offset[1],		y = tr_pos.success_pos[2] + tr_pos.success_front_offset[2],		},
 	{s = 'allclear_front_',   	x = tr_pos.allclear_pos[1] + tr_pos.allclear_front_offset[1],	y = tr_pos.allclear_pos[2] + tr_pos.allclear_front_offset[2],	},
-	{s = 'upcomingstep_bg_',	x = tr_pos.pos[1] + tr_pos.upcomingstep_bg_offset[1],			y = tr_pos.pos[2] + tr_pos.upcomingstep_bg_offset[2],			},
-	{s = 'upcomingstep_bginc_',	x = tr_pos.pos[1] + tr_pos.upcomingstep_bginc_offset[1],		y = tr_pos.pos[2] + tr_pos.upcomingstep_bginc_offset[2],		},
-	{s = 'currentstep_bg_',		x = tr_pos.pos[1] + tr_pos.currentstep_bg_offset[1],			y = tr_pos.pos[2] + tr_pos.currentstep_bg_offset[2],			},
-	{s = 'currentstep_bginc_',	x = tr_pos.pos[1] + tr_pos.currentstep_bginc_offset[1],			y = tr_pos.pos[2] + tr_pos.currentstep_bginc_offset[2],			},
-	{s = 'completedstep_bg_',	x = tr_pos.pos[1] + tr_pos.completedstep_bg_offset[1],			y = tr_pos.pos[2] + tr_pos.completedstep_bg_offset[2],			},
-	{s = 'completedstep_bginc_',x = tr_pos.pos[1] + tr_pos.completedstep_bginc_offset[1],		y = tr_pos.pos[2] + tr_pos.completedstep_bginc_offset[2],		},
+	--{s = 'upcomingstep_bg_',	x = tr_pos.pos[1] + tr_pos.upcomingstep_bg_offset[1],			y = tr_pos.pos[2] + tr_pos.upcomingstep_bg_offset[2],			},
+	--{s = 'upcomingstep_bginc_',	x = tr_pos.pos[1] + tr_pos.upcomingstep_bginc_offset[1],		y = tr_pos.pos[2] + tr_pos.upcomingstep_bginc_offset[2],		},
+	--{s = 'currentstep_bg_',		x = tr_pos.pos[1] + tr_pos.currentstep_bg_offset[1],			y = tr_pos.pos[2] + tr_pos.currentstep_bg_offset[2],			},
+	--{s = 'currentstep_bginc_',	x = tr_pos.pos[1] + tr_pos.currentstep_bginc_offset[1],			y = tr_pos.pos[2] + tr_pos.currentstep_bginc_offset[2],			},
+	--{s = 'completedstep_bg_',	x = tr_pos.pos[1] + tr_pos.completedstep_bg_offset[1],			y = tr_pos.pos[2] + tr_pos.completedstep_bg_offset[2],			},
+	--{s = 'completedstep_bginc_',x = tr_pos.pos[1] + tr_pos.completedstep_bginc_offset[1],		y = tr_pos.pos[2] + tr_pos.completedstep_bginc_offset[2],		},
+	{s = 'upcomingstep_bg_',			x = 0,			y = 0,			},
+	{s = 'upcomingstep_bginc_',			x = 0,			y = 0,			},
+	{s = 'currentstep_bg_',				x = 0,			y = 0,			},
+	{s = 'currentstep_bginc_',			x = 0,			y = 0,			},
+	{s = 'completedstep_bg_',			x = 0,			y = 0,			},
+	{s = 'completedstep_bginc_',		x = 0,			y = 0,			},
+	{s = 'completedstep_bginctocts_',	x = 0,			y = 0,			},
+
 }) do
 	motif.f_loadSprData(motif.trials_info, v)
 end

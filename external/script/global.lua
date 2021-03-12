@@ -273,7 +273,7 @@ function loop()
 				end
 			end
 		elseif gamemode('trials') and trialinfo('trialspresent') then
-			start.f_trialschecker()
+			start.f_trialsmode()
 		end
 	end
 end
