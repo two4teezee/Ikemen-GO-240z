@@ -3718,6 +3718,7 @@ function start.f_trialsbuilder()
 			start.trialsdata.trial[i] = {
 				name = trialinfo('currenttrialname'),
 				numsteps = trialinfo('currenttrialnumofsteps'),
+				dummyaction = trialinfo('currenttrialdummyaction'),
 				text = {},
 				glyphs = {},
 				stateno = {},
@@ -3975,6 +3976,9 @@ function start.f_trialschecker()
 	-- 		3c) projectile hit OR
 
 	if ct <= start.trialsdata.numoftrials and start.trialsdata.draw.success == 0 and start.trialsdata.active then
+		if p2stateno() ~= start.trialsdata.trial[ct].dummyaction and hitpausetime() < 1 then
+			charChangeState(2,start.trialsdata.trial[ct].dummyaction)
+		end
 		local throwcheck = false
 		local animcheck = false
 		local specialvar = false --placeholder for general purpose trials boolean, to be revisited
