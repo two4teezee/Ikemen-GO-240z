@@ -1835,6 +1835,7 @@ function start.f_selectScreen()
 	main.f_fadeReset('fadein', motif.select_info)
 	main.f_playBGM(true, motif.music.select_bgm, motif.music.select_bgm_loop, motif.music.select_bgm_volume, motif.music.select_bgm_loopstart, motif.music.select_bgm_loopend)
 	start.f_resetTempData(motif.select_info, '_face', false)
+	--start.f_resetTempData(motif.select_info, '_char', false)
 	local stageActiveCount = 0
 	local stageActiveType = 'stage_active'
 	timerSelect = 0
@@ -1860,6 +1861,7 @@ function start.f_selectScreen()
 		for side = 1, 2 do
 			if #start.p[side].t_selTemp > 0 then
 				start.f_drawPortraits(start.p[side].t_selTemp, side, motif.select_info, '_face', true)
+				--start.f_drawPortraits(start.p[side].t_selTemp, side, motif.select_info, '_char', true)
 			end
 		end
 		--draw cell art
@@ -1937,6 +1939,7 @@ function start.f_selectScreen()
 				end
 			end
 			--delayed screen transition for the duration of face_done_anim
+			--240z: update for char_done_anim???
 			if start.p[side].animDelay > 0 then
 				if main.f_input(main.t_players, {'pal', 's'}) then
 					start.p[side].animDelay = 0
@@ -3714,7 +3717,6 @@ function start.f_trialsbuilder()
 			completedbgincwidth = animGetSpriteInfo(motif.trials_info.completedstep_bginc_data),
 		}
 		for i = 1, start.trialsdata.numoftrials, 1 do
-			--currenttrialAdd(i,0)
 			start.trialsdata.trial[i] = {
 				name = gettrialinfo('currenttrialname',i-1),
 				numsteps = gettrialinfo('currenttrialnumofsteps',i-1),
@@ -3730,7 +3732,6 @@ function start.f_trialsbuilder()
 				start.trialsdata.maxsteps = start.trialsdata.trial[i].numsteps
 			end
 			for j = 1, start.trialsdata.trial[i].numsteps, 1 do
-				--currenttrialAdd(i,j-1)
 				start.trialsdata.trial[i].text[j] = gettrialinfo('currenttrialtext',i-1,j-1)
 				start.trialsdata.trial[i].glyphs[j] = gettrialinfo('currenttrialglyphs',i-1,j-1)
 				start.trialsdata.trial[i].stateno[j] = gettrialinfo('currenttrialstateno',i-1,j-1)
@@ -3823,7 +3824,6 @@ function start.f_trialsbuilder()
 				end
 			end
 		end
-		--currenttrialAdd(1,0)
 		start.trialsdata.draw ={
 			upcomingtextline = {},
 			currenttextline = {},
@@ -3884,7 +3884,21 @@ function start.f_trialsdrawer()
 				local padding = 0
 				local totaloffset = 0
 				local bgincwidth = 0
-				if motif.trials_info.trialslayout == 1 then
+				if motif.trials_info.trialslayout == 0 then
+					animSetPos(
+						motif.trials_info[sub .. 'step_bg_data'], 
+						motif.trials_info.pos[1] + motif.trials_info[sub .. 'step_bg_offset'][1] + tempoffset[1], 
+						motif.trials_info.pos[2] + motif.trials_info[sub .. 'step_bg_offset'][2] + tempoffset[2]
+					)
+					animUpdate(motif.trials_info[sub .. 'step_bg_data'])
+					animDraw(motif.trials_info[sub .. 'step_bg_data'])
+					start.trialsdata.draw[sub .. 'textline'][i]:update({
+						x = motif.trials_info.pos[1]+motif.trials_info.upcomingstep_text_offset[1]+motif.trials_info.spacing[1]*(i-startonstep), 
+						y = motif.trials_info.pos[2]+motif.trials_info.upcomingstep_text_offset[2]+motif.trials_info.spacing[2]*(i-startonstep),
+						text = start.trialsdata.trial[ct].text[i]
+					})
+					start.trialsdata.draw[sub .. 'textline'][i]:draw()
+				elseif motif.trials_info.trialslayout == 1 then
 					local bgsize = {0,0}
 					if start.trialsdata.bgelemdata[sub .. 'bgincwidth'] ~= nil then bgincwidth = math.floor(start.trialsdata.bgelemdata[sub .. 'bgincwidth'].Size[1]) end
 					if start.trialsdata.bgelemdata[sub .. 'bgsize'] ~= nil then bgsize = start.trialsdata.bgelemdata[sub .. 'bgsize'].Size end
@@ -3910,22 +3924,6 @@ function start.f_trialsdrawer()
 						motif.trials_info.pos[1] + motif.trials_info[sub .. 'step_bg_offset'][1] + start.trialsdata.trial[ct].glyphline[i].alignOffset[1] + (accwidth-totaloffset-bgincwidth-2*padding), -- + start.trialsdata.glyphline[ct][i][m].lengthOffset),
 						start.trialsdata.trial[ct].glyphline[i].pos[1][2] + motif.trials_info[sub .. 'step_bg_offset'][2] + tempoffset[2]
 					}
-				end
-				if motif.trials_info.trialslayout == 0 then
-					animSetPos(
-						motif.trials_info[sub .. 'step_bg_data'], 
-						motif.trials_info.pos[1] + motif.trials_info[sub .. 'step_bg_offset'][1] + tempoffset[1], 
-						motif.trials_info.pos[2] + motif.trials_info[sub .. 'step_bg_offset'][2] + tempoffset[2]
-					)
-					animUpdate(motif.trials_info[sub .. 'step_bg_data'])
-					animDraw(motif.trials_info[sub .. 'step_bg_data'])
-					start.trialsdata.draw[sub .. 'textline'][i]:update({
-						x = motif.trials_info.pos[1]+motif.trials_info.upcomingstep_text_offset[1]+motif.trials_info.spacing[1]*(i-startonstep), 
-						y = motif.trials_info.pos[2]+motif.trials_info.upcomingstep_text_offset[2]+motif.trials_info.spacing[2]*(i-startonstep),
-						text = start.trialsdata.trial[ct].text[i]
-					})
-					start.trialsdata.draw[sub .. 'textline'][i]:draw()
-				elseif motif.trials_info.trialslayout == 1 then
 					animSetScale(motif.trials_info[sub .. 'step_bg_data'], bgtargetscale[1], bgtargetscale[2])
 					animSetPos(motif.trials_info[sub .. 'step_bg_data'], bgtargetpos[1], bgtargetpos[2])
 					animUpdate(motif.trials_info[sub .. 'step_bg_data'])
