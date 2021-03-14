@@ -3698,10 +3698,10 @@ function start.f_trialsbuilder()
 		start.trialsInit = true
 		start.trialsdata = {
 			active = false,
-			trialspresent = trialinfo('trialspresent'),
-			numoftrials = trialinfo('numoftrials'),
-			currenttrial = trialinfo('currenttrial'),
-			currenttrialstep = trialinfo('currenttrialstep'),
+			trialspresent = gettrialinfo('trialspresent'),
+			numoftrials = gettrialinfo('numoftrials'),
+			currenttrial = 1,
+			currenttrialstep = 1,
 			maxsteps = 0,
 			trial = {}
 		}
@@ -3714,11 +3714,11 @@ function start.f_trialsbuilder()
 			completedbgincwidth = animGetSpriteInfo(motif.trials_info.completedstep_bginc_data),
 		}
 		for i = 1, start.trialsdata.numoftrials, 1 do
-			currenttrialAdd(i,0)
+			--currenttrialAdd(i,0)
 			start.trialsdata.trial[i] = {
-				name = trialinfo('currenttrialname'),
-				numsteps = trialinfo('currenttrialnumofsteps'),
-				dummyaction = trialinfo('currenttrialdummyaction'),
+				name = gettrialinfo('currenttrialname',i-1),
+				numsteps = gettrialinfo('currenttrialnumofsteps',i-1),
+				dummyaction = gettrialinfo('currenttrialdummyaction',i-1),
 				text = {},
 				glyphs = {},
 				stateno = {},
@@ -3730,12 +3730,12 @@ function start.f_trialsbuilder()
 				start.trialsdata.maxsteps = start.trialsdata.trial[i].numsteps
 			end
 			for j = 1, start.trialsdata.trial[i].numsteps, 1 do
-				currenttrialAdd(i,j-1)
-				start.trialsdata.trial[i].text[j] = trialinfo('currenttrialtext')
-				start.trialsdata.trial[i].glyphs[j] = trialinfo('currenttrialglyphs')
-				start.trialsdata.trial[i].stateno[j] = trialinfo('currenttrialstateno')
-				start.trialsdata.trial[i].animno[j] = trialinfo('currenttrialanimno')
-				start.trialsdata.trial[i].isthrow[j] = trialinfo('currenttrialisthrow')
+				--currenttrialAdd(i,j-1)
+				start.trialsdata.trial[i].text[j] = gettrialinfo('currenttrialtext',i-1,j-1)
+				start.trialsdata.trial[i].glyphs[j] = gettrialinfo('currenttrialglyphs',i-1,j-1)
+				start.trialsdata.trial[i].stateno[j] = gettrialinfo('currenttrialstateno',i-1,j-1)
+				start.trialsdata.trial[i].animno[j] = gettrialinfo('currenttrialanimno',i-1,j-1)
+				start.trialsdata.trial[i].isthrow[j] = gettrialinfo('currenttrialisthrow',i-1,j-1)
 				start.trialsdata.trial[i].glyphline[j] = {
 					glyph = {},
 					pos = {},
@@ -3823,7 +3823,7 @@ function start.f_trialsbuilder()
 				end
 			end
 		end
-		currenttrialAdd(1,0)
+		--currenttrialAdd(1,0)
 		start.trialsdata.draw ={
 			upcomingtextline = {},
 			currenttextline = {},
@@ -3976,9 +3976,10 @@ function start.f_trialschecker()
 	-- 		3c) projectile hit OR
 
 	if ct <= start.trialsdata.numoftrials and start.trialsdata.draw.success == 0 and start.trialsdata.active then
-		if p2stateno() ~= start.trialsdata.trial[ct].dummyaction and hitpausetime() < 1 then
-			charChangeState(2,start.trialsdata.trial[ct].dummyaction)
-		end
+		--if p2stateno() ~= start.trialsdata.trial[ct].dummyaction and hitpausetime() < 1 then
+		command("holddown")
+			--charChangeState(2,start.trialsdata.trial[ct].dummyaction)
+		--end
 		local throwcheck = false
 		local animcheck = false
 		local specialvar = false --placeholder for general purpose trials boolean, to be revisited

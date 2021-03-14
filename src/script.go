@@ -622,11 +622,6 @@ func systemScriptInit(l *lua.LState) {
 		l.Push(lua.LBool(sys.netInput.IsConnected()))
 		return 1
 	})
-	luaRegister(l, "currenttrialAdd", func(*lua.LState) int {
-		sys.cgi[0].trialslist.currentTrial = int32(numArg(l, 1))
-		sys.cgi[0].trialslist.currenttrialStep = int32(numArg(l, 2))
-		return 0
-	})
 	luaRegister(l, "dialogueReset", func(*lua.LState) int {
 		for _, p := range sys.chars {
 			if len(p) > 0 {
@@ -2785,35 +2780,6 @@ func triggerFunctions(l *lua.LState) {
 		l.Push(lua.LBool(sys.debugWC.ctrl()))
 		return 1
 	})
-	luaRegister(l, "trialinfo", func(*lua.LState) int {
-		switch strArg(l, 1) {
-		case "trialspresent":
-			l.Push(lua.LBool(sys.cgi[0].trialslist.trialspresent))
-		case "numoftrials":
-			l.Push(lua.LNumber(sys.cgi[0].trialslist.numoftrials))
-		case "currenttrial":
-			l.Push(lua.LNumber(sys.cgi[0].trialslist.currentTrial))
-		case "currenttrialname":
-			l.Push(lua.LString(sys.cgi[0].trialslist.trialnames[int(sys.cgi[0].trialslist.currentTrial)-1]))
-		case "currenttrialstep":
-			l.Push(lua.LNumber(sys.cgi[0].trialslist.currenttrialStep))
-		case "currenttrialdummyaction":
-			l.Push(lua.LNumber(sys.cgi[0].trialslist.trialdummyaction[int(sys.cgi[0].trialslist.currentTrial)-1]))
-		case "currenttrialnumofsteps":
-			l.Push(lua.LNumber(sys.cgi[0].trialslist.trialnumsteps[int(sys.cgi[0].trialslist.currentTrial)-1]))
-		case "currenttrialtext":
-			l.Push(lua.LString(sys.cgi[0].trialslist.trialsteps[int(sys.cgi[0].trialslist.currentTrial)-1][int(sys.cgi[0].trialslist.currenttrialStep)]))
-		case "currenttrialglyphs":
-			l.Push(lua.LString(sys.cgi[0].trialslist.trialglyphs[int(sys.cgi[0].trialslist.currentTrial)-1][int(sys.cgi[0].trialslist.currenttrialStep)]))
-		case "currenttrialstateno":
-			l.Push(lua.LNumber(sys.cgi[0].trialslist.trialstateno[int(sys.cgi[0].trialslist.currentTrial)-1][int(sys.cgi[0].trialslist.currenttrialStep)]))
-		case "currenttrialanimno":
-			l.Push(lua.LNumber(sys.cgi[0].trialslist.trialanimno[int(sys.cgi[0].trialslist.currentTrial)-1][int(sys.cgi[0].trialslist.currenttrialStep)]))
-		case "currenttrialisthrow":
-			l.Push(lua.LBool(sys.cgi[0].trialslist.trialisthrow[int(sys.cgi[0].trialslist.currentTrial)-1][int(sys.cgi[0].trialslist.currenttrialStep)]))
-		}
-		return 1
-	})
 	luaRegister(l, "drawgame", func(*lua.LState) int {
 		l.Push(lua.LBool(sys.debugWC.drawgame()))
 		return 1
@@ -2944,6 +2910,35 @@ func triggerFunctions(l *lua.LState) {
 			l.RaiseError("\nInvalid argument: %v\n", strArg(l, 1))
 		}
 		l.Push(ln)
+		return 1
+	})
+	luaRegister(l, "gettrialinfo", func(*lua.LState) int {
+		switch strArg(l, 1) {
+		case "trialspresent":
+			l.Push(lua.LBool(sys.cgi[0].trialslist.trialspresent))
+		case "numoftrials":
+			l.Push(lua.LNumber(sys.cgi[0].trialslist.numoftrials))
+		case "currenttrial":
+			l.Push(lua.LNumber(sys.cgi[0].trialslist.currentTrial))
+		case "currenttrialname":
+			l.Push(lua.LString(sys.cgi[0].trialslist.trialnames[int(numArg(l, 2))]))
+		case "currenttrialstep":
+			l.Push(lua.LNumber(sys.cgi[0].trialslist.currenttrialStep))
+		case "currenttrialdummyaction":
+			l.Push(lua.LNumber(sys.cgi[0].trialslist.trialdummyaction[int(numArg(l, 2))]))
+		case "currenttrialnumofsteps":
+			l.Push(lua.LNumber(sys.cgi[0].trialslist.trialnumsteps[int(numArg(l, 2))]))
+		case "currenttrialtext":
+			l.Push(lua.LString(sys.cgi[0].trialslist.trialsteps[int(numArg(l, 2))][int(numArg(l, 3))]))
+		case "currenttrialglyphs":
+			l.Push(lua.LString(sys.cgi[0].trialslist.trialglyphs[int(numArg(l, 2))][int(numArg(l, 3))]))
+		case "currenttrialstateno":
+			l.Push(lua.LNumber(sys.cgi[0].trialslist.trialstateno[int(numArg(l, 2))][int(numArg(l, 3))]))
+		case "currenttrialanimno":
+			l.Push(lua.LNumber(sys.cgi[0].trialslist.trialanimno[int(numArg(l, 2))][int(numArg(l, 3))]))
+		case "currenttrialisthrow":
+			l.Push(lua.LBool(sys.cgi[0].trialslist.trialisthrow[int(numArg(l, 2))][int(numArg(l, 3))]))
+		}
 		return 1
 	})
 	luaRegister(l, "hitcount", func(*lua.LState) int {

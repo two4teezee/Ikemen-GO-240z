@@ -272,7 +272,7 @@ function loop()
 					start.challenger = main.playerInput
 				end
 			end
-		elseif gamemode('trials') and trialinfo('trialspresent') then
+		elseif gamemode('trials') and gettrialinfo('trialspresent') then
 			start.f_trialsmode()
 		end
 	end

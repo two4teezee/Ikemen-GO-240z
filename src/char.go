@@ -4314,13 +4314,6 @@ func (c *Char) scoreTotal() float32 {
 	s += c.score()
 	return s
 }
-func (c *Char) currenttrialAdd(trial int32, step int32) {
-	if c.teamside == -1 {
-		return
-	}
-	sys.cgi[0].trialslist.currentTrial = trial
-	sys.cgi[0].trialslist.currenttrialStep = step
-}
 func (c *Char) consecutiveWins() int32 {
 	if c.teamside == -1 {
 		return 0

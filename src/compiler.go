@@ -162,7 +162,6 @@ func newCompiler() *Compiler {
 		"targetguardpointsadd": c.targetGuardPointsAdd,
 		"targetredlifeadd":     c.targetRedLifeAdd,
 		"targetscoreadd":       c.targetScoreAdd,
-		"currenttrialAdd":      c.currenttrialAdd,
 	}
 	return c
 }
@@ -7928,22 +7927,6 @@ func (c *Compiler) targetScoreAdd(is IniSection, sc *StateControllerBase,
 	})
 	return *ret, err
 }
-func (c *Compiler) currenttrialAdd(is IniSection, sc *StateControllerBase,
-	_ int8) (StateController, error) {
-	ret, err := (*currenttrialAdd)(sc), c.stateSec(is, func() error {
-		if err := c.paramValue(is, sc, "redirectid",
-			currenttrialAdd_redirectid, VT_Int, 1, false); err != nil {
-			return err
-		}
-		if err := c.paramValue(is, sc, "value",
-			currenttrialAdd_value, VT_Int, 2, true); err != nil {
-			return err
-		}
-		return nil
-	})
-	return *ret, err
-}
-
 func (c *Compiler) null(is IniSection, sc *StateControllerBase,
 	_ int8) (StateController, error) {
 	return nullStateController, nil

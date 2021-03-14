@@ -7246,31 +7246,6 @@ func (sc targetScoreAdd) Run(c *Char, _ []int32) bool {
 	return false
 }
 
-type currenttrialAdd StateControllerBase
-
-const (
-	currenttrialAdd_value byte = iota
-	currenttrialAdd_redirectid
-)
-
-func (sc currenttrialAdd) Run(c *Char, _ []int32) bool {
-	crun := c
-	StateControllerBase(sc).run(c, func(id byte, exp []BytecodeExp) bool {
-		switch id {
-		case currenttrialAdd_value:
-			crun.currenttrialAdd(exp[0].evalI(c), exp[1].evalI(c))
-		case currenttrialAdd_redirectid:
-			if rid := sys.playerID(exp[0].evalI(c)); rid != nil {
-				crun = rid
-			} else {
-				return false
-			}
-		}
-		return true
-	})
-	return false
-}
-
 type StateBytecode struct {
 	stateType StateType
 	moveType  MoveType
