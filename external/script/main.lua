@@ -1368,18 +1368,35 @@ local t_preload = {
 	{typ = 'cspr', arg = motif.select_info.p1_face_spr},
 	{typ = 'canim', arg = {motif.select_info.p2_face_anim, nil}},
 	{typ = 'cspr', arg = motif.select_info.p2_face_spr},
-	{typ = 'canim', arg = {motif.select_info.p1_char_anim, nil}},
-	{typ = 'cspr', arg = motif.select_info.p1_char_spr},
-	{typ = 'canim', arg = {motif.select_info.p2_char_anim, nil}},
-	{typ = 'cspr', arg = motif.select_info.p2_char_spr},
+	{typ = 'canim', arg = {motif.select_info.p1_face1_anim, nil}},
+	{typ = 'cspr', arg = motif.select_info.p1_face1_spr},
+	{typ = 'canim', arg = {motif.select_info.p2_face1_anim, nil}},
+	{typ = 'cspr', arg = motif.select_info.p2_face1_spr},
+	{typ = 'canim', arg = {motif.select_info.p1_face2_anim, nil}},
+	{typ = 'cspr', arg = motif.select_info.p1_face2_spr},
+	{typ = 'canim', arg = {motif.select_info.p2_face2_anim, nil}},
+	{typ = 'cspr', arg = motif.select_info.p2_face2_spr},
+	{typ = 'canim', arg = {motif.select_info.p1_face3_anim, nil}},
+	{typ = 'cspr', arg = motif.select_info.p1_face3_spr},
+	{typ = 'canim', arg = {motif.select_info.p2_face3_anim, nil}},
+	{typ = 'cspr', arg = motif.select_info.p2_face3_spr},
 	{typ = 'canim', arg = {motif.select_info.p1_face_done_anim, nil}},
 	{typ = 'cspr', arg = motif.select_info.p1_face_done_spr},
 	{typ = 'canim', arg = {motif.select_info.p2_face_done_anim, nil}},
 	{typ = 'cspr', arg = motif.select_info.p2_face_done_spr},
-	{typ = 'canim', arg = {motif.select_info.p1_char_done_anim, nil}},
-	{typ = 'cspr', arg = motif.select_info.p1_char_done_spr},
-	{typ = 'canim', arg = {motif.select_info.p2_char_done_anim, nil}},
-	{typ = 'cspr', arg = motif.select_info.p2_char_done_spr},
+	{typ = 'canim', arg = {motif.select_info.p1_face1_done_anim, nil}},
+	{typ = 'cspr', arg = motif.select_info.p1_face1_done_spr},
+	{typ = 'canim', arg = {motif.select_info.p2_face1_done_anim, nil}},
+	{typ = 'cspr', arg = motif.select_info.p2_face1_done_spr},
+	{typ = 'canim', arg = {motif.select_info.p1_face2_done_anim, nil}},
+	{typ = 'cspr', arg = motif.select_info.p1_face2_done_spr},
+	{typ = 'canim', arg = {motif.select_info.p2_face2_done_anim, nil}},
+	{typ = 'cspr', arg = motif.select_info.p2_face2_done_spr},
+	{typ = 'canim', arg = {motif.select_info.p1_face3_done_anim, nil}},
+	{typ = 'cspr', arg = motif.select_info.p1_face3_done_spr},
+	{typ = 'canim', arg = {motif.select_info.p2_face3_done_anim, nil}},
+	{typ = 'cspr', arg = motif.select_info.p2_face3_done_spr},
+
 	--vs_screen
 	{typ = 'canim', arg = {motif.vs_screen.p1_anim, nil}},
 	{typ = 'cspr', arg = motif.vs_screen.p1_spr},
@@ -1399,7 +1416,7 @@ local t_preload = {
 	{typ = 'cspr', arg = motif.hiscore_info.face_spr},
 }
 for i = 1, 2 do
-	for _, v in ipairs({{sec = 'select_info', sn = '_face'}, {sec = 'select_info', sn = '_char'}, {sec = 'vs_screen', sn = ''}, {sec = 'victory_screen', sn = ''}}) do
+	for _, v in ipairs({{sec = 'select_info', sn = '_face'}, {sec = 'select_info', sn = '_face1'}, {sec = 'select_info', sn = '_face2'}, {sec = 'select_info', sn = '_face3'}, {sec = 'vs_screen', sn = ''}, {sec = 'victory_screen', sn = ''}}) do
 		for j = 1, motif[v.sec]['p' .. i .. v.sn .. '_num'] do
 			table.insert(t_preload, {typ = 'canim', arg = {motif[v.sec]['p' .. i .. '_member' .. j .. v.sn .. '_anim'], nil}})
 			table.insert(t_preload, {typ = 'cspr', arg = motif[v.sec]['p' .. i .. '_member' .. j .. v.sn .. '_spr']})

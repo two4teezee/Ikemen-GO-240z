@@ -869,7 +869,7 @@ function start.f_animGet(ref, side, member, t, subname, prefix, loop, spscale)
 		{t['p' .. side .. subname .. prefix .. '_anim'], -1},
 		t['p' .. side .. '_member' .. member .. subname .. prefix .. '_spr'],
 		t['p' .. side .. subname .. prefix .. '_spr'],
-		{9000, 1},
+		--{9000, 1},
 	}) do
 		if v[1] ~= nil and v[1] ~= -1 then
 			local a = animGetPreloadedData('char', ref, v[1], v[2], loop)
@@ -1835,8 +1835,9 @@ function start.f_selectScreen()
 	main.f_bgReset(motif.selectbgdef.bg)
 	main.f_fadeReset('fadein', motif.select_info)
 	main.f_playBGM(true, motif.music.select_bgm, motif.music.select_bgm_loop, motif.music.select_bgm_volume, motif.music.select_bgm_loopstart, motif.music.select_bgm_loopend)
-	start.f_resetTempData(motif.select_info, '_face', false)
-	--start.f_resetTempData(motif.select_info, '_char', false)
+	for _, v in ipairs({'face', 'face1', 'face2', 'face3'}) do
+		start.f_resetTempData(motif.select_info, '_' .. v, false)
+	end
 	local stageActiveCount = 0
 	local stageActiveType = 'stage_active'
 	timerSelect = 0
@@ -1861,8 +1862,11 @@ function start.f_selectScreen()
 		--draw portraits
 		for side = 1, 2 do
 			if #start.p[side].t_selTemp > 0 then
-				start.f_drawPortraits(start.p[side].t_selTemp, side, motif.select_info, '_face', true)
-				start.f_drawPortraits(start.p[side].t_selTemp, side, motif.select_info, '_char', true)
+				for _, v in ipairs({'face', 'face1', 'face2', 'face3'}) do
+					--if start.p[side].t_selTemp[v .. '_anim_data'] ~= nil then
+					start.f_drawPortraits(start.p[side].t_selTemp, side, motif.select_info, '_' .. v, true)
+					--end
+				end
 			end
 		end
 		--draw cell art
@@ -2440,15 +2444,20 @@ function start.f_selectMenu(side, cmd, player, member)
 				cell = start.c[player].cell,
 				face_anim = motif.select_info['p' .. side .. '_member' .. member .. '_face_anim'] or motif.select_info['p' .. side .. '_face_anim'],
 				face_anim_data = start.f_animGet(start.c[player].selRef, side, member, motif.select_info, '_face', '', true, false),
-				char_anim = motif.select_info['p' .. side .. '_member' .. member .. '_char_anim'] or motif.select_info['p' .. side .. '_char_anim'],
-				char_anim_data = start.f_animGet(start.c[player].selRef, side, member, motif.select_info, '_char', '', true, false),
+				face1_anim = motif.select_info['p' .. side .. '_member' .. member .. '_face1_anim'] or motif.select_info['p' .. side .. '_face1_anim'],
+				face1_anim_data = start.f_animGet(start.c[player].selRef, side, member, motif.select_info, '_face1', '', true, false),
+				face2_anim = motif.select_info['p' .. side .. '_member' .. member .. '_face2_anim'] or motif.select_info['p' .. side .. '_face2_anim'],
+				face2_anim_data = start.f_animGet(start.c[player].selRef, side, member, motif.select_info, '_face2', '', true, false),
+				face3_anim = motif.select_info['p' .. side .. '_member' .. member .. '_face3_anim'] or motif.select_info['p' .. side .. '_face3_anim'],
+				face3_anim_data = start.f_animGet(start.c[player].selRef, side, member, motif.select_info, '_face3', '', true, false),
 				slide_dist = {0, 0},
 			})
 		elseif start.p[side].t_selTemp[member].cell ~= start.c[player].cell or start.p[side].t_selTemp[member].ref ~= start.c[player].selRef then
 			start.p[side].t_selTemp[member].ref = start.c[player].selRef
 			start.p[side].t_selTemp[member].cell = start.c[player].cell
-			start.p[side].t_selTemp[member].face_anim = motif.select_info['p' .. side .. '_member' .. member .. '_face_anim'] or motif.select_info['p' .. side .. '_face_anim']
-			start.p[side].t_selTemp[member].char_anim = motif.select_info['p' .. side .. '_member' .. member .. '_char_anim'] or motif.select_info['p' .. side .. '_char_anim']
+			for _, v in ipairs({'face', 'face1', 'face2', 'face3'}) do
+				start.p[side].t_selTemp[member][v .. '_anim'] = motif.select_info['p' .. side .. '_member' .. member .. '_' .. v .. '_anim'] or motif.select_info['p' .. side .. '_' .. v .. '_anim']
+			end
 			start.p[side].t_selTemp[member].slide_dist = {0, 0}
 			getAnim = true
 		end
@@ -2463,15 +2472,16 @@ function start.f_selectMenu(side, cmd, player, member)
 				sndPlay(motif.files.snd_data, motif.select_info['p' .. side .. '_random_move_snd'][1], motif.select_info['p' .. side .. '_random_move_snd'][2])
 				start.c[player].randCnt = motif.select_info.cell_random_switchtime
 				start.c[player].selRef = start.f_randomChar(side)
-				if start.c[player].randRef ~= start.c[player].selRef or (start.p[side].t_selTemp[member].face_anim_data == nil and start.p[side].t_selTemp[member].char_anim_data == nil) then --240z
+				if start.c[player].randRef ~= start.c[player].selRef or (start.p[side].t_selTemp[member].face_anim_data == nil and start.p[side].t_selTemp[member].face1_anim_data == nil and start.p[side].t_selTemp[member].face2_anim_data == nil and start.p[side].t_selTemp[member].face3_anim_data == nil) then
 					getAnim = true
 					start.c[player].randRef = start.c[player].selRef
 				end
 			end
 		end
 		if getAnim then
-			start.p[side].t_selTemp[member].face_anim_data = start.f_animGet(start.c[player].selRef, side, member, motif.select_info, '_face', '', true, false)
-			start.p[side].t_selTemp[member].char_anim_data = start.f_animGet(start.c[player].selRef, side, member, motif.select_info, '_char', '', true, false)
+			for _, v in ipairs({'face', 'face1', 'face2', 'face3'}) do
+				start.p[side].t_selTemp[member][v .. '_anim_data'] = start.f_animGet(start.c[player].selRef, side, member, motif.select_info, '_' .. v, '', true, false)
+			end
 		end
 		--draw active cursor
 		if start.f_selGrid(start.c[player].cell + 1).hidden ~= 1 then
@@ -2532,12 +2542,14 @@ function start.f_selectMenu(side, cmd, player, member)
 			local done_anim = motif.select_info['p' .. side .. '_member' .. member .. '_face_done_anim'] or motif.select_info['p' .. side .. '_face_done_anim']
 			if done_anim ~= -1 then
 				if start.p[side].t_selTemp[member].anim ~= done_anim and (main.f_tableLength(start.p[side].t_selected) < motif.select_info['p' .. side .. '_face_num'] or start.p[side].selEnd) then
-					start.p[side].t_selTemp[member].face_anim_data = start.f_animGet(start.c[player].selRef, side, member, motif.select_info, '_face', '_done', false, false)
-					start.p[side].t_selTemp[member].char_anim_data = start.f_animGet(start.c[player].selRef, side, member, motif.select_info, '_char', '_done', false, false)
-					start.p[side].animDelay = math.min(120, math.max(start.p[side].animDelay, math.max(animGetLength(start.p[side].t_selTemp[member].face_anim_data),animGetLength(start.p[side].t_selTemp[member].char_anim_data))))
+					for _, v in ipairs({'face', 'face1', 'face2', 'face3'}) do
+						start.p[side].t_selTemp[member][v .. '_anim_data'] = start.f_animGet(start.c[player].selRef, side, member, motif.select_info, '_' .. v, '_done', false, false)
+					end
+					start.p[side].animDelay = math.min(120, math.max(start.p[side].animDelay, animGetLength(start.p[side].t_selTemp[member].face_anim_data),animGetLength(start.p[side].t_selTemp[member].face1_anim_data),animGetLength(start.p[side].t_selTemp[member].face2_anim_data),animGetLength(start.p[side].t_selTemp[member].face3_anim_data)))
 				elseif start.p[side].selEnd and start.p[side].t_selTemp[member].ref ~= start.c[player].selRef then --only for last team member if 'select' param is used
-					start.p[side].t_selTemp[member].face_anim_data = start.f_animGet(start.c[player].selRef, side, member, motif.select_info, '_face', '', true, false)
-					start.p[side].t_selTemp[member].char_anim_data = start.f_animGet(start.c[player].selRef, side, member, motif.select_info, '_char', '', true, false)
+					for _, v in ipairs({'face', 'face1', 'face2', 'face3'}) do
+						start.p[side].t_selTemp[member][v .. '_anim_data'] = start.f_animGet(start.c[player].selRef, side, member, motif.select_info, '_' .. v, '', true, false)
+					end
 					start.p[side].animDelay = 60 --1 second delay to allow displaying 'select' param character
 				end
 			end
