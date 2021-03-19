@@ -341,6 +341,7 @@ local motif =
 		title_netplaysurvivalcoop_text = 'Online Survival', --Ikemen feature
 		title_tournament_text = 'Tournament Mode', --Ikemen feature (not implemented yet)
 		title_training_text = 'Training Mode', --Ikemen feature
+		title_trials_text = 'Trials Mode', --Ikemen feature
 		title_timeattack_text = 'Time Attack', --Ikemen feature
 		title_survival_text = 'Survival', --Ikemen feature
 		title_survivalcoop_text = 'Survival Cooperative', --Ikemen feature
