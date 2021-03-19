@@ -900,9 +900,12 @@ function start.f_drawPortraits(t_portraits, side, t, subname, last)
 		return
 	end
 	local altsubname = subname:gsub("_", "")
+	if altsubname ~= '' then
+		altsubname = altsubname .. '_'
+	end
 	--if next player portrait should replace previous one
 	if t['p' .. side .. subname .. '_num'] == 1 and last and not main.coop then
-		if t_portraits[#t_portraits][altsubname .. '_anim_data'] ~= nil then
+		if t_portraits[#t_portraits][altsubname .. 'anim_data'] ~= nil then
 			local v = t_portraits[#t_portraits]
 			for i = 1, 2 do
 				if v.slide_dist[i] < (main.f_tableExists(t['p' .. side .. '_member1' .. subname .. '_slide_dist'])[i] or 0) then
@@ -910,7 +913,7 @@ function start.f_drawPortraits(t_portraits, side, t, subname, last)
 				end
 			end
 			main.f_animPosDraw(
-				v[altsubname .. '_anim_data'],
+				v[altsubname .. 'anim_data'],
 				t['p' .. side .. subname .. '_pos'][1] + t['p' .. side .. subname .. '_offset'][1] + (main.f_tableExists(t['p' .. side .. '_member1' .. subname .. '_offset'])[1] or 0) + main.f_round(v.slide_dist[1]),
 				t['p' .. side .. subname .. '_pos'][2] + t['p' .. side .. subname .. '_offset'][2] + (main.f_tableExists(t['p' .. side .. '_member1' .. subname .. '_offset'])[2] or 0) + main.f_round(v.slide_dist[2]),
 				t['p' .. side .. subname .. '_facing'],
@@ -922,7 +925,7 @@ function start.f_drawPortraits(t_portraits, side, t, subname, last)
 	--otherwise render portraits in order, up to the 'num' limit
 	for member = #t_portraits, 1, -1 do
 		if member <= t['p' .. side .. subname .. '_num'] --[[or (last and main.coop)]] then
-			if t_portraits[member][altsubname .. '_anim_data'] ~= nil then
+			if t_portraits[member][altsubname .. 'anim_data'] ~= nil then
 				local v = t_portraits[member]
 				for i = 1, 2 do
 					if v.slide_dist[i] < (main.f_tableExists(t['p' .. side .. '_member' .. member .. subname .. '_slide_dist'])[i] or 0) then
@@ -936,7 +939,7 @@ function start.f_drawPortraits(t_portraits, side, t, subname, last)
 					x = x + (member - 1) * t['p' .. side .. subname .. '_spacing'][1]
 				end
 				main.f_animPosDraw(
-					v[altsubname ..  '_anim_data'],
+					v[altsubname ..  'anim_data'],
 					x + main.f_round(v.slide_dist[1]),
 					t['p' .. side .. subname .. '_pos'][2] + t['p' .. side .. subname .. '_offset'][2] + (main.f_tableExists(t['p' .. side .. '_member' .. member .. subname .. '_offset'])[2] or 0) + (member - 1) * t['p' .. side .. subname .. '_spacing'][2] + main.f_round(v.slide_dist[2]),
 					t['p' .. side .. subname .. '_facing'],
@@ -2442,6 +2445,8 @@ function start.f_selectMenu(side, cmd, player, member)
 			table.insert(start.p[side].t_selTemp, {
 				ref = start.c[player].selRef,
 				cell = start.c[player].cell,
+				anim = motif.select_info['p' .. side .. '_member' .. member .. '_face_anim'] or motif.select_info['p' .. side .. '_face_anim'],
+				anim_data = start.f_animGet(start.c[player].selRef, side, member, motif.select_info, '_face', '', true, false),
 				face_anim = motif.select_info['p' .. side .. '_member' .. member .. '_face_anim'] or motif.select_info['p' .. side .. '_face_anim'],
 				face_anim_data = start.f_animGet(start.c[player].selRef, side, member, motif.select_info, '_face', '', true, false),
 				face1_anim = motif.select_info['p' .. side .. '_member' .. member .. '_face1_anim'] or motif.select_info['p' .. side .. '_face1_anim'],
