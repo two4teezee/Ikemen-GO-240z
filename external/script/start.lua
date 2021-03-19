@@ -849,7 +849,9 @@ function start.f_resetTempData(t, subname, spscale)
 			end
 		end
 		for member, v in ipairs(start.p[side].t_selTemp) do
-			v[subname .. '_anim_data'] = start.f_animGet(v.ref, side, member, t, subname, '', true, spscale)
+			local altsubname = subname
+			if altsubname == '' then altsubname = 'face' end
+			v[altsubname .. '_anim_data'] = start.f_animGet(v.ref, side, member, t, subname, '', true, spscale)
 			v.slide_dist = {0, 0}
 		end
 		start.p[side].animDelay = 0
@@ -869,7 +871,7 @@ function start.f_animGet(ref, side, member, t, subname, prefix, loop, spscale)
 		{t['p' .. side .. subname .. prefix .. '_anim'], -1},
 		t['p' .. side .. '_member' .. member .. subname .. prefix .. '_spr'],
 		t['p' .. side .. subname .. prefix .. '_spr'],
-		--{9000, 1},
+		{9000, 1},
 	}) do
 		if v[1] ~= nil and v[1] ~= -1 then
 			local a = animGetPreloadedData('char', ref, v[1], v[2], loop)
@@ -902,6 +904,8 @@ function start.f_drawPortraits(t_portraits, side, t, subname, last)
 	local altsubname = subname:gsub("_", "")
 	if altsubname ~= '' then
 		altsubname = altsubname .. '_'
+	else
+		altsubname = 'face_'
 	end
 	--if next player portrait should replace previous one
 	if t['p' .. side .. subname .. '_num'] == 1 and last and not main.coop then
@@ -1866,9 +1870,9 @@ function start.f_selectScreen()
 		for side = 1, 2 do
 			if #start.p[side].t_selTemp > 0 then
 				for _, v in ipairs({'face', 'face1', 'face2', 'face3'}) do
-					--if start.p[side].t_selTemp[v .. '_anim_data'] ~= nil then
-					start.f_drawPortraits(start.p[side].t_selTemp, side, motif.select_info, '_' .. v, true)
-					--end
+					if not(motif.select_info['p' .. side .. '_' .. v .. '_anim'] == -1 and motif.select_info['p' .. side .. '_' .. v .. '_spr'][1] == -1) then
+						start.f_drawPortraits(start.p[side].t_selTemp, side, motif.select_info, '_' .. v, true)
+					end
 				end
 			end
 		end
@@ -2445,8 +2449,6 @@ function start.f_selectMenu(side, cmd, player, member)
 			table.insert(start.p[side].t_selTemp, {
 				ref = start.c[player].selRef,
 				cell = start.c[player].cell,
-				anim = motif.select_info['p' .. side .. '_member' .. member .. '_face_anim'] or motif.select_info['p' .. side .. '_face_anim'],
-				anim_data = start.f_animGet(start.c[player].selRef, side, member, motif.select_info, '_face', '', true, false),
 				face_anim = motif.select_info['p' .. side .. '_member' .. member .. '_face_anim'] or motif.select_info['p' .. side .. '_face_anim'],
 				face_anim_data = start.f_animGet(start.c[player].selRef, side, member, motif.select_info, '_face', '', true, false),
 				face1_anim = motif.select_info['p' .. side .. '_member' .. member .. '_face1_anim'] or motif.select_info['p' .. side .. '_face1_anim'],
@@ -3038,8 +3040,8 @@ function start.f_victoryOrder(side, paramSide, allow_ko, num)
 				if #t >= num then break end
 				table.insert(t, {
 					ref = selectno(),
-					anim = motif.victory_screen['p' .. paramSide .. '_member' .. #t + 1 .. '_anim'] or motif.victory_screen['p' .. paramSide .. '_anim'],
-					anim_data = start.f_animGet(selectno(), paramSide, #t + 1, motif.victory_screen, '', '', true, true),
+					face_anim = motif.victory_screen['p' .. paramSide .. '_member' .. #t + 1 .. '_anim'] or motif.victory_screen['p' .. paramSide .. '_anim'],
+					face_anim_data = start.f_animGet(selectno(), paramSide, #t + 1, motif.victory_screen, '', '', true, true),
 					slide_dist = {0, 0},
 				})
 				t_matchList[selectno()] = (t_matchList[selectno()] or 0) + 1
@@ -3059,8 +3061,8 @@ function start.f_victoryOrder(side, paramSide, allow_ko, num)
 				for i = 1, v - (t_matchList[k] or 0) do
 					table.insert(t, {
 						ref = k,
-						anim = motif.victory_screen['p' .. paramSide .. '_member' .. #t + 1 .. '_anim'] or motif.victory_screen['p' .. paramSide .. '_anim'],
-						anim_data = start.f_animGet(k, paramSide, #t + 1, motif.victory_screen, '', '', true, true),
+						face_anim = motif.victory_screen['p' .. paramSide .. '_member' .. #t + 1 .. '_anim'] or motif.victory_screen['p' .. paramSide .. '_anim'],
+						face_anim_data = start.f_animGet(k, paramSide, #t + 1, motif.victory_screen, '', '', true, true),
 						slide_dist = {0, 0},
 					})
 					t_matchList[k] = (t_matchList[k] or 0) + 1
