@@ -1870,7 +1870,7 @@ function start.f_selectScreen()
 		for side = 1, 2 do
 			if #start.p[side].t_selTemp > 0 then
 				for _, v in ipairs({'face', 'face1', 'face2', 'face3'}) do
-					if not(motif.select_info['p' .. side .. '_' .. v .. '_anim'] == -1 and motif.select_info['p' .. side .. '_' .. v .. '_spr'][1] == -1) then
+					if motif.select_info['p' .. side .. '_' .. v .. '_anim'] ~= -1 or motif.select_info['p' .. side .. '_' .. v .. '_spr'][1] ~= -1 or motif.select_info['p' .. side .. '_member1_' .. v .. '_anim'] ~= nil or motif.select_info['p' .. side .. '_member1_' .. v .. '_spr'] ~= nil  then
 						start.f_drawPortraits(start.p[side].t_selTemp, side, motif.select_info, '_' .. v, true)
 					end
 				end
@@ -2546,17 +2546,15 @@ function start.f_selectMenu(side, cmd, player, member)
 				end
 			end
 			--anim update
-			local done_anim = motif.select_info['p' .. side .. '_member' .. member .. '_face_done_anim'] or motif.select_info['p' .. side .. '_face_done_anim']
-			if done_anim ~= -1 then
-				if start.p[side].t_selTemp[member].anim ~= done_anim and (main.f_tableLength(start.p[side].t_selected) < motif.select_info['p' .. side .. '_face_num'] or start.p[side].selEnd) then
-					for _, v in ipairs({'face', 'face1', 'face2', 'face3'}) do
+			for _, v in ipairs({'face', 'face1', 'face2', 'face3'}) do
+				local done_anim = motif.select_info['p' .. side .. '_member' .. member .. '_' .. v .. '_done_anim'] or motif.select_info['p' .. side .. '_' .. v .. '_done_anim']
+				if done_anim ~= -1 then
+					if start.p[side].t_selTemp[member].anim ~= done_anim and (main.f_tableLength(start.p[side].t_selected) < motif.select_info['p' .. side .. '_face_num'] or start.p[side].selEnd) then
 						start.p[side].t_selTemp[member][v .. '_anim_data'] = start.f_animGet(start.c[player].selRef, side, member, motif.select_info, '_' .. v, '_done', false, false)
 					end
 					start.p[side].animDelay = math.min(120, math.max(start.p[side].animDelay, animGetLength(start.p[side].t_selTemp[member].face_anim_data),animGetLength(start.p[side].t_selTemp[member].face1_anim_data),animGetLength(start.p[side].t_selTemp[member].face2_anim_data),animGetLength(start.p[side].t_selTemp[member].face3_anim_data)))
 				elseif start.p[side].selEnd and start.p[side].t_selTemp[member].ref ~= start.c[player].selRef then --only for last team member if 'select' param is used
-					for _, v in ipairs({'face', 'face1', 'face2', 'face3'}) do
-						start.p[side].t_selTemp[member][v .. '_anim_data'] = start.f_animGet(start.c[player].selRef, side, member, motif.select_info, '_' .. v, '', true, false)
-					end
+					start.p[side].t_selTemp[member][v .. '_anim_data'] = start.f_animGet(start.c[player].selRef, side, member, motif.select_info, '_' .. v, '', true, false)
 					start.p[side].animDelay = 60 --1 second delay to allow displaying 'select' param character
 				end
 			end
