@@ -907,6 +907,7 @@ function start.f_drawPortraits(t_portraits, side, t, subname, last)
 	else
 		altsubname = 'face_'
 	end
+	print('before return', subname, altsubname)
 	--if next player portrait should replace previous one
 	if t['p' .. side .. subname .. '_num'] == 1 and last and not main.coop then
 		if t_portraits[#t_portraits][altsubname .. 'anim_data'] ~= nil then
@@ -927,6 +928,7 @@ function start.f_drawPortraits(t_portraits, side, t, subname, last)
 		return
 	end
 	--otherwise render portraits in order, up to the 'num' limit
+	print('after return', subname, altsubname)
 	for member = #t_portraits, 1, -1 do
 		if member <= t['p' .. side .. subname .. '_num'] --[[or (last and main.coop)]] then
 			if t_portraits[member][altsubname .. 'anim_data'] ~= nil then
@@ -2546,9 +2548,10 @@ function start.f_selectMenu(side, cmd, player, member)
 			end
 			--anim update
 			for _, v in ipairs({'face', 'face1', 'face2', 'face3'}) do
-				local done_anim = motif.select_info['p' .. side .. '_member' .. member .. '_' .. v .. '_done_anim'] or motif.select_info['p' .. side .. '_' .. v .. '_done_anim']
-				if done_anim ~= -1 then
-					if start.p[side].t_selTemp[member].anim ~= done_anim and (main.f_tableLength(start.p[side].t_selected) < motif.select_info['p' .. side .. '_face_num'] or start.p[side].selEnd) then
+				local done_anim = motif.select_info['p' .. side .. '_member' .. member .. '_' .. v .. '_done_anim'] or motif.select_info['p' .. side .. '_' .. v .. '_done_anim'] 
+				local done_spr = motif.select_info['p' .. side .. '_member' .. member .. '_' .. v .. '_done_spr'] or motif.select_info['p' .. side .. '_' .. v .. '_done_spr']
+				if done_anim ~= -1 or done_spr[1] ~= -1 then
+					if (start.p[side].t_selTemp[member].anim ~= done_anim or start.p[side].t_selTemp[member].anim ~= done_spr[1]) and (main.f_tableLength(start.p[side].t_selected) < motif.select_info['p' .. side .. '_face_num'] or start.p[side].selEnd) then
 						start.p[side].t_selTemp[member][v .. '_anim_data'] = start.f_animGet(start.c[player].selRef, side, member, motif.select_info, '_' .. v, '_done', true, false)
 					end
 					start.p[side].animDelay = math.min(120, math.max(start.p[side].animDelay, animGetLength(start.p[side].t_selTemp[member].face_anim_data),animGetLength(start.p[side].t_selTemp[member].face1_anim_data),animGetLength(start.p[side].t_selTemp[member].face2_anim_data),animGetLength(start.p[side].t_selTemp[member].face3_anim_data)))
