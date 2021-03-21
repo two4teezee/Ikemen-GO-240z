@@ -907,7 +907,6 @@ function start.f_drawPortraits(t_portraits, side, t, subname, last)
 	else
 		altsubname = 'face_'
 	end
-	print('before return', subname, altsubname)
 	--if next player portrait should replace previous one
 	if t['p' .. side .. subname .. '_num'] == 1 and last and not main.coop then
 		if t_portraits[#t_portraits][altsubname .. 'anim_data'] ~= nil then
@@ -928,7 +927,6 @@ function start.f_drawPortraits(t_portraits, side, t, subname, last)
 		return
 	end
 	--otherwise render portraits in order, up to the 'num' limit
-	print('after return', subname, altsubname)
 	for member = #t_portraits, 1, -1 do
 		if member <= t['p' .. side .. subname .. '_num'] --[[or (last and main.coop)]] then
 			if t_portraits[member][altsubname .. 'anim_data'] ~= nil then
@@ -2546,7 +2544,7 @@ function start.f_selectMenu(side, cmd, player, member)
 					end
 				end
 			end
-			--anim update
+			--anim update, check if done
 			for _, v in ipairs({'face', 'face1', 'face2', 'face3'}) do
 				local done_anim = motif.select_info['p' .. side .. '_member' .. member .. '_' .. v .. '_done_anim'] or motif.select_info['p' .. side .. '_' .. v .. '_done_anim'] 
 				local done_spr = motif.select_info['p' .. side .. '_member' .. member .. '_' .. v .. '_done_spr'] or motif.select_info['p' .. side .. '_' .. v .. '_done_spr']
