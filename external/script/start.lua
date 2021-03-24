@@ -3730,6 +3730,7 @@ function start.f_trialsbuilder()
 			currenttrial = 1,
 			currenttrialstep = 1,
 			maxsteps = 0,
+			dummystatechange = false,
 			trial = {}
 		}
 		start.trialsdata.bgelemdata = {
@@ -3998,10 +3999,10 @@ function start.f_trialschecker()
 	-- 		3c) projectile hit OR
 
 	if ct <= start.trialsdata.numoftrials and start.trialsdata.draw.success == 0 and start.trialsdata.active then
-		--if p2stateno() ~= start.trialsdata.trial[ct].dummyaction and hitpausetime() < 1 then
-		command("holddown")
-			--charChangeState(2,start.trialsdata.trial[ct].dummyaction)
-		--end
+		if hitpausetime() < 1 and not start.trialsdata.dummystatechange then
+			charChangeState(2,start.trialsdata.trial[ct].dummyaction)
+			start.trialsdata.dummystatechange = true
+		end
 		local throwcheck = false
 		local animcheck = false
 		local specialvar = false --placeholder for general purpose trials boolean, to be revisited
@@ -4012,6 +4013,7 @@ function start.f_trialschecker()
 				if ncts >= start.trialsdata.trial[ct].numsteps  then
 					start.trialsdata.currenttrial = ct + 1
 					start.trialsdata.currenttrialstep = 0
+					start.trialsdata.dummystatechange = false
 					if ct < start.trialsdata.numoftrials then 
 						if (motif.trials_info.success_front_displaytime == -1) and (motif.trials_info.success_bg_displaytime == -1) then
 							start.trialsdata.draw.success = math.max(animGetLength(motif.trials_info.success_front_data), animGetLength(motif.trials_info.success_bg_data)) 
