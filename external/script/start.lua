@@ -3731,6 +3731,8 @@ function start.f_trialsbuilder()
 			currenttrialstep = 1,
 			maxsteps = 0,
 			dummystatechange = false,
+			dummyactionspacer = 59,
+			dummyactionno = 1,
 			trial = {}
 		}
 		start.trialsdata.bgelemdata = {
@@ -3997,11 +3999,22 @@ function start.f_trialschecker()
 	-- 		3a) move hit OR
 	-- 		3b) throwcheck passed OR
 	-- 		3c) projectile hit OR
-
+	
 	if ct <= start.trialsdata.numoftrials and start.trialsdata.draw.success == 0 and start.trialsdata.active then
 		if hitpausetime() < 1 and not start.trialsdata.dummystatechange then
-			charChangeState(2,start.trialsdata.trial[ct].dummyaction)
-			start.trialsdata.dummystatechange = true
+			--if #start.trialsdata.trial[ct].dummyaction == 1 then
+				charChangeState(2,start.trialsdata.trial[ct].dummyaction)
+				start.trialsdata.dummystatechange = true
+				start.trialsdata.dummyactionspacer = 59
+			--else
+			--	charChangeState(2,start.trialsdata.trial[ct].dummyaction[start.trialsdata.dummyactionno])
+			--	start.trialsdata.dummyactionno = start.trialsdata.dummyactionno + 1
+			--end
+		elseif p2stateno() == 0 and start.trialsdata.dummyactionspacer == 0 then
+			start.trialsdata.dummystatechange = false
+			start.trialsdata.dummyactionno = 1
+		elseif p2stateno() == 0 then
+			start.trialsdata.dummyactionspacer = start.trialsdata.dummyactionspacer - 1
 		end
 		local throwcheck = false
 		local animcheck = false
