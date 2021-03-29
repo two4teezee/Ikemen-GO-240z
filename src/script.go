@@ -2925,7 +2925,7 @@ func triggerFunctions(l *lua.LState) {
 		case "currenttrialstep":
 			l.Push(lua.LNumber(sys.cgi[0].trialslist.currenttrialStep))
 		case "currenttrialdummyaction":
-			l.Push(lua.LNumber(sys.cgi[0].trialslist.trialdummyaction[int(numArg(l, 2))]))
+			l.Push(lua.LString(sys.cgi[0].trialslist.trialdummyaction[int(numArg(l, 2))]))
 		case "currenttrialnumofsteps":
 			l.Push(lua.LNumber(sys.cgi[0].trialslist.trialnumsteps[int(numArg(l, 2))]))
 		case "currenttrialtext":

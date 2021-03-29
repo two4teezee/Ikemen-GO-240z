@@ -3730,7 +3730,7 @@ function start.f_trialsbuilder()
 			currenttrial = 1,
 			currenttrialstep = 1,
 			maxsteps = 0,
-			dummystatechange = false,
+			dummystatechange = true,
 			dummyactionspacer = 59,
 			dummyactionno = 1,
 			trial = {}
@@ -3992,34 +3992,85 @@ function start.f_trialsdrawer()
 end
 
 function start.f_trialschecker()
-	--Gating Criteria:
-	-- you'll want to change this if you're doing something odd with your chars 
-	-- 1) stateno matches, AND
-	-- 2) optional animcheck passed AND
-	-- 		3a) move hit OR
-	-- 		3b) throwcheck passed OR
-	-- 		3c) projectile hit OR
-	
 	if ct <= start.trialsdata.numoftrials and start.trialsdata.draw.success == 0 and start.trialsdata.active then
-		if hitpausetime() < 1 and not start.trialsdata.dummystatechange then
-			--if #start.trialsdata.trial[ct].dummyaction == 1 then
-				charChangeState(2,start.trialsdata.trial[ct].dummyaction)
+		--if dummyaction == "neutral" {
+		--	gi.trialslist.trialdummyaction[ii] = 0
+		--} else if dummyaction == "walk forward" {
+		--	gi.trialslist.trialdummyaction[ii] = 20
+		--} else if dummyaction == "walk backward" {
+		--	gi.trialslist.trialdummyaction[ii] = 20
+		--} else if dummyaction == "standing block" {
+		--	gi.trialslist.trialdummyaction[ii] = 150
+		--} else if dummyaction == "neutral crouch" {
+		--	gi.trialslist.trialdummyaction[ii] = 11
+		--} else if dummyaction == "crouching block" {
+		--	gi.trialslist.trialdummyaction[ii] = 152
+		--} else if dummyaction == "neutral jump" {
+		--	gi.trialslist.trialdummyaction[ii] = 50
+		--} else if dummyaction == "forward jump" {
+		--	gi.trialslist.trialdummyaction[ii] = 50
+		--} else if dummyaction == "backward jump" {
+		--	gi.trialslist.trialdummyaction[ii] = 50
+		--} else if dummyaction == "air block" {
+		--	gi.trialslist.trialdummyaction[ii] = 154
+		--} else if dummyaction == "standing attack" {
+		--	gi.trialslist.trialdummyaction[ii] = 400
+		--} else if dummyaction == "crouching attack" {
+		--	gi.trialslist.trialdummyaction[ii] = 405
+		--} else if dummyaction == "jumping attack" {
+		--	gi.trialslist.trialdummyaction[ii] = 406
+		--} else if dummyaction == "projectile attack" {
+		--	gi.trialslist.trialdummyaction[ii] = 410
+		--}
+		if hitpausetime() < 1 and not start.trialsdata.dummystatechange and start.trialsdata.trial[ct].dummyaction ~= 'neutral' then
+			if start.trialsdata.trial[ct].dummyaction == 'standing attack' then
+				charChangeState(2,400)
 				start.trialsdata.dummystatechange = true
 				start.trialsdata.dummyactionspacer = 59
-			--else
-			--	charChangeState(2,start.trialsdata.trial[ct].dummyaction[start.trialsdata.dummyactionno])
-			--	start.trialsdata.dummyactionno = start.trialsdata.dummyactionno + 1
-			--end
+			elseif start.trialsdata.trial[ct].dummyaction == 'crouching attack' then
+				charChangeState(2,405)
+				start.trialsdata.dummystatechange = true
+				start.trialsdata.dummyactionspacer = 59
+			elseif start.trialsdata.trial[ct].dummyaction == 'projectile attack' then
+				charChangeState(2,410)
+				start.trialsdata.dummystatechange = true
+				start.trialsdata.dummyactionspacer = 59
+			elseif start.trialsdata.trial[ct].dummyaction == 'neutral crouch' then
+				if p2stateno() == 0 then
+					charChangeState(2,10)
+				else
+					charChangeState(2,11)
+				end
+			elseif start.trialsdata.trial[ct].dummyaction == 'neutral jump' then
+				charChangeState(2,40)
+			elseif start.trialsdata.trial[ct].dummyaction == 'standing guard' then
+				charChangeState(2,130)	
+			elseif start.trialsdata.trial[ct].dummyaction == 'crouching guard' then
+				if p2stateno() == 0 then
+					charChangeState(2,10)
+				else
+					charChangeState(2,131)
+				end
+			elseif start.trialsdata.trial[ct].dummyaction == 'auto guard' then
+				charChangeState(2,410)
+			end
 		elseif p2stateno() == 0 and start.trialsdata.dummyactionspacer == 0 then
 			start.trialsdata.dummystatechange = false
 			start.trialsdata.dummyactionno = 1
-		elseif p2stateno() == 0 then
+		elseif p2stateno() == 0 and ctrl() then
 			start.trialsdata.dummyactionspacer = start.trialsdata.dummyactionspacer - 1
 		end
 		local throwcheck = false
 		local animcheck = false
 		local specialvar = false --placeholder for general purpose trials boolean, to be revisited
 		if start.trialsdata.trial[ct].animno[cts+1] ~= -2147483648 then animcheck = true end
+		-- Gating Criteria:
+		-- You'll want to change this if you're doing something odd with your chars 
+		-- 1) stateno matches, AND
+		-- 2) optional animcheck passed AND
+		-- 	3a) move hit OR
+		-- 	3b) throwcheck passed OR
+		-- 	3c) projectile hit OR...
 		if (stateno() == start.trialsdata.trial[ct].stateno[cts+1]) and (anim() == start.trialsdata.trial[ct].animno[cts+1] or not(animcheck)) and ((hitpausetime() > 1 and movehit()) or (projhittime(numproj()) > 1 and hitshakeover()) or throwcheck or specialvar) then
 			ncts = cts + 1
 			if ncts == 1 or (ncts > 1 and combocount() > 0) then

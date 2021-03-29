@@ -1430,7 +1430,7 @@ type ParsedTrials struct {
 	currentTrial     int32
 	currenttrialStep int32
 	trialnumsteps    []int32
-	trialdummyaction []int32
+	trialdummyaction []string
 	trialsteps       [][]string
 	trialglyphs      [][]string
 	trialstateno     [][]int32
@@ -1869,7 +1869,7 @@ func (c *Char) load(def string) error {
 							gi.trialslist.numoftrials++
 						}
 					}
-					gi.trialslist.trialdummyaction = make([]int32, gi.trialslist.numoftrials)
+					gi.trialslist.trialdummyaction = make([]string, gi.trialslist.numoftrials)
 					gi.trialslist.trialnumsteps = make([]int32, gi.trialslist.numoftrials)
 					gi.trialslist.trialnames = make([]string, gi.trialslist.numoftrials)
 					gi.trialslist.trialsteps = make([][]string, gi.trialslist.numoftrials)
@@ -1882,7 +1882,6 @@ func (c *Char) load(def string) error {
 					for j < len(triallines) {
 						is, name, _ := ReadIniSection(triallines, &j)
 						var steps string
-						var dummyaction string
 						var ok bool
 						switch name {
 						case "trialdef":
@@ -1895,38 +1894,9 @@ func (c *Char) load(def string) error {
 								gi.trialslist.trialnames[ii] = ("Trial " + strconv.Itoa(ii+1))
 							}
 							if is["trial.dummyaction"] != "" {
-								dummyaction = strings.ToLower(is["trial.dummyaction"])
-								if dummyaction == "neutral" {
-									gi.trialslist.trialdummyaction[ii] = 0
-								} else if dummyaction == "walk forward" {
-									gi.trialslist.trialdummyaction[ii] = 20
-								} else if dummyaction == "walk backward" {
-									gi.trialslist.trialdummyaction[ii] = 20
-								} else if dummyaction == "standing block" {
-									gi.trialslist.trialdummyaction[ii] = 150
-								} else if dummyaction == "neutral crouch" {
-									gi.trialslist.trialdummyaction[ii] = 11
-								} else if dummyaction == "crouching block" {
-									gi.trialslist.trialdummyaction[ii] = 152
-								} else if dummyaction == "neutral jump" {
-									gi.trialslist.trialdummyaction[ii] = 50
-								} else if dummyaction == "forward jump" {
-									gi.trialslist.trialdummyaction[ii] = 50
-								} else if dummyaction == "backward jump" {
-									gi.trialslist.trialdummyaction[ii] = 50
-								} else if dummyaction == "air block" {
-									gi.trialslist.trialdummyaction[ii] = 154
-								} else if dummyaction == "standing attack" {
-									gi.trialslist.trialdummyaction[ii] = 400
-								} else if dummyaction == "crouching attack" {
-									gi.trialslist.trialdummyaction[ii] = 405
-								} else if dummyaction == "jumping attack" {
-									gi.trialslist.trialdummyaction[ii] = 406
-								} else if dummyaction == "projectile attack" {
-									gi.trialslist.trialdummyaction[ii] = 410
-								}
+								gi.trialslist.trialdummyaction[ii] = strings.ToLower(is["trial.dummyaction"])
 							} else {
-								gi.trialslist.trialdummyaction[ii] = 0
+								gi.trialslist.trialdummyaction[ii] = "neutral"
 							}
 							stepstemp, _ := strconv.ParseInt(steps, 10, 32)
 							gi.trialslist.trialnumsteps[ii] = int32(stepstemp)
