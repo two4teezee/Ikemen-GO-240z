@@ -4060,7 +4060,7 @@ function start.f_trialschecker()
 		elseif p2stateno() == 0 and ctrl() then
 			start.trialsdata.dummyactionspacer = start.trialsdata.dummyactionspacer - 1
 		end
-		local throwcheck = false
+		local throwcheck = start.trialsdata.trial[ct].isthrow[cts+1]
 		local animcheck = false
 		local specialvar = false --placeholder for general purpose trials boolean, to be revisited
 		if start.trialsdata.trial[ct].animno[cts+1] ~= -2147483648 then animcheck = true end
@@ -4069,9 +4069,21 @@ function start.f_trialschecker()
 		-- 1) stateno matches, AND
 		-- 2) optional animcheck passed AND
 		-- 	3a) move hit OR
-		-- 	3b) throwcheck passed OR
-		-- 	3c) projectile hit OR...
-		if (stateno() == start.trialsdata.trial[ct].stateno[cts+1]) and (anim() == start.trialsdata.trial[ct].animno[cts+1] or not(animcheck)) and ((hitpausetime() > 1 and movehit()) or (projhittime(numproj()) > 1 and hitshakeover()) or throwcheck or specialvar) then
+		-- 	3b) projectile hit OR...
+		-- 	3c) throwcheck passed OR...
+		--  3d) specialvar bool == TRUE OR...
+		print(id())
+
+		if ishelper() and time() == 1 and movetype() == 'A' then
+			print(id())
+		end
+
+		if (stateno() == start.trialsdata.trial[ct].stateno[cts+1]) and 
+		(anim() == start.trialsdata.trial[ct].animno[cts+1] or not(animcheck)) and 
+		((hitpausetime() > 1 and movehit()) or 
+		--(projhittime(numproj()) > 1 and hitshakeover()) or 
+		throwcheck or 
+		specialvar) then
 			ncts = cts + 1
 			if ncts == 1 or (ncts > 1 and combocount() > 0) then
 				if ncts >= start.trialsdata.trial[ct].numsteps  then
