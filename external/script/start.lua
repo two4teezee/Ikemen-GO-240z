@@ -4089,10 +4089,10 @@ function start.f_trialschecker()
 		-- 	3b) projectile hit OR...
 		-- 	3c) throwcheck passed OR...
 		--  3d) specialvar bool == TRUE OR...
-		print(id())
 
 		if ishelper() and time() == 1 and movetype() == 'A' then
-			print(id())
+			start.trialsdata.IDledger[#start.trialsdata.IDledger + 1] = id()
+			start.trialsdata.stateledger[#start.trialsdata.stateledger + 1] = stateno()
 		end
 
 		if (stateno() == start.trialsdata.trial[ct].stateno[cts+1] and not(projcheck) and not(helpercheck)) and --stateno and NOT projectile and NOT helper
