@@ -2491,11 +2491,16 @@ function start.f_selectMenu(side, cmd, player, member)
 		end
 		--draw active cursor
 		if start.f_selGrid(start.c[player].cell + 1).hidden ~= 1 then
+			if motif.select_info['p' .. side .. '_cursor_active_matchcellfacing'] == 1 then
+				tempfacing = (motif.select_info['cell_' .. start.c[player].selX + 1 .. '_' .. start.c[player].selY + 1 .. '_facing'] or 1)
+			else
+				tempfacing = (motif.select_info['p' .. side .. '_cursor_active_facing'] or 1)
+			end
 			main.f_animPosDraw(
 				start.f_getCursorData(player, '_cursor_active_data'),
 				motif.select_info.pos[1] + start.c[player].selX * (motif.select_info.cell_size[1] + motif.select_info.cell_spacing[1]) + start.f_faceOffset(start.c[player].selX + 1, start.c[player].selY + 1, 1),
 				motif.select_info.pos[2] + start.c[player].selY * (motif.select_info.cell_size[2] + motif.select_info.cell_spacing[2]) + start.f_faceOffset(start.c[player].selX + 1, start.c[player].selY + 1, 2),
-				(motif.select_info['cell_' .. start.c[player].selX + 1 .. '_' .. start.c[player].selY + 1 .. '_facing'] or 1)
+				tempfacing
 			)
 		end
 		--cell selected or select screen timer reached 0
@@ -3753,6 +3758,11 @@ function start.f_trialsbuilder()
 				stateno = {},
 				animno = {},
 				isthrow = {},
+				ishelper = {},
+				projid = {},
+				specialbool = {},
+				specialstr = {},
+				specialval = {},
 				glyphline = {},
 			}
 			if start.trialsdata.trial[i].numsteps > start.trialsdata.maxsteps then
@@ -3764,6 +3774,11 @@ function start.f_trialsbuilder()
 				start.trialsdata.trial[i].stateno[j] = gettrialinfo('currenttrialstateno',i-1,j-1)
 				start.trialsdata.trial[i].animno[j] = gettrialinfo('currenttrialanimno',i-1,j-1)
 				start.trialsdata.trial[i].isthrow[j] = gettrialinfo('currenttrialisthrow',i-1,j-1)
+				start.trialsdata.trial[i].ishelper[j] = gettrialinfo('currenttrialishelper',i-1,j-1)
+				start.trialsdata.trial[i].projid[j] = gettrialinfo('currenttrialprojid',i-1,j-1)
+				start.trialsdata.trial[i].specialbool[j] = gettrialinfo('currenttrialspecialbool',i-1,j-1)
+				start.trialsdata.trial[i].specialstr[j] = gettrialinfo('currenttrialspecialstr',i-1,j-1)
+				start.trialsdata.trial[i].specialval[j] = gettrialinfo('currenttrialspecialval',i-1,j-1)
 				start.trialsdata.trial[i].glyphline[j] = {
 					glyph = {},
 					pos = {},
@@ -4062,11 +4077,13 @@ function start.f_trialschecker()
 		end
 		local throwcheck = start.trialsdata.trial[ct].isthrow[cts+1]
 		local animcheck = false
+		local projcheck = false
 		local specialvar = false --placeholder for general purpose trials boolean, to be revisited
 		if start.trialsdata.trial[ct].animno[cts+1] ~= -2147483648 then animcheck = true end
+		if start.trialsdata.trial[ct].projid[cts+1] ~= -1 then projcheck = true end
 		-- Gating Criteria:
 		-- You'll want to change this if you're doing something odd with your chars 
-		-- 1) stateno matches, AND
+		-- 1) stateno matches desired trials stateno OR stateno at helper/proj creation time matches desired stateno, AND
 		-- 2) optional animcheck passed AND
 		-- 	3a) move hit OR
 		-- 	3b) projectile hit OR...
@@ -4078,12 +4095,12 @@ function start.f_trialschecker()
 			print(id())
 		end
 
-		if (stateno() == start.trialsdata.trial[ct].stateno[cts+1]) and 
-		(anim() == start.trialsdata.trial[ct].animno[cts+1] or not(animcheck)) and 
-		((hitpausetime() > 1 and movehit()) or 
-		--(projhittime(numproj()) > 1 and hitshakeover()) or 
-		throwcheck or 
-		specialvar) then
+		if (stateno() == start.trialsdata.trial[ct].stateno[cts+1] and not(projcheck) and not(helpercheck)) and --stateno and NOT projectile and NOT helper
+		(anim() == start.trialsdata.trial[ct].animno[cts+1] or not(animcheck)) and --anim only specified when appropriate
+		((hitpausetime() > 1 and movehit()) or --movehit for stateno
+		(projhittime(start.trialsdata.trial[ct].projid[cts+1]) > 1 and hitshakeover() and projcheck) or --when we have a projectile
+		throwcheck or --throwcheck in case movehit wouldn't be triggered
+		start.trialsdata.trial[ct].specialbool[cts+1]) then
 			ncts = cts + 1
 			if ncts == 1 or (ncts > 1 and combocount() > 0) then
 				if ncts >= start.trialsdata.trial[ct].numsteps  then

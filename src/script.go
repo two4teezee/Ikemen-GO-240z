@@ -2938,6 +2938,16 @@ func triggerFunctions(l *lua.LState) {
 			l.Push(lua.LNumber(sys.cgi[0].trialslist.trialanimno[int(numArg(l, 2))][int(numArg(l, 3))]))
 		case "currenttrialisthrow":
 			l.Push(lua.LBool(sys.cgi[0].trialslist.trialisthrow[int(numArg(l, 2))][int(numArg(l, 3))]))
+		case "currenttrialishelper":
+			l.Push(lua.LBool(sys.cgi[0].trialslist.trialishelper[int(numArg(l, 2))][int(numArg(l, 3))]))
+		case "currenttrialprojid":
+			l.Push(lua.LNumber(sys.cgi[0].trialslist.trialprojid[int(numArg(l, 2))][int(numArg(l, 3))]))
+		case "currenttrialspecialbool":
+			l.Push(lua.LBool(sys.cgi[0].trialslist.trialspecialbool[int(numArg(l, 2))][int(numArg(l, 3))]))
+		case "currenttrialspecialstr":
+			l.Push(lua.LString(sys.cgi[0].trialslist.trialspecialstr[int(numArg(l, 2))][int(numArg(l, 3))]))
+		case "currenttrialspecialval":
+			l.Push(lua.LNumber(sys.cgi[0].trialslist.trialspecialval[int(numArg(l, 2))][int(numArg(l, 3))]))
 		}
 		return 1
 	})
