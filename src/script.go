@@ -63,7 +63,7 @@ func userDataError(l *lua.LState, argi int, udtype interface{}) {
 }
 
 // -------------------------------------------------------------------------------------------------
-// System Script
+// Register external functions to be called from Lua scripts
 func systemScriptInit(l *lua.LState) {
 	triggerFunctions(l)
 	luaRegister(l, "addChar", func(l *lua.LState) int {
@@ -770,7 +770,9 @@ func systemScriptInit(l *lua.LState) {
 		l.Push(newUserData(l, fnt))
 		return 1
 	})
+	// Execute a match of gameplay
 	luaRegister(l, "game", func(l *lua.LState) int {
+		// Anonymous function to load characters and stages, and/or wait for them to finish loading
 		load := func() error {
 			sys.loader.runTread()
 			for sys.loader.state != LS_Complete {
@@ -784,6 +786,7 @@ func systemScriptInit(l *lua.LState) {
 			runtime.GC()
 			return nil
 		}
+
 		for {
 			if sys.gameEnd {
 				l.Push(lua.LNumber(-1))
@@ -794,19 +797,27 @@ func systemScriptInit(l *lua.LState) {
 			sys.debugRef = [2]int{}
 			sys.roundsExisted = [2]int32{}
 			sys.matchWins = [2]int32{}
+
+			// Reset lifebars
 			for i := range sys.lifebar.wi {
 				sys.lifebar.wi[i].clear()
 			}
+
 			sys.draws = 0
 			tbl := l.NewTable()
 			sys.matchData = l.NewTable()
+
+			// Anonymous function to perform gameplay
 			fight := func() (int32, error) {
+				// Load characters and stage
 				if err := load(); err != nil {
 					return -1, err
 				}
 				if sys.loader.state == LS_Cancel {
 					return -1, nil
 				}
+
+				// Reset and setup characters
 				sys.charList.clear()
 				for i := 0; i < MaxSimul*2; i += 2 {
 					if len(sys.chars[i]) > 0 {
@@ -840,7 +851,10 @@ func systemScriptInit(l *lua.LState) {
 						}
 					}
 				}
+
+				// If first round
 				if sys.round == 1 {
+					// Update wins, reset stage
 					sys.endMatch = false
 					if sys.tmode[1] == TM_Turns {
 						sys.matchWins[0] = sys.numTurns[1]
@@ -855,9 +869,14 @@ func systemScriptInit(l *lua.LState) {
 					sys.teamLeader = [...]int{0, 1}
 					sys.stage.reset()
 				}
+
+				// Winning player index
+				// -1 on quit, -2 on restarting match
 				winp := int32(0)
+
 				//fight loop
 				if sys.fight() {
+					// Match is restarting
 					for i, b := range sys.reloadCharSlot {
 						if b {
 							sys.chars[i] = []*Char{}
@@ -868,17 +887,15 @@ func systemScriptInit(l *lua.LState) {
 						sys.stage = nil
 					}
 					if sys.reloadLifebarFlg {
-						lb, err := loadLifebar(sys.lifebar.deffile)
-						if err != nil {
-							l.RaiseError(err.Error())
-						}
-						sys.lifebar = *lb
+						sys.lifebar.reloadLifebar()
 					}
 					sys.loaderReset()
 					winp = -2
 				} else if sys.esc {
+					// Match was quit
 					winp = -1
 				} else {
+					// Determine winner
 					w1 := sys.wins[0] >= sys.matchWins[0]
 					w2 := sys.wins[1] >= sys.matchWins[1]
 					if w1 != w2 {
@@ -887,15 +904,24 @@ func systemScriptInit(l *lua.LState) {
 				}
 				return winp, nil
 			}
+
+			// Reset net inputs
 			if sys.netInput != nil {
 				sys.netInput.Stop()
 			}
+
+			// Defer synchronizing with external inputs on return
 			defer sys.synchronize()
+
+			// Loop calling gameplay until match ends
+			// Will repeat on turns mode character change and hard reset
 			for {
 				var err error
+				// Call gameplay anonymous function
 				if winp, err = fight(); err != nil {
 					l.RaiseError(err.Error())
 				}
+				// If a team won, and not going to the next character in turns mode, break
 				if winp < 0 || sys.tmode[0] != TM_Turns && sys.tmode[1] != TM_Turns ||
 					sys.wins[0] >= sys.matchWins[0] || sys.wins[1] >= sys.matchWins[1] ||
 					sys.gameEnd {
@@ -910,7 +936,10 @@ func systemScriptInit(l *lua.LState) {
 				}
 				sys.loader.reset()
 			}
+
+			// If not restarting match
 			if winp != -2 {
+				// Cleanup
 				var ti int32
 				tbl_time := l.NewTable()
 				for k, v := range sys.timerRounds {
@@ -1514,14 +1543,12 @@ func systemScriptInit(l *lua.LState) {
 		return 0
 	})
 	luaRegister(l, "reload", func(*lua.LState) int {
-		if sys.netInput == nil && sys.fileInput == nil {
-			sys.reloadFlg = true
-			for i := range sys.reloadCharSlot {
-				sys.reloadCharSlot[i] = true
-			}
-			sys.reloadStageFlg = true
-			sys.reloadLifebarFlg = true
+		sys.reloadFlg = true
+		for i := range sys.reloadCharSlot {
+			sys.reloadCharSlot[i] = true
 		}
+		sys.reloadStageFlg = true
+		sys.reloadLifebarFlg = true
 		return 0
 	})
 	luaRegister(l, "remapInput", func(l *lua.LState) int {
@@ -1534,9 +1561,7 @@ func systemScriptInit(l *lua.LState) {
 		return 0
 	})
 	luaRegister(l, "removeDizzy", func(*lua.LState) int {
-		if sys.netInput == nil && sys.fileInput == nil {
-			sys.debugWC.unsetSCF(SCF_dizzy)
-		}
+		sys.debugWC.unsetSCF(SCF_dizzy)
 		return 0
 	})
 	luaRegister(l, "replayRecord", func(*lua.LState) int {
@@ -1588,9 +1613,7 @@ func systemScriptInit(l *lua.LState) {
 		return 0
 	})
 	luaRegister(l, "roundReset", func(*lua.LState) int {
-		if sys.netInput == nil && sys.fileInput == nil {
-			sys.roundResetFlg = true
-		}
+		sys.roundResetFlg = true
 		return 0
 	})
 	luaRegister(l, "selectChar", func(*lua.LState) int {
@@ -1660,27 +1683,21 @@ func systemScriptInit(l *lua.LState) {
 		return 1
 	})
 	luaRegister(l, "selfState", func(*lua.LState) int {
-		if sys.netInput == nil && sys.fileInput == nil {
-			sys.debugWC.selfState(int32(numArg(l, 1)), -1, -1, 1, false)
-		}
+		sys.debugWC.selfState(int32(numArg(l, 1)), -1, -1, 1, false)
 		return 0
 	})
 	luaRegister(l, "setAccel", func(*lua.LState) int {
-		if sys.netInput == nil && sys.fileInput == nil {
-			sys.accel = float32(numArg(l, 1))
-		}
+		sys.accel = float32(numArg(l, 1))
 		return 0
 	})
 	luaRegister(l, "setAILevel", func(*lua.LState) int {
-		if sys.netInput == nil && sys.fileInput == nil {
-			level := float32(numArg(l, 1))
-			sys.com[sys.debugWC.playerNo] = level
-			for _, c := range sys.chars[sys.debugWC.playerNo] {
-				if level == 0 {
-					c.key = sys.debugWC.playerNo
-				} else {
-					c.key = ^sys.debugWC.playerNo
-				}
+		level := float32(numArg(l, 1))
+		sys.com[sys.debugWC.playerNo] = level
+		for _, c := range sys.chars[sys.debugWC.playerNo] {
+			if level == 0 {
+				c.key = sys.debugWC.playerNo
+			} else {
+				c.key = ^sys.debugWC.playerNo
 			}
 		}
 		return 0
@@ -1736,9 +1753,7 @@ func systemScriptInit(l *lua.LState) {
 		return 0
 	})
 	luaRegister(l, "setDizzyPoints", func(*lua.LState) int {
-		if sys.netInput == nil && sys.fileInput == nil {
-			sys.debugWC.dizzyPointsSet(int32(numArg(l, 1)))
-		}
+		sys.debugWC.dizzyPointsSet(int32(numArg(l, 1)))
 		return 0
 	})
 	luaRegister(l, "setGameMode", func(*lua.LState) int {
@@ -1756,9 +1771,7 @@ func systemScriptInit(l *lua.LState) {
 		return 0
 	})
 	luaRegister(l, "setGuardPoints", func(*lua.LState) int {
-		if sys.netInput == nil && sys.fileInput == nil {
-			sys.debugWC.guardPointsSet(int32(numArg(l, 1)))
-		}
+		sys.debugWC.guardPointsSet(int32(numArg(l, 1)))
 		return 0
 	})
 	luaRegister(l, "setHomeTeam", func(l *lua.LState) int {
@@ -1851,7 +1864,7 @@ func systemScriptInit(l *lua.LState) {
 		return 0
 	})
 	luaRegister(l, "setLife", func(*lua.LState) int {
-		if sys.netInput == nil && sys.fileInput == nil && sys.debugWC.alive() {
+		if sys.debugWC.alive() {
 			sys.debugWC.lifeSet(int32(numArg(l, 1)))
 		}
 		return 0
@@ -2016,9 +2029,7 @@ func systemScriptInit(l *lua.LState) {
 		return 0
 	})
 	luaRegister(l, "setPower", func(*lua.LState) int {
-		if sys.netInput == nil && sys.fileInput == nil {
-			sys.debugWC.setPower(int32(numArg(l, 1)))
-		}
+		sys.debugWC.setPower(int32(numArg(l, 1)))
 		return 0
 	})
 	luaRegister(l, "setPowerShare", func(l *lua.LState) int {
@@ -2030,9 +2041,7 @@ func systemScriptInit(l *lua.LState) {
 		return 0
 	})
 	luaRegister(l, "setRedLife", func(*lua.LState) int {
-		if sys.netInput == nil && sys.fileInput == nil {
-			sys.debugWC.redLifeSet(int32(numArg(l, 1)))
-		}
+		sys.debugWC.redLifeSet(int32(numArg(l, 1)))
 		return 0
 	})
 	luaRegister(l, "setRoundTime", func(l *lua.LState) int {
@@ -2084,9 +2093,7 @@ func systemScriptInit(l *lua.LState) {
 		return 0
 	})
 	luaRegister(l, "setTime", func(*lua.LState) int {
-		if sys.netInput == nil && sys.fileInput == nil {
-			sys.time = int32(numArg(l, 1))
-		}
+		sys.time = int32(numArg(l, 1))
 		return 0
 	})
 	luaRegister(l, "setTimeFramesPerCount", func(l *lua.LState) int {
@@ -2340,12 +2347,10 @@ func systemScriptInit(l *lua.LState) {
 		return 0
 	})
 	luaRegister(l, "togglePause", func(*lua.LState) int {
-		if sys.netInput == nil {
-			if l.GetTop() >= 1 {
-				sys.paused = boolArg(l, 1)
-			} else {
-				sys.paused = !sys.paused
-			}
+		if l.GetTop() >= 1 {
+			sys.paused = boolArg(l, 1)
+		} else {
+			sys.paused = !sys.paused
 		}
 		return 0
 	})
@@ -2901,6 +2906,14 @@ func triggerFunctions(l *lua.LState) {
 			ln = lua.LNumber(c.ghv.redlife)
 		case "score":
 			ln = lua.LNumber(c.ghv.score)
+		case "hitdamage":
+			ln = lua.LNumber(c.ghv.hitdamage)
+		case "guarddamage":
+			ln = lua.LNumber(c.ghv.guarddamage)
+		case "hitpower":
+			ln = lua.LNumber(c.ghv.hitpower)
+		case "guardpower":
+			ln = lua.LNumber(c.ghv.guardpower)
 		default:
 			l.RaiseError("\nInvalid argument: %v\n", strArg(l, 1))
 		}

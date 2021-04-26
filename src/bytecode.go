@@ -413,6 +413,10 @@ const (
 	OC_ex_gethitvar_playerno
 	OC_ex_gethitvar_redlife
 	OC_ex_gethitvar_score
+	OC_ex_gethitvar_hitdamage
+	OC_ex_gethitvar_guarddamage
+	OC_ex_gethitvar_hitpower
+	OC_ex_gethitvar_guardpower
 	OC_ex_ailevelf
 	OC_ex_animelemlength
 	OC_ex_animlength
@@ -1711,6 +1715,14 @@ func (be BytecodeExp) run_ex(c *Char, i *int, oc *Char) {
 		sys.bcStack.PushI(c.ghv.redlife)
 	case OC_ex_gethitvar_score:
 		sys.bcStack.PushF(c.ghv.score)
+	case OC_ex_gethitvar_hitdamage:
+		sys.bcStack.PushI(c.ghv.hitdamage)
+	case OC_ex_gethitvar_guarddamage:
+		sys.bcStack.PushI(c.ghv.guarddamage)
+	case OC_ex_gethitvar_hitpower:
+		sys.bcStack.PushI(c.ghv.hitpower)
+	case OC_ex_gethitvar_guardpower:
+		sys.bcStack.PushI(c.ghv.guardpower)
 	case OC_ex_ailevelf:
 		sys.bcStack.PushF(c.aiLevel())
 	case OC_ex_animelemlength:
@@ -2104,7 +2116,12 @@ func (sc stateDef) Run(c *Char) {
 		case stateDef_anim:
 			c.changeAnim(exp[1].evalI(c), exp[0].evalB(c))
 		case stateDef_ctrl:
-			c.setCtrl(exp[0].evalB(c))
+			//in mugen fatal blow ignores statedef ctrl
+			if !c.ghv.fatal {
+				c.setCtrl(exp[0].evalB(c))
+			} else {
+				c.ghv.fatal = false
+			}
 		case stateDef_poweradd:
 			c.powerAdd(exp[0].evalI(c))
 		}
@@ -3423,7 +3440,7 @@ func (sc palFX) runSub(c *Char, pfd *PalFXDef,
 func (sc palFX) Run(c *Char, _ []int32) bool {
 	crun := c
 	if !crun.ownpal {
-		return true
+		return false
 	}
 	pf := crun.palfx
 	if pf == nil {

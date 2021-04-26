@@ -27,5 +27,6 @@ go build -i -tags al_cmpt -o ./bin/$BINARY_NAME ./src
 chmod +x ./bin/$BINARY_NAME
 
 cp ./build/Ikemen_GO.command ./bin/Ikemen_GO.command
-cp -r ./script/ ./bin/script/
+cp -r ./external/ ./bin/external/
 cp -r ./data/ ./bin/data/
+cp -r ./font/ ./bin/font/
