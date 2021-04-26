@@ -636,6 +636,11 @@ type GetHitVar struct {
 	guardpoints    int32
 	redlife        int32
 	score          float32
+	hitdamage      int32
+	guarddamage    int32
+	hitpower       int32
+	guardpower     int32
+	fatal          bool
 }
 
 func (ghv *GetHitVar) clear() {
@@ -4038,7 +4043,7 @@ func (c *Char) bindToTarget(tar []int32, time int32, x, y float32, hmf HMF) {
 func (c *Char) targetLifeAdd(tar []int32, add int32, kill, absolute bool) {
 	for _, tid := range tar {
 		if t := sys.playerID(tid); t != nil {
-			dmg := float64(t.computeDamage(-float64(add), kill, absolute, 1, c))
+			dmg := float64(t.computeDamage(-float64(add), kill, absolute, 1, c, true))
 			t.lifeAdd(-dmg, true, true)
 			t.redLifeAdd(dmg*float64(c.gi().constants["default.lifetoredlifemul"]), true)
 		}
@@ -4163,7 +4168,7 @@ func (c *Char) targetDrop(excludeid int32, keepone bool) {
 	}
 }
 func (c *Char) computeDamage(damage float64, kill, absolute bool,
-	atkmul float32, attacker *Char) int32 {
+	atkmul float32, attacker *Char, bounds bool) int32 {
 	if damage == 0 || !absolute && atkmul == 0 {
 		return 0
 	}
@@ -4172,12 +4177,14 @@ func (c *Char) computeDamage(damage float64, kill, absolute bool,
 		damage *= float64(atkmul) / c.finalDefense
 	}
 	damage = math.Ceil(damage)
-	min, max := float64(c.life-c.lifeMax), float64(Max(0, c.life-Btoi(!kill)))
-	if damage < min {
-		damage = min
-	}
-	if damage > max {
-		damage = max
+	if bounds {
+		min, max := float64(c.life-c.lifeMax), float64(Max(0, c.life-Btoi(!kill)))
+		if damage < min {
+			damage = min
+		}
+		if damage > max {
+			damage = max
+		}
 	}
 	return int32(damage)
 }
@@ -5375,6 +5382,10 @@ func (c *Char) action() {
 			}
 			c.ghv.damage = 0
 		}
+		c.ghv.hitdamage = 0
+		c.ghv.guarddamage = 0
+		c.ghv.hitpower = 0
+		c.ghv.guardpower = 0
 		if c.ghv.redlife != 0 {
 			if c.ss.moveType == MT_H && !c.scf(SCF_guard) {
 				c.redLifeAdd(float64(c.ghv.redlife), true)
@@ -5985,7 +5996,7 @@ func (cl *CharList) clsn(getter *Char, proj bool) {
 			if getter.bindToId == c.id {
 				getter.setBindTime(0)
 			}
-			absdamage := int32(0)
+			var absdamage, hitdamage, guarddamage int32
 			if ghvset {
 				ghv := &getter.ghv
 				cmb := (getter.ss.moveType == MT_H || getter.sf(CSF_gethit)) &&
@@ -6023,6 +6034,9 @@ func (cl *CharList) clsn(getter *Char, proj bool) {
 				if !math.IsNaN(float64(hd.score[0])) {
 					ghv.score = hd.score[0]
 				}
+				ghv.fatal = false
+				hitdamage = hd.hitdamage
+				guarddamage = hd.guarddamage
 				if guard && int32(getter.ss.stateType)&hd.guardflag != 0 {
 					ghv.hitshaketime = Max(0, hd.guard_shaketime)
 					ghv.hittime = Max(0, c.scaleHit(hd.guard_hittime, getter.id, 1))
@@ -6171,14 +6185,21 @@ func (cl *CharList) clsn(getter *Char, proj bool) {
 				kill = hd.guard_kill
 			}
 			getter.ghv.damage += getter.computeDamage(
-				float64(absdamage)*float64(hits), kill, false, attackMul, c)
+				float64(absdamage)*float64(hits), kill, false, attackMul, c, true)
+			getter.ghv.hitdamage += getter.computeDamage(
+				float64(hitdamage)*float64(hits), true, false, attackMul, c, false)
+			getter.ghv.guarddamage += getter.computeDamage(
+				float64(guarddamage)*float64(hits), true, false, attackMul, c, false)
+			getter.ghv.hitpower += hd.hitgivepower
+			getter.ghv.guardpower += hd.guardgivepower
 			if ghvset && getter.ghv.damage >= getter.life {
 				if kill || !live {
+					getter.ghv.fatal = true
+					getter.ghv.fallf = true
+					if getter.ghv.fall.animtype < RA_Back {
+						getter.ghv.fall.animtype = RA_Back
+					}
 					if getter.kovelocity && !sys.sf(GSF_nokovelocity) {
-						getter.ghv.fallf = true
-						if getter.ghv.fall.animtype < RA_Back {
-							getter.ghv.fall.animtype = RA_Back
-						}
 						if getter.ss.stateType == ST_A {
 							if getter.ghv.xvel < 0 {
 								getter.ghv.xvel -= 2 * getter.localscl * (320 / float32(sys.gameWidth))

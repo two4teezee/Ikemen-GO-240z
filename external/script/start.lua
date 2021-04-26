@@ -897,6 +897,24 @@ function start.f_animGet(ref, side, member, t, subname, prefix, loop, spscale)
 	return nil
 end
 
+--calculate portraits slide.dist offset
+local function f_slideDistCalc(slide_dist, t_dist, t_speed)
+	if t_dist == nil or t_speed == nil then
+		return
+	end
+	for i = 1, 2 do
+		if (t_dist[i] or 0) > 0 then
+			if slide_dist[i] < (t_dist[i] or 0) then
+				slide_dist[i] = math.min(slide_dist[i] + (t_speed[i] or 0), t_dist[i] or 0)
+			end
+		elseif (t_dist[i] or 0) < 0 then
+			if slide_dist[i] > (t_dist[i] or 0) then
+				slide_dist[i] = math.max(slide_dist[i] - (t_speed[i] or 0), t_dist[i] or 0)
+			end
+		end
+	end
+end
+
 function start.f_drawPortraits(t_portraits, side, t, subname, last)
 	if #t_portraits == 0 then
 		return
@@ -911,11 +929,7 @@ function start.f_drawPortraits(t_portraits, side, t, subname, last)
 	if t['p' .. side .. subname .. '_num'] == 1 and last and not main.coop then
 		if t_portraits[#t_portraits][altsubname .. 'anim_data'] ~= nil then
 			local v = t_portraits[#t_portraits]
-			for i = 1, 2 do
-				if v.slide_dist[i] < (main.f_tableExists(t['p' .. side .. '_member1' .. subname .. '_slide_dist'])[i] or 0) then
-					v.slide_dist[i] = math.min(v.slide_dist[i] + (main.f_tableExists(t['p' .. side .. '_member1' .. subname .. '_slide_speed'])[i] or 0), (main.f_tableExists(t['p' .. side .. '_member1' .. subname .. '_slide_dist'])[i] or 0))
-				end
-			end
+			f_slideDistCalc(v.slide_dist, t['p' .. side .. '_member1' .. subname .. '_slide_dist'], t['p' .. side .. '_member1' .. subname .. '_slide_speed'])
 			main.f_animPosDraw(
 				v[altsubname .. 'anim_data'],
 				t['p' .. side .. subname .. '_pos'][1] + t['p' .. side .. subname .. '_offset'][1] + (main.f_tableExists(t['p' .. side .. '_member1' .. subname .. '_offset'])[1] or 0) + main.f_round(v.slide_dist[1]),
@@ -931,11 +945,7 @@ function start.f_drawPortraits(t_portraits, side, t, subname, last)
 		if member <= t['p' .. side .. subname .. '_num'] --[[or (last and main.coop)]] then
 			if t_portraits[member][altsubname .. 'anim_data'] ~= nil then
 				local v = t_portraits[member]
-				for i = 1, 2 do
-					if v.slide_dist[i] < (main.f_tableExists(t['p' .. side .. '_member' .. member .. subname .. '_slide_dist'])[i] or 0) then
-						v.slide_dist[i] = math.min(v.slide_dist[i] + (main.f_tableExists(t['p' .. side .. '_member' .. member .. subname .. '_slide_speed'])[i] or 0), (main.f_tableExists(t['p' .. side .. '_member' .. member .. subname .. '_slide_dist'])[i] or 0))
-					end
-				end
+				f_slideDistCalc(v.slide_dist, t['p' .. side .. '_member' .. member .. subname .. '_slide_dist'], t['p' .. side .. '_member' .. member .. subname .. '_slide_speed'])
 				local x = t['p' .. side .. subname .. '_pos'][1] + t['p' .. side .. subname .. '_offset'][1] + (main.f_tableExists(t['p' .. side .. '_member' .. member .. subname .. '_offset'])[1] or 0)
 				if t['p' .. side .. subname .. '_padding'] == 1 then
 					x = x + (2 * member - 1) * t['p' .. side .. subname .. '_spacing'][1] * t['p' .. side .. subname .. '_num'] / (2 * #t_portraits)
@@ -1455,7 +1465,7 @@ function start.f_selectMode()
 						storyboard.f_storyboard(motif.files.intro_storyboard)
 					end
 				end
-				start.exit = main.exitSelect or not main.selectMenu[1]
+				start.exit = start.exit or main.exitSelect or not main.selectMenu[1]
 			end
 			if start.exit then
 				main.f_bgReset(motif[main.background].bg)
@@ -1747,11 +1757,14 @@ function launchFight(data)
 		start.f_setMusic(stageNo, t.music)
 		if not start.f_selectVersus(t.vsscreen) then break end
 		saveData = true
+		local continueScreen = main.continueScreen
 		local victoryScreen = main.victoryScreen
 		local rankDisplay = main.rankDisplay
+		main.continueScreen = t.continue
 		main.victoryScreen = t.victoryscreen
 		main.rankDisplay = t.rankdisplay
 		_, t_gameStats = start.f_game(t.lua)
+		main.continueScreen = continueScreen
 		main.victoryScreen = victoryScreen
 		main.rankDisplay = rankDisplay
 		clearColor(motif.selectbgdef.bgclearcolor[1], motif.selectbgdef.bgclearcolor[2], motif.selectbgdef.bgclearcolor[3])
@@ -2508,7 +2521,6 @@ function start.f_selectMenu(side, cmd, player, member)
 			if timerSelect ~= -1 then
 				sndPlay(motif.files.snd_data, start.f_getCursorData(player, '_cursor_done_snd')[1], start.f_getCursorData(player, '_cursor_done_snd')[2])
 			end
-			local pal = main.f_btnPalNo(main.t_cmd[cmd])
 			if timerSelect ~= -1 then
 				start.f_playWave(start.c[player].selRef, 'cursor', motif.select_info['p' .. side .. '_select_snd'][1], motif.select_info['p' .. side .. '_select_snd'][2])
 			end
@@ -2661,7 +2673,7 @@ function start.f_selectVersus(enabled)
 				main.f_fadeReset('fadeout', motif.vs_screen)
 				escFlag = true
 			elseif confirmed[1] and confirmed[2] then
-				if main.fadeType == 'fadein' and (counter >= motif.vs_screen.time or main.f_input({1}, main.f_extractKeys(motif.vs_screen.p1_key_accept))) then
+				if main.fadeType == 'fadein' and (counter >= motif.vs_screen.time or main.f_input(main.t_players, main.f_extractKeys(motif.vs_screen.p1_key_accept))) then
 					main.f_fadeReset('fadeout', motif.vs_screen)
 				end
 			elseif counter >= motif.vs_screen.time + orderTime then
@@ -3182,7 +3194,7 @@ function start.f_victory()
 	--draw layerno = 1 backgrounds
 	bgDraw(motif.victorybgdef.bg, true)
 	--draw fadein / fadeout
-	if main.fadeType == 'fadein' and (start.t_victory.counter >= motif.victory_screen.time or main.f_input({1}, {'pal', 's'})) then
+	if main.fadeType == 'fadein' and (start.t_victory.counter >= motif.victory_screen.time or main.f_input(main.t_players, {'pal', 's'})) then
 		main.f_fadeReset('fadeout', motif.victory_screen)
 	end
 	main.f_fadeAnim(motif.victory_screen)
@@ -4309,7 +4321,7 @@ function start.f_turnsRecovery()
 				base = lifemax() * config.RatioRecoveryBase / 100
 			end
 			if (not matchover() and teammode() == 'turns') or (gamemode('survival') or gamemode('survivalcoop') or gamemode('netplaysurvivalcoop')) then
-				setLife(math.min(lifemax(), life() + main.f_round(timeremaining() / (timeremaining() + timeelapsed()) + base + bonus)))
+				setLife(math.min(lifemax(), life() + base + main.f_round(timeremaining() / (timeremaining() + timeelapsed()) * bonus)))
 			end
 		end
 	end

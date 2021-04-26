@@ -396,7 +396,9 @@ function text:create(t)
 	self.__index = self
 	if t.font ~= -1 then
 		if main.font[t.font .. t.height] == nil then
+			--main.f_loadingRefresh(main.txt_loading)
 			main.font[t.font .. t.height] = fontNew(t.font, t.height)
+			main.f_loadingRefresh(main.txt_loading)
 		end
 		if main.font_def[t.font .. t.height] == nil then
 			main.font_def[t.font .. t.height] = fontGetDef(main.font[t.font .. t.height])
@@ -680,12 +682,13 @@ end
 
 --generate anim from table
 function main.f_animFromTable(t, sff, x, y, scaleX, scaleY, facing, infFrame, defsc)
-	x = x or 0
-	y = y or 0
-	scaleX = scaleX or 1.0
-	scaleY = scaleY or 1.0
-	facing = facing or '0'
-	infFrame = infFrame or 1
+	local t = t or {}
+	local x = x or 0
+	local y = y or 0
+	local scaleX = scaleX or 1.0
+	local scaleY = scaleY or 1.0
+	local facing = facing or '0'
+	local infFrame = infFrame or 1
 	local facing_sav = ''
 	local anim = ''
 	local length = 0
@@ -1349,11 +1352,11 @@ main.t_unlockLua = {chars = {}, stages = {}, modes = {}}
 
 motif = require('external.script.motif')
 
-local txt_loading = main.f_createTextImg(motif.title_info, 'loading')
-txt_loading:draw()
+main.txt_loading = main.f_createTextImg(motif.title_info, 'loading')
+main.txt_loading:draw()
 refresh()
 loadLifebar(main.lifebarDef)
-main.f_loadingRefresh(txt_loading)
+main.f_loadingRefresh(main.txt_loading)
 main.timeFramesPerCount = getTimeFramesPerCount()
 main.f_updateRoundsNum()
 
@@ -1571,7 +1574,7 @@ function main.f_drawInput(t, txt, overlay, offsetY, spacingY, background, catego
 end
 
 main.t_validParams = {
-	char = {music = true, musicalt = true, musiclife = true, musicvictory = true, ai = true, vsscreen = true, winscreen = true, rank = true, rounds = true, time = true, single = true, includestage = true, boss = true, bonus = true, exclude = true, hidden = true, order = true, ordersurvival = true, arcadepath = true, ratiopath = true, slot = true, unlock = true, select = true, next = true, previous = true},
+	char = {music = true, musicalt = true, musiclife = true, musicvictory = true, ai = true, vsscreen = true, victoryscreen = true, rankdisplay = true, rounds = true, time = true, single = true, includestage = true, boss = true, bonus = true, exclude = true, hidden = true, order = true, ordersurvival = true, arcadepath = true, ratiopath = true, slot = true, unlock = true, select = true, next = true, previous = true},
 	stage = {music = true, musicalt = true, musiclife = true, musicvictory = true, order = true, unlock = true}
 }
 
@@ -1751,13 +1754,16 @@ function main.f_addChar(line, playable, loading, slot)
 		end
 	end
 	if loading then
-		main.f_loadingRefresh(txt_loading)
+		main.f_loadingRefresh(main.txt_loading)
 	end
 	return valid
 end
 
 function main.f_addStage(file, hidden)
 	file = file:gsub('\\', '/')
+	if file:match('/$') then
+		return
+	end
 	addStage(file)
 	local stageNo = #main.t_selStages + 1
 	local t_info = getStageInfo(stageNo)
@@ -3288,7 +3294,10 @@ function main.f_connect(server, t)
 		overlay_connecting:draw()
 		--draw text
 		for i = 1, #t do
-			txt_connecting:update({text = t[i]})
+			txt_connecting:update({
+				text = t[i],
+				y = motif[main.group].connecting_offset[2] + main.f_ySpacing(motif.title_info, 'connecting_font') * (i - 1),
+			})
 			txt_connecting:draw()
 		end
 		--draw layerno = 1 backgrounds
@@ -4029,7 +4038,8 @@ if main.flags['-stresstest'] ~= nil then
 	os.exit()
 end
 
-main.f_loadingRefresh(txt_loading)
+main.f_loadingRefresh(main.txt_loading)
+main.txt_loading = nil
 --sleep(1)
 
 if config.FirstRun then
