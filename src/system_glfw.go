@@ -5,6 +5,7 @@ package main
 import (
 	"fmt"
 	"image"
+	"runtime"
 
 	glfw "github.com/go-gl/glfw/v3.3/glfw"
 )
@@ -36,8 +37,17 @@ func (s *System) newWindow(w, h int) (*Window, error) {
 	fullscreen := s.fullscreen && !forceWindowed
 
 	glfw.WindowHint(glfw.Resizable, glfw.True)
-	glfw.WindowHint(glfw.ContextVersionMajor, 2)
-	glfw.WindowHint(glfw.ContextVersionMinor, 1)
+
+	// only macOS needs this
+	if runtime.GOOS == "darwin" {
+		glfw.WindowHint(glfw.ContextVersionMajor, 3)
+		glfw.WindowHint(glfw.ContextVersionMinor, 2)
+		glfw.WindowHint(glfw.OpenGLForwardCompatible, glfw.True)
+		glfw.WindowHint(glfw.OpenGLProfile, glfw.OpenGLCoreProfile)
+	} else {
+		glfw.WindowHint(glfw.ContextVersionMajor, 2)
+		glfw.WindowHint(glfw.ContextVersionMinor, 1)
+	}
 
 	// Create main window.
 	// NOTE: Borderless fullscreen is in reality just a window without borders.
@@ -110,6 +120,10 @@ func (w *Window) GetScaledViewportSize() (int32, int32, int32, int32) {
 	ratioHeight := float32(winHeight) / float32(sys.gameHeight)
 	var ratio float32
 	var x, y, resizedWidth, resizedHeight int32 = 0, 0, int32(winWidth), int32(winHeight)
+
+	if sys.fullscreen || int32(winWidth) == sys.scrrect[2] && int32(winHeight) == sys.scrrect[3] {
+		return 0, 0, int32(winWidth), int32(winHeight)
+	}
 
 	if ratioWidth < ratioHeight {
 		ratio = ratioWidth

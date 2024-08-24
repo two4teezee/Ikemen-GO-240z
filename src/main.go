@@ -222,6 +222,7 @@ type configSettings struct {
 	IP                         map[string]string
 	KeepAspect                 bool
 	WindowScaleMode            bool
+	Language                   string
 	LifeMul                    float32
 	ListenPort                 string
 	LoseSimul                  bool
@@ -234,7 +235,7 @@ type configSettings struct {
 	MaxPlayerProjectile        int
 	Modules                    []string
 	Motif                      string
-	MSAA                       bool
+	MSAA                       int32
 	NumSimul                   [2]int
 	NumTag                     [2]int
 	NumTurns                   [2]int
@@ -342,7 +343,7 @@ func setupConfig() configSettings {
 	sys.allowDebugKeys = tmp.DebugKeys
 	sys.allowDebugMode = tmp.DebugMode
 	sys.audioDucking = tmp.AudioDucking
-	Mp3SampleRate = int(tmp.AudioSampleRate)
+	sys.audioSampleRate = tmp.AudioSampleRate
 	sys.bgmVolume = tmp.VolumeBgm
 	sys.maxBgmVolume = tmp.MaxBgmVolume
 	sys.borderless = tmp.Borderless
@@ -363,6 +364,10 @@ func setupConfig() configSettings {
 	sys.controllerStickSensitivity = tmp.ControllerStickSensitivity
 	sys.explodMax = tmp.MaxExplod
 	sys.externalShaderList = tmp.ExternalShaders
+	// Bump up shader version for macOS only
+	if runtime.GOOS == "darwin" {
+		tmp.FontShaderVer = max(150, tmp.FontShaderVer)
+	}
 	sys.fontShaderVer = tmp.FontShaderVer
 	// Resoluion stuff
 	sys.fullscreen = tmp.Fullscreen
@@ -378,12 +383,16 @@ func setupConfig() configSettings {
 	sys.helperMax = tmp.MaxHelper
 	sys.inputButtonAssist = tmp.InputButtonAssist
 	sys.inputSOCDresolution = Clamp(tmp.InputSOCDResolution, 0, 4)
+	sys.language = tmp.Language
 	sys.lifeMul = tmp.LifeMul / 100
 	sys.lifeShare = [...]bool{tmp.TeamLifeShare, tmp.TeamLifeShare}
 	sys.listenPort = tmp.ListenPort
 	sys.loseSimul = tmp.LoseSimul
 	sys.loseTag = tmp.LoseTag
 	sys.masterVolume = tmp.VolumeMaster
+	if tmp.MSAA <= -1 {
+		tmp.MSAA = 0
+	}
 	sys.multisampleAntialiasing = tmp.MSAA
 	sys.pauseMasterVolume = tmp.PauseMasterVolume
 	sys.panningRange = tmp.PanningRange

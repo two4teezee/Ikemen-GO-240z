@@ -15,8 +15,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ikemen-engine/beep"
-	"github.com/ikemen-engine/beep/speaker"
+	"github.com/gopxl/beep/v2"
+	"github.com/gopxl/beep/v2/speaker"
 	lua "github.com/yuin/gopher-lua"
 )
 
@@ -25,10 +25,7 @@ const (
 	MaxAttachedChar = 1
 )
 
-var (
-	FPS           = 60
-	Mp3SampleRate = 44100
-)
+var FPS = 60
 
 // sys
 // The only instance of a System struct.
@@ -91,6 +88,7 @@ var sys = System{
 	stereoEffects:        true,
 	panningRange:         30,
 	windowCentered:       true,
+	audioSampleRate:      44100,
 }
 
 type TeamMode int32
@@ -116,6 +114,7 @@ type System struct {
 	redrawWait              struct{ nextTime, lastDraw time.Time }
 	brightness              int32
 	roundTime               int32
+	language                string
 	lifeMul                 float32
 	team1VS2Life            float32
 	turnsRecoveryRate       float32
@@ -238,24 +237,25 @@ type System struct {
 	wintime                 int32
 	projs                   [MaxSimul*2 + MaxAttachedChar][]Projectile
 	explods                 [MaxSimul*2 + MaxAttachedChar][]Explod
-	explDrawlist            [MaxSimul*2 + MaxAttachedChar][]int
-	topexplDrawlist         [MaxSimul*2 + MaxAttachedChar][]int
-	underexplDrawlist       [MaxSimul*2 + MaxAttachedChar][]int
+	explodsLayerN1          [MaxSimul*2 + MaxAttachedChar][]int
+	explodsLayer0           [MaxSimul*2 + MaxAttachedChar][]int
+	explodsLayer1           [MaxSimul*2 + MaxAttachedChar][]int
 	changeStateNest         int32
-	sprites                 DrawList
-	topSprites              DrawList
-	bottomSprites           DrawList
+	spritesLayerN1          DrawList
+	spritesLayerU           DrawList
+	spritesLayer0           DrawList
+	spritesLayer1           DrawList
 	shadows                 ShadowList
-	drawc1hit               ClsnRect
-	drawc1rev               ClsnRect
-	drawc1not               ClsnRect
-	drawc2                  ClsnRect
-	drawc2hb                ClsnRect
-	drawc2mtk               ClsnRect
-	drawc2grd               ClsnRect
-	drawc2stb               ClsnRect
-	drawwh                  ClsnRect
-	drawch                  ClsnRect
+	debugc1hit              ClsnRect
+	debugc1rev              ClsnRect
+	debugc1not              ClsnRect
+	debugc2                 ClsnRect
+	debugc2hb               ClsnRect
+	debugc2mtk              ClsnRect
+	debugc2grd              ClsnRect
+	debugc2stb              ClsnRect
+	debugcsize              ClsnRect
+	debugch                 ClsnRect
 	autoguard               [MaxSimul*2 + MaxAttachedChar]bool
 	accel                   float32
 	clsnSpr                 Sprite
@@ -284,6 +284,7 @@ type System struct {
 	audioDucking            bool
 	windowTitle             string
 	screenshotFolder        string
+	audioSampleRate         int32
 	//FLAC_FrameWait          int
 
 	// Common Files
@@ -320,7 +321,7 @@ type System struct {
 
 	// Shader Vars
 	postProcessingShader    int32
-	multisampleAntialiasing bool
+	multisampleAntialiasing int32
 	fontShaderVer           uint
 
 	// External Shader Vars
@@ -436,7 +437,7 @@ func (s *System) init(w, h int32) *lua.LState {
 	gfx.Init()
 	gfx.BeginFrame(false)
 	// And the audio.
-	speaker.Init(audioFrequency, audioOutLen)
+	speaker.Init(beep.SampleRate(sys.audioSampleRate), audioOutLen)
 	speaker.Play(NewNormalizer(s.soundMixer))
 	l := lua.NewState()
 	l.Options.IncludeGoStackTrace = true
@@ -948,9 +949,9 @@ func (s *System) playerClear(pn int, destroy bool) {
 	}
 	s.projs[pn] = s.projs[pn][:0]
 	s.explods[pn] = s.explods[pn][:0]
-	s.explDrawlist[pn] = s.explDrawlist[pn][:0]
-	s.topexplDrawlist[pn] = s.topexplDrawlist[pn][:0]
-	s.underexplDrawlist[pn] = s.underexplDrawlist[pn][:0]
+	s.explodsLayerN1[pn] = s.explodsLayerN1[pn][:0]
+	s.explodsLayer0[pn] = s.explodsLayer0[pn][:0]
+	s.explodsLayer1[pn] = s.explodsLayer1[pn][:0]
 }
 func (s *System) nextRound() {
 	s.resetGblEffect()
@@ -1176,7 +1177,7 @@ func (s *System) charUpdate() {
 		for i, pr := range s.projs {
 			for j, p := range pr {
 				if p.id >= 0 {
-					s.projs[i][j].tradeDetection(i)
+					s.projs[i][j].tradeDetection(i, j)
 				}
 			}
 		}
@@ -1199,20 +1200,21 @@ func (s *System) posReset() {
 	}
 }
 func (s *System) action() {
-	s.sprites = s.sprites[:0]
-	s.topSprites = s.topSprites[:0]
-	s.bottomSprites = s.bottomSprites[:0]
+	s.spritesLayerN1 = s.spritesLayerN1[:0]
+	s.spritesLayerU = s.spritesLayerU[:0]
+	s.spritesLayer0 = s.spritesLayer0[:0]
+	s.spritesLayer1 = s.spritesLayer1[:0]
 	s.shadows = s.shadows[:0]
-	s.drawc1hit = s.drawc1hit[:0]
-	s.drawc1rev = s.drawc1rev[:0]
-	s.drawc1not = s.drawc1not[:0]
-	s.drawc2 = s.drawc2[:0]
-	s.drawc2hb = s.drawc2hb[:0]
-	s.drawc2mtk = s.drawc2mtk[:0]
-	s.drawc2grd = s.drawc2grd[:0]
-	s.drawc2stb = s.drawc2stb[:0]
-	s.drawwh = s.drawwh[:0]
-	s.drawch = s.drawch[:0]
+	s.debugc1hit = s.debugc1hit[:0]
+	s.debugc1rev = s.debugc1rev[:0]
+	s.debugc1not = s.debugc1not[:0]
+	s.debugc2 = s.debugc2[:0]
+	s.debugc2hb = s.debugc2hb[:0]
+	s.debugc2mtk = s.debugc2mtk[:0]
+	s.debugc2grd = s.debugc2grd[:0]
+	s.debugc2stb = s.debugc2stb[:0]
+	s.debugcsize = s.debugcsize[:0]
+	s.debugch = s.debugch[:0]
 	s.clsnText = nil
 	var x, y, scl float32 = s.cam.Pos[0], s.cam.Pos[1], s.cam.Scale / s.cam.BaseScale()
 	s.cam.ResetTracking()
@@ -1405,12 +1407,14 @@ func (s *System) action() {
 								if !p[0].scf(SCF_inputwait) {
 									p[0].setSCF(SCF_inputwait)
 								}
-								// Check if this character is ready to procced to roundstate 4
-								if p[0].scf(SCF_over) || p[0].ss.no == 5150 || (p[0].scf(SCF_ctrl) && p[0].ss.moveType == MT_I &&
-									p[0].ss.stateType != ST_A && p[0].ss.stateType != ST_L) {
+								// Check if this player is ready to proceed to roundstate 4
+								// TODO: The game should normally only wait for players that are active in the fight // || p[0].teamside == -1 || p[0].scf(SCF_standby)
+								// TODO: This could be manageable from the char's side with an AssertSpecial or such
+								if p[0].scf(SCF_over) || p[0].ss.no == 5150 ||
+									(p[0].scf(SCF_ctrl) && p[0].ss.moveType == MT_I && p[0].ss.stateType != ST_A && p[0].ss.stateType != ST_L) {
 									continue
 								}
-								// Freeze timer if any character is not ready to proceed yet
+								// Freeze timer if any player is not ready to proceed yet
 								s.intro = rs4t
 								break
 							}
@@ -1451,7 +1455,7 @@ func (s *System) action() {
 					}
 					for _, p := range s.chars {
 						if len(p) > 0 {
-							// default life recovery, used only if externalized Lua implementation is disabled
+							// Default life recovery. Used only if externalized Lua implementation is disabled
 							if len(sys.commonLua) == 0 && s.waitdown >= 0 && s.time > 0 && p[0].win() &&
 								p[0].alive() && !s.matchOver() &&
 								(s.tmode[0] == TM_Turns || s.tmode[1] == TM_Turns) {
@@ -1461,6 +1465,7 @@ func (s *System) action() {
 									p[0].life = p[0].lifeMax
 								}
 							}
+							// TODO: These changestates ought to be unhardcoded
 							if !p[0].scf(SCF_over) && !p[0].hitPause() && p[0].alive() && p[0].animNo != 5 {
 								p[0].setSCF(SCF_over)
 								p[0].unsetSCF(SCF_inputwait)
@@ -1538,7 +1543,7 @@ func (s *System) action() {
 		if s.superanim != nil {
 			s.superanim.Action()
 		}
-		s.charList.action(x)
+		s.charList.action()
 		s.nomusic = s.gsf(GSF_nomusic) && !sys.postMatchFlg
 	} else {
 		s.charUpdate()
@@ -1610,7 +1615,7 @@ func (s *System) action() {
 	s.charList.xScreenBound()
 
 	if s.superanim != nil {
-		s.topSprites.add(&SprData{s.superanim, &s.superpmap, s.superpos,
+		s.spritesLayer1.add(&SprData{s.superanim, &s.superpmap, s.superpos,
 			[...]float32{s.superfacing, 1}, [2]int32{-1}, 5, Rotation{}, [2]float32{},
 			false, true, s.cgi[s.superplayer].mugenver[0] != 1, 1, 1, 0, 0, [4]float32{0, 0, 0, 0}}, 0, 0, 0, 0)
 		if s.superanim.loopend {
@@ -1642,10 +1647,9 @@ func (s *System) action() {
 			}
 		}
 	}
-	explUpdate(&s.explDrawlist, true)
-	explUpdate(&s.topexplDrawlist, false)
-	explUpdate(&s.underexplDrawlist, true)
-
+	explUpdate(&s.explodsLayerN1, true)
+	explUpdate(&s.explodsLayer0, true)
+	explUpdate(&s.explodsLayer1, false)
 	if s.tickNextFrame() {
 		spd := s.gameSpeed * s.accel
 		if s.postMatchFlg {
@@ -1662,6 +1666,7 @@ func (s *System) action() {
 	s.tickSound()
 	return
 }
+
 func (s *System) draw(x, y, scl float32) {
 	ecol := uint32(s.envcol[2]&0xff | s.envcol[1]&0xff<<8 |
 		s.envcol[0]&0xff<<16)
@@ -1673,6 +1678,8 @@ func (s *System) draw(x, y, scl float32) {
 	//}
 	if s.envcol_time == 0 {
 		c := uint32(0)
+
+		// Draw stage background fill if stage is disabled
 		if s.gsf(GSF_nobg) {
 			if s.allPalFX.enable {
 				var rgb [3]int32
@@ -1685,22 +1692,49 @@ func (s *System) draw(x, y, scl float32) {
 				c = uint32(rgb[2] | rgb[1]<<8 | rgb[0]<<16)
 			}
 			FillRect(s.scrrect, c, 0xff)
-		} else {
+		}
+
+		// Draw normal stage background fill and elements with layerNo == -1
+		if !s.gsf(GSF_nobg) {
 			if s.stage.debugbg {
 				FillRect(s.scrrect, 0xff00ff, 0xff)
 			} else {
 				c = uint32(s.stage.bgclearcolor[2]&0xff | s.stage.bgclearcolor[1]&0xff<<8 | s.stage.bgclearcolor[0]&0xff<<16)
 				FillRect(s.scrrect, c, 0xff)
 			}
-			s.stage.draw(false, bgx, bgy, scl)
+			if s.stage.ikemenver[0] != 0 || s.stage.ikemenver[1] != 0 { // This layer did not render in Mugen
+				s.stage.draw(-1, bgx, bgy, scl)
+			}
 		}
-		s.bottomSprites.draw(x, y, scl*s.cam.BaseScale())
+
+		// Draw reflections on layer -1
 		if !s.gsf(GSF_globalnoshadow) {
-			if s.stage.reflection > 0 {
+			if s.stage.reflection > 0 && s.stage.reflectionlayerno < 0 {
+				s.shadows.drawReflection(x, y, scl*s.cam.BaseScale())
+			}
+		}
+
+		// Draw character sprites with layerNo == -1
+		s.spritesLayerN1.draw(x, y, scl*s.cam.BaseScale())
+
+		// Draw stage elements with layerNo == 0
+		if !s.gsf(GSF_nobg) {
+			s.stage.draw(0, bgx, bgy, scl)
+		}
+
+		// Draw character sprites with special under flag
+		s.spritesLayerU.draw(x, y, scl*s.cam.BaseScale())
+
+		// Draw shadows
+		// Draw reflections on layer 0
+		// TODO: Make shadows render in same layers as their sources?
+		if !s.gsf(GSF_globalnoshadow) {
+			if s.stage.reflection > 0 && s.stage.reflectionlayerno >= 0 {
 				s.shadows.drawReflection(x, y, scl*s.cam.BaseScale())
 			}
 			s.shadows.draw(x, y, scl*s.cam.BaseScale())
 		}
+
 		//off := s.envShake.getOffset()
 		//yofs, yofs2 := float32(s.gameHeight), float32(0)
 		//if scl > 1 && s.cam.verticalfollow > 0 {
@@ -1734,21 +1768,35 @@ func (s *System) draw(x, y, scl float32) {
 		//	rect[0] = s.scrrect[2] - rect[2]
 		//	fade(rect, 0, 255)
 		//}
+
+		// Draw lifebar layers -1 and 0
 		s.lifebar.draw(-1)
 		s.lifebar.draw(0)
-	} else {
+	}
+
+	// Draw EnvColor effect
+	if s.envcol_time != 0 {
 		FillRect(s.scrrect, ecol, 255)
 	}
+
+	// Draw character sprites in layer 0
 	if s.envcol_time == 0 || s.envcol_under {
-		s.sprites.draw(x, y, scl*s.cam.BaseScale())
+		s.spritesLayer0.draw(x, y, scl*s.cam.BaseScale())
 		if s.envcol_time == 0 && !s.gsf(GSF_nofg) {
-			s.stage.draw(true, bgx, bgy, scl)
+			s.stage.draw(1, bgx, bgy, scl)
 		}
 	}
+
+	// Draw lifebar layer 1
 	s.lifebar.draw(1)
-	s.topSprites.draw(x, y, scl*s.cam.BaseScale())
+
+	// Draw character sprites in layer 1 (old "ontop")
+	s.spritesLayer1.draw(x, y, scl*s.cam.BaseScale())
+
+	// Draw lifebar layer 2
 	s.lifebar.draw(2)
 }
+
 func (s *System) drawTop() {
 	fade := func(rect [4]int32, color uint32, alpha int32) {
 		FillRect(rect, color, alpha>>uint(Btoi(s.clsnDraw))+Btoi(s.clsnDraw)*128)
@@ -1789,25 +1837,25 @@ func (s *System) drawTop() {
 	// Draw Clsn boxes
 	if s.clsnDraw {
 		s.clsnSpr.Pal[0] = 0xff0000ff
-		s.drawc1hit.draw(0x3feff)
+		s.debugc1hit.draw(0x3feff)
 		s.clsnSpr.Pal[0] = 0xff0040c0
-		s.drawc1rev.draw(0x3feff)
+		s.debugc1rev.draw(0x3feff)
 		s.clsnSpr.Pal[0] = 0xff000080
-		s.drawc1not.draw(0x3feff)
+		s.debugc1not.draw(0x3feff)
 		s.clsnSpr.Pal[0] = 0xffff0000
-		s.drawc2.draw(0x3feff)
+		s.debugc2.draw(0x3feff)
 		s.clsnSpr.Pal[0] = 0xff808000
-		s.drawc2hb.draw(0x3feff)
+		s.debugc2hb.draw(0x3feff)
 		s.clsnSpr.Pal[0] = 0xff004000
-		s.drawc2mtk.draw(0x3feff)
+		s.debugc2mtk.draw(0x3feff)
 		s.clsnSpr.Pal[0] = 0xffc00040
-		s.drawc2grd.draw(0x3feff)
+		s.debugc2grd.draw(0x3feff)
 		s.clsnSpr.Pal[0] = 0xff404040
-		s.drawc2stb.draw(0x3feff)
+		s.debugc2stb.draw(0x3feff)
 		s.clsnSpr.Pal[0] = 0xff303030
-		s.drawwh.draw(0x3feff)
+		s.debugcsize.draw(0x3feff)
 		s.clsnSpr.Pal[0] = 0xffffffff
-		s.drawch.draw(0x3feff)
+		s.debugch.draw(0x3feff)
 	}
 }
 func (s *System) drawDebugText() {
@@ -1930,7 +1978,7 @@ func (s *System) fight() (reload bool) {
 		s.wincnt.update()
 	}()
 	var oldStageVars Stage
-	oldStageVars.copyStageVars(s.stage)
+	oldStageVars.copyStageVars(s.stage) // NOTE: This save and restore of stage variables makes ModifyStageVar not persist. Maybe that should not be the case?
 	var life, lifeMax, power, powerMax [len(s.chars)]int32
 	var guardPoints, guardPointsMax, dizzyPoints, dizzyPointsMax, redLife [len(s.chars)]int32
 	var teamside [len(s.chars)]int
@@ -2112,6 +2160,7 @@ func (s *System) fight() (reload bool) {
 						p[0].power = 0
 					}
 				}
+				p[0].power = Clamp(p[0].power, 0, p[0].powerMax) // Because of Turns mode
 				p[0].dialogue = []string{}
 				p[0].mapArray = make(map[string]float32)
 				for k, v := range p[0].mapDefault {
@@ -2640,7 +2689,7 @@ func (s *Select) addChar(def string) {
 		return
 	}
 	sc.def = def
-	lines, i, info, files, keymap, arcade := SplitAndTrim(str, "\n"), 0, true, true, true, true
+	lines, i, info, files, keymap, arcade, lanInfo, lanFiles, lanKeymap, lanArcade := SplitAndTrim(str, "\n"), 0, true, true, true, true, true, true, true, true
 	var cns, sprite, anim, movelist string
 	var fnt [10][2]string
 	for i < len(lines) {
@@ -2649,6 +2698,24 @@ func (s *Select) addChar(def string) {
 		case "info":
 			if info {
 				info = false
+				var ok bool
+				if sc.name, ok, _ = is.getText("displayname"); !ok {
+					sc.name, _, _ = is.getText("name")
+				}
+				if sc.lifebarname, ok, _ = is.getText("lifebarname"); !ok {
+					sc.lifebarname = sc.name
+				}
+				sc.author, _, _ = is.getText("author")
+				sc.pal_defaults = is.readI32CsvForStage("pal.defaults")
+				is.ReadI32("localcoord", &sc.localcoord)
+				if ok = is.ReadF32("portraitscale", &sc.portrait_scale); !ok {
+					sc.portrait_scale = 320 / float32(sc.localcoord)
+				}
+			}
+		case fmt.Sprintf("%v.info", sys.language):
+			if lanInfo {
+				info = false
+				lanInfo = false
 				var ok bool
 				if sc.name, ok, _ = is.getText("displayname"); !ok {
 					sc.name, _, _ = is.getText("name")
@@ -2681,8 +2748,39 @@ func (s *Select) addChar(def string) {
 					fnt[i][1] = is[fmt.Sprintf("fnt_height%v", i)]
 				}
 			}
+		case fmt.Sprintf("%v.files", sys.language):
+			if lanFiles {
+				files = false
+				lanFiles = false
+				cns = is["cns"]
+				sprite = is["sprite"]
+				anim = is["anim"]
+				sc.sound = is["sound"]
+				for i := 1; i <= MaxPalNo; i++ {
+					if is[fmt.Sprintf("pal%v", i)] != "" {
+						sc.pal = append(sc.pal, int32(i))
+					}
+				}
+				movelist = is["movelist"]
+				for i := range fnt {
+					fnt[i][0] = is[fmt.Sprintf("font%v", i)]
+					fnt[i][1] = is[fmt.Sprintf("fnt_height%v", i)]
+				}
+			}
 		case "palette ":
 			if keymap &&
+				len(subname) >= 6 && strings.ToLower(subname[:6]) == "keymap" {
+				keymap = false
+				for _, v := range [12]string{"a", "b", "c", "x", "y", "z",
+					"a2", "b2", "c2", "x2", "y2", "z2"} {
+					var i32 int32
+					if is.ReadI32(v, &i32) {
+						sc.pal_keymap = append(sc.pal_keymap, i32)
+					}
+				}
+			}
+		case fmt.Sprintf("%v.palette ", sys.language):
+			if lanKeymap &&
 				len(subname) >= 6 && strings.ToLower(subname[:6]) == "keymap" {
 				keymap = false
 				for _, v := range [12]string{"a", "b", "c", "x", "y", "z",
@@ -2696,6 +2794,15 @@ func (s *Select) addChar(def string) {
 		case "arcade":
 			if arcade {
 				arcade = false
+				sc.intro, _, _ = is.getText("intro.storyboard")
+				sc.ending, _, _ = is.getText("ending.storyboard")
+				sc.arcadepath, _, _ = is.getText("arcadepath")
+				sc.ratiopath, _, _ = is.getText("ratiopath")
+			}
+		case fmt.Sprintf("%v.arcade", sys.language):
+			if lanArcade {
+				arcade = false
+				lanArcade = false
 				sc.intro, _, _ = is.getText("intro.storyboard")
 				sc.ending, _, _ = is.getText("ending.storyboard")
 				sc.arcadepath, _, _ = is.getText("arcadepath")
@@ -2820,7 +2927,7 @@ func (s *Select) AddStage(def string) error {
 		return err
 	}
 	tstr = fmt.Sprintf("Stage added: %v", def)
-	i, info, music, bgdef, stageinfo := 0, true, true, true, true
+	i, info, music, bgdef, stageinfo, lanInfo, lanMusic, lanBgdef, lanStageinfo := 0, true, true, true, true, true, true, true, true
 	var spr string
 	s.stagelist = append(s.stagelist, *newSelectStage())
 	ss := &s.stagelist[len(s.stagelist)-1]
@@ -2844,9 +2951,32 @@ func (s *Select) AddStage(def string) error {
 					return nil
 				}
 			}
+		case fmt.Sprintf("%v.info", sys.language):
+			if lanInfo {
+				info = false
+				lanInfo = false
+				var ok bool
+				if ss.name, ok, _ = is.getText("displayname"); !ok {
+					if ss.name, ok, _ = is.getText("name"); !ok {
+						ss.name = def
+					}
+				}
+				if err := is.LoadFile("attachedchar", []string{def, "", sys.motifDir, "data/"}, func(filename string) error {
+					ss.attachedchardef = filename
+					return nil
+				}); err != nil {
+					return nil
+				}
+			}
 		case "music":
 			if music {
 				music = false
+				ss.stagebgm = is
+			}
+		case fmt.Sprintf("%v.music", sys.language):
+			if lanMusic {
+				music = false
+				lanMusic = false
 				ss.stagebgm = is
 			}
 		case "bgdef":
@@ -2854,9 +2984,25 @@ func (s *Select) AddStage(def string) error {
 				bgdef = false
 				spr = is["spr"]
 			}
+		case fmt.Sprintf("%v.bgdef", sys.language):
+			if lanBgdef {
+				bgdef = false
+				lanBgdef = false
+				spr = is["spr"]
+			}
 		case "stageinfo":
 			if stageinfo {
 				stageinfo = false
+				if ok := is.ReadF32("portraitscale", &ss.portrait_scale); !ok {
+					localcoord := float32(320)
+					is.ReadF32("localcoord", &localcoord)
+					ss.portrait_scale = 320 / localcoord
+				}
+			}
+		case fmt.Sprintf("%v.stageinfo", sys.language):
+			if lanStageinfo {
+				stageinfo = false
+				lanStageinfo = false
 				if ok := is.ReadF32("portraitscale", &ss.portrait_scale); !ok {
 					localcoord := float32(320)
 					is.ReadF32("localcoord", &localcoord)

@@ -174,6 +174,9 @@ func newCompiler() *Compiler {
 		"modifybgm":            c.modifyBgm,
 		"groundleveloffset":    c.groundLevelOffset,
 		"targetadd":            c.targetAdd,
+		"modifyhitdef":         c.modifyHitDef,
+		"modifyreversaldef":    c.modifyReversalDef,
+		"modifyprojectile":     c.modifyProjectile,
 	}
 	return c
 }
@@ -432,6 +435,10 @@ var triggerMap = map[string]int{
 	"runorder":   1,
 	"bgmvar":     1,
 	"gameoption": 1,
+	"layerno":    1,
+	"explodvar":  1,
+	"clsnvar":    1,
+	"projvar":    1,
 }
 
 func (c *Compiler) tokenizer(in *string) string {
@@ -1510,6 +1517,62 @@ func (c *Compiler) expValue(out *BytecodeExp, in *string,
 		out.append(OC_camerazoom)
 	case "canrecover":
 		out.append(OC_canrecover)
+	case "clsnvar":
+		if err := c.checkOpeningBracket(in); err != nil {
+			return bvNone(), err
+		}
+		ctype := c.token
+		switch ctype {
+		case "size":
+			bv1 = BytecodeInt(0)
+		case "clsn1":
+			bv1 = BytecodeInt(1)
+		case "clsn2":
+			bv1 = BytecodeInt(2)
+		}
+		c.token = c.tokenizer(in)
+
+		if c.token != "," {
+			return bvNone(), Error("Missing ','")
+		}
+		c.token = c.tokenizer(in)
+
+		if bv2, err = c.expBoolOr(&be2, in); err != nil {
+			return bvNone(), err
+		}
+		c.token = c.tokenizer(in)
+		vname := c.token
+
+		switch vname {
+		case "back":
+			opc = OC_ex2_clsnvar_left
+		case "top":
+			opc = OC_ex2_clsnvar_top
+		case "front":
+			opc = OC_ex2_clsnvar_right
+		case "bottom":
+			opc = OC_ex2_clsnvar_bottom
+		default:
+			return bvNone(), Error(fmt.Sprint("Invalid argument: %s", vname))
+		}
+		c.token = c.tokenizer(in)
+
+		if err := c.checkClosingBracket(); err != nil {
+			return bvNone(), err
+		}
+		be2.appendValue(bv2)
+		be1.appendValue(bv1)
+		if len(be2) > int(math.MaxUint8-1) {
+			be1.appendI32Op(OC_jz, int32(len(be2)+1))
+		} else {
+			be1.append(OC_jz8, OpCode(len(be2)+1))
+		}
+		be1.append(be2...)
+		be1.append(OC_ex2_, opc)
+		if rd {
+			out.appendI32Op(OC_run, int32(len(be1)))
+		}
+		out.append(be1...)
 	case "command", "selfcommand":
 		opc := OC_command
 		if c.token == "selfcommand" {
@@ -1791,6 +1854,117 @@ func (c *Compiler) expValue(out *BytecodeExp, in *string,
 		}
 	case "drawgame":
 		out.append(OC_ex_, OC_ex_drawgame)
+	case "explodvar":
+		if err := c.checkOpeningBracket(in); err != nil {
+			return bvNone(), err
+		}
+		if bv1, err = c.expBoolOr(&be1, in); err != nil {
+			return bvNone(), err
+		}
+		if c.token != "," {
+			return bvNone(), Error("Missing ','")
+		}
+		c.token = c.tokenizer(in)
+		if bv2, err = c.expBoolOr(&be2, in); err != nil {
+			return bvNone(), err
+		}
+		if c.token != "," {
+			return bvNone(), Error("Missing ','")
+		}
+		c.token = c.tokenizer(in)
+
+		vname := c.token
+
+		switch vname {
+		case "anim":
+			opc = OC_ex2_explodvar_anim
+		case "animelem":
+			opc = OC_ex2_explodvar_animelem
+		case "removetime":
+			opc = OC_ex2_explodvar_removetime
+		case "pausemovetime":
+			opc = OC_ex2_explodvar_pausemovetime
+		case "pos":
+			c.token = c.tokenizer(in)
+
+			switch c.token {
+			case "x":
+				opc = OC_ex2_explodvar_pos_x
+			case "y":
+				opc = OC_ex2_explodvar_pos_y
+			default:
+				return bvNone(), Error(fmt.Sprint("Invalid argument: %s", c.token))
+			}
+		case "vel":
+			c.token = c.tokenizer(in)
+
+			switch c.token {
+			case "x":
+				opc = OC_ex2_explodvar_vel_x
+			case "y":
+				opc = OC_ex2_explodvar_vel_y
+			default:
+				return bvNone(), Error(fmt.Sprint("Invalid argument: %s", c.token))
+			}
+		case "accel":
+			c.token = c.tokenizer(in)
+
+			switch c.token {
+			case "x":
+				opc = OC_ex2_explodvar_accel_x
+			case "y":
+				opc = OC_ex2_explodvar_accel_y
+			default:
+				return bvNone(), Error(fmt.Sprint("Invalid argument: %s", c.token))
+			}
+		case "scale":
+			c.token = c.tokenizer(in)
+
+			switch c.token {
+			case "x":
+				opc = OC_ex2_explodvar_scale_x
+			case "y":
+				opc = OC_ex2_explodvar_scale_y
+			default:
+				return bvNone(), Error(fmt.Sprint("Invalid argument: %s", c.token))
+			}
+		case "angle":
+			c.token = c.tokenizer(in)
+
+			switch c.token {
+			case "x":
+				opc = OC_ex2_explodvar_angle_x
+			case "y":
+				opc = OC_ex2_explodvar_angle_y
+			case ")":
+				opc = OC_ex2_explodvar_angle
+			default:
+				return bvNone(), Error(fmt.Sprint("Invalid argument: %s", c.token))
+			}
+		default:
+			return bvNone(), Error(fmt.Sprint("Invalid argument: %s", vname))
+		}
+		if opc != OC_ex2_explodvar_angle {
+			c.token = c.tokenizer(in)
+
+			if err := c.checkClosingBracket(); err != nil {
+				return bvNone(), err
+			}
+		}
+
+		be2.appendValue(bv2)
+		be1.appendValue(bv1)
+		if len(be2) > int(math.MaxUint8-1) {
+			be1.appendI32Op(OC_jz, int32(len(be2)+1))
+		} else {
+			be1.append(OC_jz8, OpCode(len(be2)+1))
+		}
+		be1.append(be2...)
+		be1.append(OC_ex2_, opc)
+		if rd {
+			out.appendI32Op(OC_run, int32(len(be1)))
+		}
+		out.append(be1...)
 	case "facing":
 		out.append(OC_facing)
 	case "frontedge":
@@ -1883,8 +2057,8 @@ func (c *Compiler) expValue(out *BytecodeExp, in *string,
 				out.append(OC_ex_gethitvar_slidetime)
 			case "ctrltime":
 				out.append(OC_ex_gethitvar_ctrltime)
-			case "recovertime":
-				out.append(OC_ex_gethitvar_recovertime)
+			case "recovertime", "down.recovertime": // Added second term for consistency
+				out.append(OC_ex_gethitvar_down_recovertime)
 			case "xoff":
 				out.append(OC_ex_gethitvar_xoff)
 			case "yoff":
@@ -1977,6 +2151,10 @@ func (c *Compiler) expValue(out *BytecodeExp, in *string,
 				out.append(OC_ex_gethitvar_airguard_velocity_y)
 			case "frame":
 				out.append(OC_ex_gethitvar_frame)
+			case "down.recover":
+				out.append(OC_ex_gethitvar_down_recover)
+			case "xaccel":
+				out.append(OC_ex_gethitvar_xaccel)
 			default:
 				return bvNone(), Error("Invalid data: " + c.token)
 			}
@@ -2058,6 +2236,8 @@ func (c *Compiler) expValue(out *BytecodeExp, in *string,
 		out.append(OC_ex_, OC_ex_ishometeam)
 	case "index":
 		out.append(OC_ex2_, OC_ex2_index)
+	case "layerno":
+		out.append(OC_ex2_, OC_ex2_layerno)
 	case "leftedge":
 		out.append(OC_leftedge)
 	case "life", "p2life":
@@ -2288,6 +2468,163 @@ func (c *Compiler) expValue(out *BytecodeExp, in *string,
 			return bvNone(), err
 		}
 		out.append(OC_projhittime)
+	case "projvar":
+		if err := c.checkOpeningBracket(in); err != nil {
+			return bvNone(), err
+		}
+		if bv1, err = c.expBoolOr(&be1, in); err != nil {
+			return bvNone(), err
+		}
+		if c.token != "," {
+			return bvNone(), Error("Missing ','")
+		}
+		c.token = c.tokenizer(in)
+		if bv2, err = c.expBoolOr(&be2, in); err != nil {
+			return bvNone(), err
+		}
+		if c.token != "," {
+			return bvNone(), Error("Missing ','")
+		}
+		c.token = c.tokenizer(in)
+
+		vname := c.token
+
+		switch vname {
+		case "projremove":
+			opc = OC_ex2_projectilevar_projremove
+		case "projremovetime":
+			opc = OC_ex2_projectilevar_projremovetime
+		case "shadow":
+			c.token = c.tokenizer(in)
+
+			switch c.token {
+			case "r":
+				opc = OC_ex2_projectilevar_projshadow_r
+			case "g":
+				opc = OC_ex2_projectilevar_projshadow_g
+			case "b":
+				opc = OC_ex2_projectilevar_projshadow_b
+			default:
+				return bvNone(), Error(fmt.Sprint("Invalid argument: %s", c.token))
+			}
+		case "misstime":
+			opc = OC_ex2_projectilevar_projmisstime
+		case "hits":
+			opc = OC_ex2_projectilevar_projhits
+		case "priority":
+			opc = OC_ex2_projectilevar_projpriority
+		case "hitanim":
+			opc = OC_ex2_projectilevar_projhitanim
+		case "remanim":
+			opc = OC_ex2_projectilevar_projremanim
+		case "cancelanim":
+			opc = OC_ex2_projectilevar_projcancelanim
+		case "vel":
+			c.token = c.tokenizer(in)
+
+			switch c.token {
+			case "x":
+				opc = OC_ex2_projectilevar_vel_x
+			case "y":
+				opc = OC_ex2_projectilevar_vel_y
+			default:
+				return bvNone(), Error(fmt.Sprint("Invalid argument: %s", c.token))
+			}
+		case "velmul":
+			c.token = c.tokenizer(in)
+
+			switch c.token {
+			case "x":
+				opc = OC_ex2_projectilevar_velmul_x
+			case "y":
+				opc = OC_ex2_projectilevar_velmul_y
+			default:
+				return bvNone(), Error(fmt.Sprint("Invalid argument: %s", c.token))
+			}
+		case "remvelocity":
+			c.token = c.tokenizer(in)
+
+			switch c.token {
+			case "x":
+				opc = OC_ex2_projectilevar_remvelocity_x
+			case "y":
+				opc = OC_ex2_projectilevar_remvelocity_y
+			default:
+				return bvNone(), Error(fmt.Sprint("Invalid argument: %s", c.token))
+			}
+		case "accel":
+			c.token = c.tokenizer(in)
+
+			switch c.token {
+			case "x":
+				opc = OC_ex2_projectilevar_accel_x
+			case "y":
+				opc = OC_ex2_projectilevar_accel_y
+			default:
+				return bvNone(), Error(fmt.Sprint("Invalid argument: %s", c.token))
+			}
+		case "scale":
+			c.token = c.tokenizer(in)
+
+			switch c.token {
+			case "x":
+				opc = OC_ex2_projectilevar_projscale_x
+			case "y":
+				opc = OC_ex2_projectilevar_projscale_y
+			default:
+				return bvNone(), Error(fmt.Sprint("Invalid argument: %s", c.token))
+			}
+		case "angle":
+			opc = OC_ex2_projectilevar_projangle
+		case "pos":
+			c.token = c.tokenizer(in)
+
+			switch c.token {
+			case "x":
+				opc = OC_ex2_projectilevar_pos_x
+			case "y":
+				opc = OC_ex2_projectilevar_pos_y
+			default:
+				return bvNone(), Error(fmt.Sprint("Invalid argument: %s", c.token))
+			}
+		case "sprpriority":
+			opc = OC_ex2_projectilevar_projsprpriority
+		case "stagebound":
+			opc = OC_ex2_projectilevar_projstagebound
+		case "edgebound":
+			opc = OC_ex2_projectilevar_projedgebound
+		case "lowbound":
+			opc = OC_ex2_projectilevar_lowbound
+		case "highbound":
+			opc = OC_ex2_projectilevar_highbound
+		case "anim":
+			opc = OC_ex2_projectilevar_projanim
+		case "animelem":
+			opc = OC_ex2_projectilevar_animelem
+		case "pausemovetime":
+			opc = OC_ex2_projectilevar_pausemovetime
+		default:
+			return bvNone(), Error(fmt.Sprint("Invalid argument: %s", vname))
+		}
+		c.token = c.tokenizer(in)
+
+		if err := c.checkClosingBracket(); err != nil {
+			return bvNone(), err
+		}
+
+		be2.appendValue(bv2)
+		be1.appendValue(bv1)
+		if len(be2) > int(math.MaxUint8-1) {
+			be1.appendI32Op(OC_jz, int32(len(be2)+1))
+		} else {
+			be1.append(OC_jz8, OpCode(len(be2)+1))
+		}
+		be1.append(be2...)
+		be1.append(OC_ex2_, opc)
+		if rd {
+			out.appendI32Op(OC_run, int32(len(be1)))
+		}
+		out.append(be1...)
 	case "random":
 		out.append(OC_random)
 
@@ -3302,12 +3639,20 @@ func (c *Compiler) expValue(out *BytecodeExp, in *string,
 			out.appendI64Op(OC_ex_isassertedchar, int64(ASF_noailevel))
 		case "nointroreset":
 			out.appendI64Op(OC_ex_isassertedchar, int64(ASF_nointroreset))
-		case "ignoreclsn2push":
-			out.appendI64Op(OC_ex_isassertedchar, int64(ASF_ignoreclsn2push))
+		case "sizepushonly":
+			out.appendI64Op(OC_ex_isassertedchar, int64(ASF_sizepushonly))
 		case "immovable":
 			out.appendI64Op(OC_ex_isassertedchar, int64(ASF_immovable))
 		case "cornerpriority":
 			out.appendI64Op(OC_ex_isassertedchar, int64(ASF_cornerpriority))
+		case "drawunder":
+			out.appendI64Op(OC_ex_isassertedchar, int64(ASF_drawunder))
+		case "runfirst":
+			out.appendI64Op(OC_ex_isassertedchar, int64(ASF_runfirst))
+		case "runlast":
+			out.appendI64Op(OC_ex_isassertedchar, int64(ASF_runlast))
+		case "projtypecollision":
+			out.appendI64Op(OC_ex_isassertedchar, int64(ASF_projtypecollision))
 		// Ikemen global flags
 		case "globalnoko":
 			out.appendI32Op(OC_ex_isassertedglobal, int32(GSF_globalnoko))
@@ -4160,14 +4505,15 @@ func (c *Compiler) stateSec(is IniSection, f func() error) error {
 	}
 	return nil
 }
-func (c *Compiler) stateParam(is IniSection, name string,
-	f func(string) error) error {
+func (c *Compiler) stateParam(is IniSection, name string, mandatory bool, f func(string) error) error {
 	data, ok := is[name]
 	if ok {
 		if err := f(data); err != nil {
 			return Error(data + "\n" + name + ": " + err.Error())
 		}
 		delete(is, name)
+	} else if mandatory {
+		return Error(name + " not specified")
 	}
 	return nil
 }
@@ -4224,21 +4570,21 @@ func (c *Compiler) scAdd(sc *StateControllerBase, id byte,
 }
 func (c *Compiler) paramValue(is IniSection, sc *StateControllerBase,
 	paramname string, id byte, vt ValueType, numArg int, mandatory bool) error {
-	f := false
-	if err := c.stateParam(is, paramname, func(data string) error {
-		f = true
+	found := false
+	if err := c.stateParam(is, paramname, false, func(data string) error {
+		found = true
 		return c.scAdd(sc, id, data, vt, numArg)
 	}); err != nil {
 		return err
 	}
-	if mandatory && !f {
+	if mandatory && !found {
 		return Error(paramname + " not specified")
 	}
 	return nil
 }
 func (c *Compiler) paramPostype(is IniSection, sc *StateControllerBase,
 	id byte) error {
-	return c.stateParam(is, "postype", func(data string) error {
+	return c.stateParam(is, "postype", false, func(data string) error {
 		if len(data) == 0 {
 			return Error("Value not specified")
 		}
@@ -4270,7 +4616,7 @@ func (c *Compiler) paramPostype(is IniSection, sc *StateControllerBase,
 
 func (c *Compiler) paramSpace(is IniSection, sc *StateControllerBase,
 	id byte) error {
-	return c.stateParam(is, "space", func(data string) error {
+	return c.stateParam(is, "space", false, func(data string) error {
 		if len(data) <= 1 {
 			return Error("Value not specified")
 		}
@@ -4289,7 +4635,7 @@ func (c *Compiler) paramSpace(is IniSection, sc *StateControllerBase,
 
 func (c *Compiler) paramProjection(is IniSection, sc *StateControllerBase,
 	id byte) error {
-	return c.stateParam(is, "projection", func(data string) error {
+	return c.stateParam(is, "projection", false, func(data string) error {
 		if len(data) <= 1 {
 			return Error("Value not specified")
 		}
@@ -4313,7 +4659,7 @@ func (c *Compiler) paramProjection(is IniSection, sc *StateControllerBase,
 
 func (c *Compiler) paramSaveData(is IniSection, sc *StateControllerBase,
 	id byte) error {
-	return c.stateParam(is, "savedata", func(data string) error {
+	return c.stateParam(is, "savedata", false, func(data string) error {
 		if len(data) <= 1 {
 			return Error("Value not specified")
 		}
@@ -4335,7 +4681,7 @@ func (c *Compiler) paramSaveData(is IniSection, sc *StateControllerBase,
 
 func (c *Compiler) paramTrans(is IniSection, sc *StateControllerBase,
 	prefix string, id byte, afterImage bool) error {
-	return c.stateParam(is, prefix+"trans", func(data string) error {
+	return c.stateParam(is, prefix+"trans", false, func(data string) error {
 		if len(data) == 0 {
 			return Error("Value not specified")
 		}
@@ -4375,7 +4721,7 @@ func (c *Compiler) paramTrans(is IniSection, sc *StateControllerBase,
 		var exp []BytecodeExp
 		b := false
 		if !afterImage || sys.cgi[c.playerNo].mugenver[0] == 1 {
-			if err := c.stateParam(is, prefix+"alpha", func(data string) error {
+			if err := c.stateParam(is, prefix+"alpha", false, func(data string) error {
 				b = true
 				bes, err := c.exprs(data, VT_Int, 2)
 				if err != nil {
@@ -4455,7 +4801,7 @@ func (c *Compiler) paramTrans(is IniSection, sc *StateControllerBase,
 func (c *Compiler) stateDef(is IniSection, sbc *StateBytecode) error {
 	return c.stateSec(is, func() error {
 		sc := newStateControllerBase()
-		if err := c.stateParam(is, "type", func(data string) error {
+		if err := c.stateParam(is, "type", false, func(data string) error {
 			if len(data) == 0 {
 				return Error("Value not specified")
 			}
@@ -4477,7 +4823,7 @@ func (c *Compiler) stateDef(is IniSection, sbc *StateBytecode) error {
 		}); err != nil {
 			return err
 		}
-		if err := c.stateParam(is, "movetype", func(data string) error {
+		if err := c.stateParam(is, "movetype", false, func(data string) error {
 			if len(data) == 0 {
 				return Error("Value not specified")
 			}
@@ -4497,7 +4843,7 @@ func (c *Compiler) stateDef(is IniSection, sbc *StateBytecode) error {
 		}); err != nil {
 			return err
 		}
-		if err := c.stateParam(is, "physics", func(data string) error {
+		if err := c.stateParam(is, "physics", false, func(data string) error {
 			if len(data) == 0 {
 				return Error("Value not specified")
 			}
@@ -4520,7 +4866,7 @@ func (c *Compiler) stateDef(is IniSection, sbc *StateBytecode) error {
 			return err
 		}
 		b := false
-		if err := c.stateParam(is, "hitcountpersist", func(data string) error {
+		if err := c.stateParam(is, "hitcountpersist", false, func(data string) error {
 			b = true
 			return c.scAdd(sc, stateDef_hitcountpersist, data, VT_Bool, 1)
 		}); err != nil {
@@ -4530,7 +4876,7 @@ func (c *Compiler) stateDef(is IniSection, sbc *StateBytecode) error {
 			sc.add(stateDef_hitcountpersist, sc.iToExp(0))
 		}
 		b = false
-		if err := c.stateParam(is, "movehitpersist", func(data string) error {
+		if err := c.stateParam(is, "movehitpersist", false, func(data string) error {
 			b = true
 			return c.scAdd(sc, stateDef_movehitpersist, data, VT_Bool, 1)
 		}); err != nil {
@@ -4540,7 +4886,7 @@ func (c *Compiler) stateDef(is IniSection, sbc *StateBytecode) error {
 			sc.add(stateDef_movehitpersist, sc.iToExp(0))
 		}
 		b = false
-		if err := c.stateParam(is, "hitdefpersist", func(data string) error {
+		if err := c.stateParam(is, "hitdefpersist", false, func(data string) error {
 			b = true
 			return c.scAdd(sc, stateDef_hitdefpersist, data, VT_Bool, 1)
 		}); err != nil {
@@ -4557,7 +4903,7 @@ func (c *Compiler) stateDef(is IniSection, sbc *StateBytecode) error {
 			stateDef_facep2, VT_Bool, 1, false); err != nil {
 			return err
 		}
-		if err := c.stateParam(is, "juggle", func(data string) error {
+		if err := c.stateParam(is, "juggle", false, func(data string) error {
 			return c.scAdd(sc, stateDef_juggle, data, VT_Int, 1)
 		}); err != nil {
 			return err
@@ -4566,7 +4912,7 @@ func (c *Compiler) stateDef(is IniSection, sbc *StateBytecode) error {
 			stateDef_velset, VT_Float, 3, false); err != nil {
 			return err
 		}
-		if err := c.stateParam(is, "anim", func(data string) error {
+		if err := c.stateParam(is, "anim", false, func(data string) error {
 			prefix := c.getDataPrefix(&data, false)
 			return c.scAdd(sc, stateDef_anim, data, VT_Int, 1,
 				sc.beToExp(BytecodeExp(prefix))...)
