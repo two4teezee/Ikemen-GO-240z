@@ -218,6 +218,15 @@ function loop()
 			if gamemode('training') then
 				menu.f_trainingReset()
 			end
+			if gamemode('trials') then
+				start.trialsdata = nil
+				trialsExist = false
+				-- Check if there's a trials file - if so, parse it
+				if start.f_getCharData(start.p[1].t_selected[1].ref).trialsdef ~= "" then
+					trials.f_inittrialsData()
+					trialsExist = true
+				end
+			end
 		end
 		start.turnsRecoveryInit = false
 		start.dialogueInit = false
@@ -225,6 +234,26 @@ function loop()
 	if winnerteam() ~= -1 and player(winnerteam()) and roundstate() == 4 and isasserted("over") then
 		--turns life recovery
 		start.f_turnsRecovery()
+	end
+	if gamemode('trials') and roundstate() == 2 then
+		if trialsExist and not trialsdata.trialsInitialized then
+			-- Initialize the trials based on parsed file and char state at roundstate() == 2
+			trials.f_trialsBuilder()
+			menu.f_trialsReset()
+		elseif trialsExist and trialsdata.trialsInitialized then
+			-- If trials initialized, draw elements and check for success!
+			trials.f_trialsDrawer()
+			trials.f_trialsChecker()
+		else
+			-- No trials present!
+			player(2)
+			setAILevel(0)
+			player(1)
+			charMapSet(2, '_iksys_trialsDummyControl', 0)
+			trialcounter = main.f_createTextImg(motif.trials_mode, 'trialcounter')
+			trialcounter:update({x = motif.trials_mode.trialcounter_pos[1], y = motif.trials_mode.trialcounter_pos[2], text = motif.trials_mode.trialcounter_notrialsdata_text})
+			trialcounter:draw()
+		end
 	end
 	--dialogue
 	if indialogue() then
