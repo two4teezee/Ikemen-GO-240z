@@ -3024,6 +3024,29 @@ for _, v in ipairs({
 	motif.f_loadSprData(motif.select_info, v)
 end
 
+--trials spr/anim data
+local tr_pos = motif.trials_mode
+for _, v in ipairs({
+	{s = 'bg_',							x = tr_pos.trialsteps_pos[1] + tr_pos.bg_offset[1],					y = tr_pos.trialsteps_pos[2] + tr_pos.bg_offset[2],					},
+	{s = 'success_bg_',    				x = tr_pos.success_pos[1] + tr_pos.success_bg_offset[1],			y = tr_pos.success_pos[2] + tr_pos.success_bg_offset[2],			},
+	{s = 'allclear_bg_',	   			x = tr_pos.allclear_pos[1] + tr_pos.allclear_bg_offset[1],			y = tr_pos.allclear_pos[2] + tr_pos.allclear_bg_offset[2],			},
+	{s = 'success_front_',    			x = tr_pos.success_pos[1] + tr_pos.success_front_offset[1],			y = tr_pos.success_pos[2] + tr_pos.success_front_offset[2],			},
+	{s = 'allclear_front_',   			x = tr_pos.allclear_pos[1] + tr_pos.allclear_front_offset[1],		y = tr_pos.allclear_pos[2] + tr_pos.allclear_front_offset[2],		},
+	{s = 'upcomingstep_bg_',			x = 0,																y = 0,																},
+	{s = 'upcomingstep_bg_tail_',		x = 0,																y = 0,																},
+	{s = 'upcomingstep_bg_head_',		x = 0,																y = 0,																},
+	{s = 'currentstep_bg_',				x = 0,																y = 0,																},
+	{s = 'currentstep_bg_tail_',		x = 0,																y = 0,																},
+	{s = 'currentstep_bg_head_',		x = 0,																y = 0,																},
+	{s = 'completedstep_bg_',			x = 0,																y = 0,																},
+	{s = 'completedstep_bg_tail_',		x = 0,																y = 0,																},
+	{s = 'completedstep_bg_head_',		x = 0,																y = 0,																},
+	{s = 'trialtitle_bg_',    			x = tr_pos.trialtitle_pos[1] + tr_pos.trialtitle_bg_offset[1],		y = tr_pos.trialtitle_pos[2] + tr_pos.trialtitle_bg_offset[2],		},
+	{s = 'trialtitle_front_',    		x = tr_pos.trialtitle_pos[1] + tr_pos.trialtitle_front_offset[1],	y = tr_pos.trialtitle_pos[2] + tr_pos.trialtitle_front_offset[2],	},
+}) do
+	motif.f_loadSprData(motif.trials_mode, v)
+end
+
 --versus screen spr/anim data
 for i = 1, 2 do
 	for j = 1, motif.vs_screen['p' .. i .. '_num'] do
