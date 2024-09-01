@@ -2789,6 +2789,16 @@ for k, v in pairs(t.menu_info) do
 	end
 end
 
+--trials_info section reuses menu_info values (excluding itemnames)
+motif.trials_info = main.f_tableMerge(motif.trials_info, motif.menu_info)
+if t.menu_info == nil then t.menu_info = {} end
+if t.trials_info == nil then t.trials_info = {} end
+for k, v in pairs(t.menu_info) do
+	if t.trials_info[k] == nil and not k:match('_itemname_') then
+		t.trials_info[k] = v
+	end
+end
+
 --merge tables
 motif = main.f_tableMerge(motif, t)
 
@@ -3047,6 +3057,8 @@ for _, v in ipairs({
 	motif.f_loadSprData(motif.trials_mode, v)
 end
 
+print("got to after bg thingy")
+
 --versus screen spr/anim data
 for i = 1, 2 do
 	for j = 1, motif.vs_screen['p' .. i .. '_num'] do
@@ -3071,11 +3083,11 @@ motif.f_loadSprData(motif.continue_screen, {s = 'counter_'})
 motif.f_loadSprData(motif.challenger_info, {s = 'bg_'})
 
 --arrows spr/anim data
-for _, v in ipairs({motif.title_info, motif.option_info, motif.replay_info, motif.menu_info, motif.training_info, motif.attract_mode}) do
+for _, v in ipairs({motif.title_info, motif.option_info, motif.replay_info, motif.menu_info, motif.training_info, motif.trials_info, motif.attract_mode}) do
 	motif.f_loadSprData(v, {s = 'menu_arrow_up_',   x = v.menu_pos[1], y = v.menu_pos[2]})
 	motif.f_loadSprData(v, {s = 'menu_arrow_down_', x = v.menu_pos[1], y = v.menu_pos[2]})
 end
-for _, v in ipairs({motif.menu_info, motif.training_info}) do
+for _, v in ipairs({motif.menu_info, motif.training_info, motif.trials_info}) do
 	motif.f_loadSprData(v, {s = 'movelist_arrow_up_',   x = v.movelist_pos[1], y = v.movelist_pos[2]})
 	motif.f_loadSprData(v, {s = 'movelist_arrow_down_', x = v.movelist_pos[1], y = v.movelist_pos[2]})
 end
