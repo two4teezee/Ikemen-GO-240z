@@ -93,6 +93,11 @@ local motif =
 		hiscore_bgm_loopstart = 0, --Ikemen feature
 		hiscore_bgm_loopend = 0, --Ikemen feature
 	},
+	languages =
+	{
+		languages = {"en"},
+		en = "English",
+	},
 	title_info =
 	{
 		fadein_time = 10,
@@ -355,7 +360,7 @@ local motif =
 		p1_face_anim = -1, --Ikemen feature
 		p1_face_spr = {9000, 1},
 		p1_face_done_anim = -1, --Ikemen feature
-		p1_face_done_spr = {9000, 1}, --Ikemen feature
+		p1_face_done_spr = {}, --Ikemen feature
 		p1_face_offset = {0, 0},
 		p1_face_facing = 1,
 		p1_face_scale = {1.0, 1.0},
@@ -366,7 +371,7 @@ local motif =
 		p2_face_num = 1, --Ikemen feature
 		p2_face_anim = -1, --Ikemen feature
 		p2_face_done_anim = -1, --Ikemen feature
-		p2_face_done_spr = {9000, 1}, --Ikemen feature
+		p2_face_done_spr = {}, --Ikemen feature
 		p2_face_spr = {9000, 1},
 		p2_face_offset = {0, 0},
 		p2_face_facing = -1,
@@ -377,7 +382,7 @@ local motif =
 		--p<pn>_member<num>_face_anim = -1, --Ikemen feature
 		--p<pn>_member<num>_face_spr = {9000, 1}, --Ikemen feature
 		--p<pn>_member<num>_face_done_anim = -1, --Ikemen feature
-		--p<pn>_member<num>_face_done_spr = {9000, 1}, --Ikemen feature
+		--p<pn>_member<num>_face_done_spr = {}, --Ikemen feature
 		--p<pn>_member<num>_face_offset = {0, 0}, --Ikemen feature
 		--p<pn>_member<num>_face_scale = {1.0, 1.0}, --Ikemen feature
 		--p<pn>_member<num>_face_slide_speed = {0, 0}, --Ikemen feature
@@ -2238,6 +2243,7 @@ end
 
 function motif.setBaseOptionInfo()
 	motif.option_info.menu_itemname_menugame = "Game Settings"
+	motif.option_info.menu_itemname_menugame_language = "Language"
 	motif.option_info.menu_itemname_menugame_difficulty = "Difficulty Level"
 	motif.option_info.menu_itemname_menugame_roundtime = "Time Limit"
 	motif.option_info.menu_itemname_menugame_lifemul = "Life"
@@ -2312,6 +2318,8 @@ function motif.setBaseOptionInfo()
 	motif.option_info.menu_itemname_menuvideo_resolution_back = "Back"
 	motif.option_info.menu_itemname_menuvideo_fullscreen = "Fullscreen"
 	motif.option_info.menu_itemname_menuvideo_vretrace = "VSync"
+	motif.option_info.menu_itemname_menuvideo_keepaspect = "Keep Aspect Ratio"
+	motif.option_info.menu_itemname_menuvideo_windowscalemode = "Bilinear Filtering"
 	motif.option_info.menu_itemname_menuvideo_msaa = "MSAA"
 	motif.option_info.menu_itemname_menuvideo_shaders = "Shaders" --reserved submenu
 	-- This list is populated with shaders existing in 'external/shaders' directory
@@ -2362,6 +2370,7 @@ function motif.setBaseOptionInfo()
 	end
 	main.t_sort.option_info.menu = {
 		"menugame",
+		"menugame_language",
 		"menugame_difficulty",
 		"menugame_roundtime",
 		"menugame_lifemul",
@@ -2434,6 +2443,8 @@ function motif.setBaseOptionInfo()
 		"menuvideo_resolution_back",
 		"menuvideo_fullscreen",
 		"menuvideo_vretrace",
+		"menuvideo_keepaspect",
+		"menuvideo_windowscalemode",
 		"menuvideo_msaa",
 		"menuvideo_shaders",
 		"menuvideo_shaders_empty",
@@ -2702,13 +2713,15 @@ for line in main.motifData:gmatch('([^\n]*)\n?') do
 							if subt == 'teammenu' then
 								prefix = 'p' .. i .. '_'
 							end
-							for _, v in ipairs({'_bg_', '_bg_active_'}) do
-								local bg = param:gsub('_itemname_', v)
-								def_pos[prefix .. bg .. '_anim'] = -1
-								def_pos[prefix .. bg .. '_spr'] = {-1, 0}
-								def_pos[prefix .. bg .. '_offset'] = {0, 0}
-								def_pos[prefix .. bg .. '_facing'] = 1
-								def_pos[prefix .. bg .. '_scale'] = {1.0, 1.0}
+							if prefix == not nil then 
+								for _, v in ipairs({'_bg_', '_bg_active_'}) do
+									local bg = param:gsub('_itemname_', v)
+									def_pos[prefix .. bg .. '_anim'] = -1
+									def_pos[prefix .. bg .. '_spr'] = {-1, 0}
+									def_pos[prefix .. bg .. '_offset'] = {0, 0}
+									def_pos[prefix .. bg .. '_facing'] = 1
+									def_pos[prefix .. bg .. '_scale'] = {1.0, 1.0}
+								end
 							end
 						end
 					end
@@ -2767,6 +2780,19 @@ for line in main.motifData:gmatch('([^\n]*)\n?') do
 	end
 	main.f_loadingRefresh()
 end
+
+-- merge current language sections, if any
+for group_k, contents in pairs(t) do
+	if string.sub(group_k, 1, 3) == config.Language .. "_" then
+		local defgroup = string.sub(group_k, 4, -1)
+		if type(t[defgroup]) == "table" then
+			t[defgroup] = main.f_tableMerge(t[defgroup], contents)
+		elseif t[defgroup] ~= nil then -- infobox & others
+			t[defgroup] = contents
+		end
+	end
+end
+
 --file:close()
 
 if main.debugLog then main.f_printTable(main.t_sort, 'debug/t_sort.txt') end
@@ -3123,14 +3149,40 @@ function motif.f_start()
 	for group_k, group_t in pairs(main.t_sort) do
 		for subt_k, subt_t in pairs(group_t) do
 			for _, v in ipairs(subt_t) do
+				local real_t = motif[group_k]
+				if string.sub(group_k, 1, 3) == config.Language .. "_" then
+					real_t = motif[string.sub(group_k, 4, -1)]
+				end
 				if subt_k == 'teammenu' then
 					for i = 1, 2 do
-						motif.f_loadSprData(motif[group_k], {s = 'p' .. i .. '_' .. subt_k .. '_bg_' .. v .. '_', x = motif[group_k]['p' .. i .. '_teammenu_pos'][1], y = motif[group_k]['p' .. i .. '_teammenu_pos'][2]})
-						motif.f_loadSprData(motif[group_k], {s = 'p' .. i .. '_' .. subt_k .. '_bg_active_' .. v .. '_', x = motif[group_k]['p' .. i .. '_teammenu_pos'][1], y = motif[group_k]['p' .. i .. '_teammenu_pos'][2]})
+						local teammenu_pos = real_t['p' .. i .. '_teammenu_pos']
+						if teammenu_pos ~= nil then
+							motif.f_loadSprData(real_t, {
+								s = 'p' .. i .. '_' .. subt_k .. '_bg_' .. v .. '_',
+								x = teammenu_pos[1],
+								y = teammenu_pos[2]
+							})
+							motif.f_loadSprData(real_t, {
+								s = 'p' .. i .. '_' .. subt_k .. '_bg_active_' .. v .. '_',
+								x = teammenu_pos[1],
+								y = teammenu_pos[2]
+							})
+						end
 					end
 				else--if subt_k == 'menu' or subt_k == 'keymenu' then
-					motif.f_loadSprData(motif[group_k], {s = subt_k .. '_bg_' .. v .. '_', x = motif[group_k].menu_pos[1], y = motif[group_k].menu_pos[2]})
-					motif.f_loadSprData(motif[group_k], {s = subt_k .. '_bg_active_' .. v .. '_', x = motif[group_k].menu_pos[1], y = motif[group_k].menu_pos[2]})
+					local menu_pos = real_t.menu_pos
+					if menu_pos ~= nil then
+						motif.f_loadSprData(real_t, {
+							s = subt_k .. '_bg_' .. v .. '_',
+							x = menu_pos[1],
+							y = menu_pos[2]
+						})
+						motif.f_loadSprData(real_t, {
+							s = subt_k .. '_bg_active_' .. v .. '_',
+							x = menu_pos[1],
+							y = menu_pos[2]
+						})
+					end
 				end
 			end
 		end
