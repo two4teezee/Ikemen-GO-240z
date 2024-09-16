@@ -166,23 +166,24 @@ end
 
 local function f_trialsFade()
 	-- This function is responsible for fadein/fadeout if resetonsuccess is set to true.
-	if start.trials.draw.fadeout > 0 then
+	if start.trials.draw.fadeout > 0 and motif.trials_mode.fadeout_time > 0 then
 		if not main.fadeActive then
 			main.f_fadeReset('fadeout',motif.trials_mode)
 		end
 		main.f_fadeAnim(motif.trials_mode)
 		start.trials.draw.fadeout = start.trials.draw.fadeout - 1
-	elseif start.trials.draw.fadein > 0 then
-		if main.fadeType == 'fadeout' then
-			charMapSet(2, '_iksys_trialsReposition', 1)
-			main.f_fadeReset('fadein',motif.trials_mode)
-		elseif main.fadeType == 'fadein' then
-			charMapSet(2, '_iksys_trialsCameraReset', 1)
+	elseif start.trials.draw.fadein > 0 and motif.trials_mode.fadein_time > 0 then
+		if start.trials.draw.fadeout == 0 then
+			if main.fadeType == 'fadeout' then
+				charMapSet(2, '_iksys_trialsReposition', 1)
+				main.f_fadeReset('fadein',motif.trials_mode)
+			elseif main.fadeType == 'fadein' then
+				charMapSet(2, '_iksys_trialsCameraReset', 1)
+			end
 		end
 		main.f_fadeAnim(motif.trials_mode)
 		start.trials.draw.fadein = start.trials.draw.fadein - 1
 	end
-	start.trials.draw.fade = start.trials.draw.fade - 1
 end
 
 function trials.f_inittrialsData()
@@ -362,7 +363,7 @@ function trials.f_trialsBuilder()
 		currenttextline = {},
 		completedtextline = {},
 		success = 0,
-		fade = 0,
+		fade = false,
 		fadein = 0,
 		fadeout = 0,
 		success_text = main.f_createTextImg(motif.trials_mode, 'success_text'),
@@ -399,7 +400,7 @@ function trials.f_trialsBuilder()
 end
 
 function trials.f_trialsDrawer()
-	if start.trials.trialsInitialized and not start.trials.active and start.trials.draw.fade == 0 then
+	if start.trials.trialsInitialized and not start.trials.active and not start.trials.draw.fade then
 		f_trialsDummySetup()
 		start.trials.active = true
 	end
@@ -657,7 +658,7 @@ end
 function trials.f_trialsChecker()
 	--This function sets dummy actions according to the character trials info and validates trials attempts
 	--To help follow along, ct = current trial, cts = current trial step, ncts = next current trial step
-	if ct <= #start.trials.trial and start.trials.draw.success == 0 and start.trials.draw.fade == 0 and start.trials.active then
+	if ct <= #start.trials.trial and start.trials.draw.success == 0 and not start.trials.draw.fade and start.trials.active then
 		local helpercheck = false
 		local projcheck = false
 		local maincharcheck = false
@@ -748,10 +749,10 @@ function trials.f_trialsChecker()
 							else
 								start.trials.draw.success = math.max(motif.trials_mode.success_front_displaytime, motif.trials_mode.success_bg_displaytime, motif.trials_mode.success_text_displaytime)
 							end
-							if motif.trials_mode.trialresetonsuccess == "true" then
+							if motif.trials_mode.trialsresetonsuccess == "true" then
 								start.trials.draw.fadein = motif.trials_mode.fadein_time
 								start.trials.draw.fadeout = motif.trials_mode.fadeout_time
-								start.trials.draw.fade = start.trials.draw.fadein + start.trials.draw.fadeout
+								start.trials.draw.fade = true
 							end
 						end
 					end
@@ -769,7 +770,7 @@ function trials.f_trialsChecker()
 	--If the trial was completed successfully, draw the trials success
 	if start.trials.draw.success > 0 then
 		f_trialsSuccess('success', ct)
-	elseif start.trials.draw.fade > 0 and motif.trials_mode.trialresetonsuccess == "true" then
+	elseif start.trials.draw.fade = true and motif.trials_mode.trialsresetonsuccess == "true" then
 		if start.trials.draw.fade < start.trials.draw.fadein + start.trials.draw.fadeout then
 			f_trialsFade()
 		else

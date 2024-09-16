@@ -296,9 +296,9 @@ menu.t_itemname = {
 	['trialresetonsuccess'] = function(t, item, cursorPosY, moveTxt, section)
 		if menu.f_valueChanged(t.items[item], motif[section]) then
 			if menu.t_valuename.trialresetonsuccess[menu.trialresetonsuccess or 1].itemname == "Yes" then
-				motif.trials_mode.trialresetonsuccess = "true"
+				motif.trials_mode.trialsresetonsuccess = "true"
 			else
-				motif.trials_mode.trialresetonsuccess = "false"
+				motif.trials_mode.trialsresetonsuccess = "false"
 			end
 		end
 		return true
@@ -567,7 +567,7 @@ function menu.f_trialsReset()
 	for k, _ in pairs(menu.t_valuename) do
 		menu[k] = 1
 	end
-	if motif.trials_mode.trialresetonsuccess == "true" then
+	if motif.trials_mode.trialsresetonsuccess == "true" then
 		menu.trialresetonsuccess = 1
 	else
 		menu.trialresetonsuccess = 2

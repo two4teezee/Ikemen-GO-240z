@@ -2295,7 +2295,7 @@
 	; resetonsuccess: set to "true" to reset character positions after each trial success (except the final one). Can optionally specify fadein and fadeout parameters - will default to shown values.
 	; trialslayout: "vertical" or "horizontal" are the only valid values. Defaults to "vertical" if not specified. Affects scrolling logic, as stated above, also enables dynamic step width
 	; --------------------------------------------------------------------------
-	resetonsuccess = "false"
+	trialsresetonsuccess = "false"
 	trialslayout = "vertical"
 
 	; SELSCREENPALFX -----------------------------------------------------------
@@ -2310,12 +2310,12 @@
 	; RESETONSUCCESS FADES -----------------------------------------------------
 	; Used when "resetonsuccess" is set to "true"; defaults to the commented values below.
 	; --------------------------------------------------------------------------
-	; fadein.time = 40, --Ikemen feature
-	; fadein.col = {0, 0, 0}, --Ikemen feature
-	; fadein.anim = -1, --Ikemen feature
-	; fadeout.time = 40, --Ikemen feature
-	; fadeout.col = {0, 0, 0}, --Ikemen feature
-	; fadeout.anim = -1, --Ikemen feature
+	; fadein.time = 40 ; --Ikemen feature
+	; fadein.col = {0, 0, 0} ; --Ikemen feature
+	; fadein.anim = -1 ; --Ikemen feature
+	; fadeout.time = 40 ; --Ikemen feature
+	; fadeout.col = {0, 0, 0} ; --Ikemen feature
+	; fadeout.anim = -1 ; --Ikemen feature
 
 	; TRIALSTEPS OPTIONS -------------------------------------------------------
 	; trialsteps.pos: local origin from which trial steps are drawn. Other elements have their own origin specifications.

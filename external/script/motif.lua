@@ -1522,7 +1522,7 @@ local motif =
 	},
 	trials_mode =
 	{
-		resetonsuccess = "false",
+		trialsresetonsuccess = "false",
 		trialslayout = "vertical",
 		selscreenpalfx_add = {},
 		selscreenpalfx_mul = {},
